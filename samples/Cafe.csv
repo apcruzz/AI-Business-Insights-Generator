@@ -1,0 +1,1001 @@
+Transaction_ID,Date,Time,Hour,Day_of_Week,Product_Name,Category,Quantity,Unit_Price,Gross_Sales,Discount_Amount,Net_Sales,Unit_COGS,Total_COGS,Gross_Profit,Payment_Method,Employee_ID,Employee_Name,Weather_Signal,Store_Location
+TXN-10001,8/1/2026,0:02:00,0,Saturday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10001,8/1/2026,0:04:00,0,Saturday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Cash,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10001,8/1/2026,0:05:00,0,Saturday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10001,8/1/2026,0:06:00,0,Saturday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10001,8/1/2026,0:10:00,0,Saturday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10001,8/1/2026,0:16:00,0,Saturday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10001,8/1/2026,0:18:00,0,Saturday,Whole Bean Bag (12oz),Retail,2,18,36,0,36,7.5,15,21,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10002,8/1/2026,0:20:00,0,Saturday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Cash,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10003,8/1/2026,0:22:00,0,Saturday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10004,8/1/2026,0:28:00,0,Saturday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10004,8/1/2026,0:31:00,0,Saturday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10004,8/1/2026,0:35:00,0,Saturday,Espresso,Beverages,1,3.5,3.5,0.53,2.97,0.4,0.4,2.57,Cash,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10005,8/1/2026,0:42:00,0,Saturday,Cold Brew,Beverages,2,5.5,11,0,11,0.8,1.6,9.4,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10006,8/1/2026,0:48:00,0,Saturday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10007,8/1/2026,0:51:00,0,Saturday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10007,8/1/2026,0:58:00,0,Saturday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10008,8/1/2026,1:06:00,1,Saturday,Espresso,Beverages,2,3.5,7,0,7,0.4,0.8,6.2,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10008,8/1/2026,1:13:00,1,Saturday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10008,8/1/2026,1:18:00,1,Saturday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10008,8/1/2026,1:23:00,1,Saturday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10008,8/1/2026,1:24:00,1,Saturday,Cappuccino,Beverages,3,4.95,14.85,0,14.85,0.75,2.25,12.6,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10008,8/1/2026,1:26:00,1,Saturday,Cappuccino,Beverages,2,4.95,9.9,0,9.9,0.75,1.5,8.4,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10009,8/1/2026,1:29:00,1,Saturday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10009,8/1/2026,1:30:00,1,Saturday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10010,8/1/2026,1:34:00,1,Saturday,Whole Bean Bag (12oz),Retail,2,18,36,5.4,30.6,7.5,15,15.6,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10010,8/1/2026,1:36:00,1,Saturday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10011,8/1/2026,1:39:00,1,Saturday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10011,8/1/2026,1:43:00,1,Saturday,Breakfast Sandwich,Food,3,8.25,24.75,0,24.75,2.1,6.3,18.45,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10012,8/1/2026,1:51:00,1,Saturday,Cold Brew,Beverages,1,5.5,5.5,0.82,4.68,0.8,0.8,3.88,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10012,8/1/2026,1:55:00,1,Saturday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10012,8/1/2026,1:57:00,1,Saturday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10013,8/1/2026,2:05:00,2,Saturday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10014,8/1/2026,2:13:00,2,Saturday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10015,8/1/2026,2:20:00,2,Saturday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Cash,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10016,8/1/2026,2:22:00,2,Saturday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Cash,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10016,8/1/2026,2:26:00,2,Saturday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10016,8/1/2026,2:28:00,2,Saturday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10016,8/1/2026,2:29:00,2,Saturday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10016,8/1/2026,2:36:00,2,Saturday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10017,8/1/2026,2:44:00,2,Saturday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10018,8/1/2026,2:49:00,2,Saturday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10019,8/1/2026,2:55:00,2,Saturday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10020,8/1/2026,2:58:00,2,Saturday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10020,8/1/2026,3:00:00,3,Saturday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Cash,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10020,8/1/2026,3:04:00,3,Saturday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10020,8/1/2026,3:10:00,3,Saturday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10021,8/1/2026,3:17:00,3,Saturday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10021,8/1/2026,3:18:00,3,Saturday,Whole Bean Bag (12oz),Retail,3,18,54,8.1,45.9,7.5,22.5,23.4,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10022,8/1/2026,3:23:00,3,Saturday,Avocado Toast,Food,2,9.5,19,0,19,2.2,4.4,14.6,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10023,8/1/2026,3:28:00,3,Saturday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10023,8/1/2026,3:29:00,3,Saturday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Cash,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10024,8/1/2026,3:34:00,3,Saturday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10024,8/1/2026,3:38:00,3,Saturday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Cash,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10025,8/1/2026,3:46:00,3,Saturday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Cash,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10026,8/1/2026,3:47:00,3,Saturday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10026,8/1/2026,3:55:00,3,Saturday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Cash,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10026,8/1/2026,3:58:00,3,Saturday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10027,8/1/2026,3:59:00,3,Saturday,Espresso,Beverages,2,3.5,7,0,7,0.4,0.8,6.2,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10028,8/1/2026,4:01:00,4,Saturday,Blueberry Muffin,Bakery,2,3.75,7.5,0,7.5,0.85,1.7,5.8,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10028,8/1/2026,4:04:00,4,Saturday,Cold Brew,Beverages,2,5.5,11,0,11,0.8,1.6,9.4,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10029,8/1/2026,4:11:00,4,Saturday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10030,8/1/2026,4:15:00,4,Saturday,Americano,Beverages,1,4.25,4.25,0.64,3.61,0.5,0.5,3.11,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10031,8/1/2026,4:19:00,4,Saturday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10032,8/1/2026,4:23:00,4,Saturday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10033,8/1/2026,4:28:00,4,Saturday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10033,8/1/2026,4:34:00,4,Saturday,Americano,Beverages,2,4.25,8.5,0,8.5,0.5,1,7.5,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10034,8/1/2026,4:39:00,4,Saturday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10034,8/1/2026,4:46:00,4,Saturday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10035,8/1/2026,4:51:00,4,Saturday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10036,8/1/2026,4:55:00,4,Saturday,Americano,Beverages,2,4.25,8.5,0,8.5,0.5,1,7.5,Gift Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10036,8/1/2026,5:01:00,5,Saturday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10037,8/1/2026,5:08:00,5,Saturday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10037,8/1/2026,5:15:00,5,Saturday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10038,8/1/2026,5:16:00,5,Saturday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10038,8/1/2026,5:22:00,5,Saturday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10038,8/1/2026,5:25:00,5,Saturday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10038,8/1/2026,5:27:00,5,Saturday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10039,8/1/2026,5:30:00,5,Saturday,Cold Brew,Beverages,3,5.5,16.5,0,16.5,0.8,2.4,14.1,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10039,8/1/2026,5:38:00,5,Saturday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10040,8/1/2026,5:45:00,5,Saturday,Espresso,Beverages,2,3.5,7,0,7,0.4,0.8,6.2,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10041,8/1/2026,5:52:00,5,Saturday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Cash,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10042,8/1/2026,6:00:00,6,Saturday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10042,8/1/2026,6:06:00,6,Saturday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10042,8/1/2026,6:13:00,6,Saturday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10043,8/1/2026,6:21:00,6,Saturday,Cold Brew,Beverages,2,5.5,11,0,11,0.8,1.6,9.4,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10043,8/1/2026,6:29:00,6,Saturday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10044,8/1/2026,6:34:00,6,Saturday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10044,8/1/2026,6:37:00,6,Saturday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10045,8/1/2026,6:44:00,6,Saturday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Cash,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10045,8/1/2026,6:45:00,6,Saturday,Whole Bean Bag (12oz),Retail,1,18,18,2.7,15.3,7.5,7.5,7.8,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10045,8/1/2026,6:50:00,6,Saturday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10045,8/1/2026,6:54:00,6,Saturday,Cappuccino,Beverages,1,4.95,4.95,0.74,4.21,0.75,0.75,3.46,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10045,8/1/2026,7:01:00,7,Saturday,Almond Croissant,Bakery,2,4.5,9,0,9,1.1,2.2,6.8,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10045,8/1/2026,7:02:00,7,Saturday,Whole Bean Bag (12oz),Retail,1,18,18,2.7,15.3,7.5,7.5,7.8,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10046,8/1/2026,7:09:00,7,Saturday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10046,8/1/2026,7:13:00,7,Saturday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10046,8/1/2026,7:18:00,7,Saturday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10046,8/1/2026,7:22:00,7,Saturday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10046,8/1/2026,7:23:00,7,Saturday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10046,8/1/2026,7:27:00,7,Saturday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10046,8/1/2026,7:29:00,7,Saturday,Iced Latte,Beverages,2,5.75,11.5,0,11.5,0.9,1.8,9.7,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10046,8/1/2026,7:34:00,7,Saturday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10047,8/1/2026,7:38:00,7,Saturday,Cappuccino,Beverages,2,4.95,9.9,0,9.9,0.75,1.5,8.4,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10048,8/1/2026,7:39:00,7,Saturday,Breakfast Sandwich,Food,1,8.25,8.25,1.24,7.01,2.1,2.1,4.91,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10049,8/1/2026,7:45:00,7,Saturday,Breakfast Sandwich,Food,2,8.25,16.5,0,16.5,2.1,4.2,12.3,Cash,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10049,8/1/2026,7:53:00,7,Saturday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10049,8/1/2026,7:58:00,7,Saturday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10050,8/1/2026,8:03:00,8,Saturday,Cold Brew,Beverages,2,5.5,11,1.65,9.35,0.8,1.6,7.75,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10050,8/1/2026,8:07:00,8,Saturday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10050,8/1/2026,8:15:00,8,Saturday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10051,8/1/2026,8:21:00,8,Saturday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10052,8/1/2026,8:25:00,8,Saturday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10052,8/1/2026,8:33:00,8,Saturday,Almond Croissant,Bakery,1,4.5,4.5,0.67,3.83,1.1,1.1,2.73,Cash,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10052,8/1/2026,8:37:00,8,Saturday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10052,8/1/2026,8:43:00,8,Saturday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10053,8/1/2026,8:48:00,8,Saturday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Cash,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10054,8/1/2026,8:51:00,8,Saturday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10054,8/1/2026,8:56:00,8,Saturday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10054,8/1/2026,8:57:00,8,Saturday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Cash,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10054,8/1/2026,9:02:00,9,Saturday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10054,8/1/2026,9:03:00,9,Saturday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10054,8/1/2026,9:08:00,9,Saturday,Almond Croissant,Bakery,1,4.5,4.5,0.67,3.83,1.1,1.1,2.73,Cash,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10054,8/1/2026,9:10:00,9,Saturday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10054,8/1/2026,9:12:00,9,Saturday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10054,8/1/2026,9:16:00,9,Saturday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10055,8/1/2026,9:23:00,9,Saturday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10055,8/1/2026,9:27:00,9,Saturday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10056,8/1/2026,9:29:00,9,Saturday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Cash,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10057,8/1/2026,9:30:00,9,Saturday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10057,8/1/2026,9:34:00,9,Saturday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10057,8/1/2026,9:36:00,9,Saturday,Iced Latte,Beverages,2,5.75,11.5,0,11.5,0.9,1.8,9.7,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10058,8/1/2026,9:37:00,9,Saturday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10059,8/1/2026,9:45:00,9,Saturday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10059,8/1/2026,9:53:00,9,Saturday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10060,8/1/2026,9:58:00,9,Saturday,Cold Brew,Beverages,2,5.5,11,0,11,0.8,1.6,9.4,Cash,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10060,8/1/2026,9:59:00,9,Saturday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10060,8/1/2026,10:07:00,10,Saturday,Almond Croissant,Bakery,2,4.5,9,0,9,1.1,2.2,6.8,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10060,8/1/2026,10:14:00,10,Saturday,Almond Croissant,Bakery,2,4.5,9,0,9,1.1,2.2,6.8,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10061,8/1/2026,10:20:00,10,Saturday,Americano,Beverages,2,4.25,8.5,0,8.5,0.5,1,7.5,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10062,8/1/2026,10:28:00,10,Saturday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Gift Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10063,8/1/2026,10:30:00,10,Saturday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Cash,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10063,8/1/2026,10:31:00,10,Saturday,Blueberry Muffin,Bakery,1,3.75,3.75,0.56,3.19,0.85,0.85,2.34,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10063,8/1/2026,10:37:00,10,Saturday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10063,8/1/2026,10:42:00,10,Saturday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10063,8/1/2026,10:43:00,10,Saturday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10063,8/1/2026,10:44:00,10,Saturday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10063,8/1/2026,10:52:00,10,Saturday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10063,8/1/2026,10:57:00,10,Saturday,Almond Croissant,Bakery,3,4.5,13.5,0,13.5,1.1,3.3,10.2,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10064,8/1/2026,11:00:00,11,Saturday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10064,8/1/2026,11:05:00,11,Saturday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10065,8/1/2026,11:06:00,11,Saturday,Cappuccino,Beverages,2,4.95,9.9,0,9.9,0.75,1.5,8.4,Cash,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10065,8/1/2026,11:14:00,11,Saturday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10065,8/1/2026,11:21:00,11,Saturday,Avocado Toast,Food,2,9.5,19,0,19,2.2,4.4,14.6,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10066,8/1/2026,11:28:00,11,Saturday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10067,8/1/2026,11:35:00,11,Saturday,Iced Latte,Beverages,1,5.75,5.75,0.86,4.89,0.9,0.9,3.99,Gift Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10067,8/1/2026,11:41:00,11,Saturday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10067,8/1/2026,11:44:00,11,Saturday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10067,8/1/2026,11:50:00,11,Saturday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10067,8/1/2026,11:57:00,11,Saturday,Almond Croissant,Bakery,2,4.5,9,1.35,7.65,1.1,2.2,5.45,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10067,8/1/2026,12:01:00,12,Saturday,Cappuccino,Beverages,3,4.95,14.85,0,14.85,0.75,2.25,12.6,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10067,8/1/2026,12:03:00,12,Saturday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10068,8/1/2026,12:04:00,12,Saturday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10068,8/1/2026,12:08:00,12,Saturday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10068,8/1/2026,12:10:00,12,Saturday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10069,8/1/2026,12:13:00,12,Saturday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10069,8/1/2026,12:18:00,12,Saturday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10069,8/1/2026,12:23:00,12,Saturday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10069,8/1/2026,12:27:00,12,Saturday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10069,8/1/2026,12:32:00,12,Saturday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10070,8/1/2026,12:37:00,12,Saturday,Espresso,Beverages,2,3.5,7,0,7,0.4,0.8,6.2,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10070,8/1/2026,12:41:00,12,Saturday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10070,8/1/2026,12:44:00,12,Saturday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10070,8/1/2026,12:50:00,12,Saturday,Americano,Beverages,2,4.25,8.5,0,8.5,0.5,1,7.5,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10071,8/1/2026,12:53:00,12,Saturday,Blueberry Muffin,Bakery,2,3.75,7.5,0,7.5,0.85,1.7,5.8,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10071,8/1/2026,12:58:00,12,Saturday,Cappuccino,Beverages,2,4.95,9.9,0,9.9,0.75,1.5,8.4,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10071,8/1/2026,13:04:00,13,Saturday,Almond Croissant,Bakery,2,4.5,9,0,9,1.1,2.2,6.8,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10071,8/1/2026,13:11:00,13,Saturday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10071,8/1/2026,13:16:00,13,Saturday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10071,8/1/2026,13:23:00,13,Saturday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Cash,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10071,8/1/2026,13:29:00,13,Saturday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10071,8/1/2026,13:34:00,13,Saturday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10072,8/1/2026,13:42:00,13,Saturday,Cold Brew,Beverages,2,5.5,11,0,11,0.8,1.6,9.4,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10072,8/1/2026,13:48:00,13,Saturday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Cash,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10072,8/1/2026,13:55:00,13,Saturday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Cash,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10072,8/1/2026,13:56:00,13,Saturday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10072,8/1/2026,13:58:00,13,Saturday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10073,8/1/2026,13:59:00,13,Saturday,Cold Brew,Beverages,2,5.5,11,0,11,0.8,1.6,9.4,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10073,8/1/2026,14:01:00,14,Saturday,Whole Bean Bag (12oz),Retail,3,18,54,8.1,45.9,7.5,22.5,23.4,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10073,8/1/2026,14:05:00,14,Saturday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10073,8/1/2026,14:09:00,14,Saturday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10074,8/1/2026,14:10:00,14,Saturday,Iced Latte,Beverages,3,5.75,17.25,0,17.25,0.9,2.7,14.55,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10074,8/1/2026,14:12:00,14,Saturday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Cash,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10075,8/1/2026,14:18:00,14,Saturday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Cash,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10075,8/1/2026,14:20:00,14,Saturday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10075,8/1/2026,14:22:00,14,Saturday,Cold Brew,Beverages,2,5.5,11,1.65,9.35,0.8,1.6,7.75,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10075,8/1/2026,14:27:00,14,Saturday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10075,8/1/2026,14:34:00,14,Saturday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10075,8/1/2026,14:40:00,14,Saturday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Cash,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10076,8/1/2026,14:46:00,14,Saturday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Cash,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10077,8/1/2026,14:53:00,14,Saturday,Americano,Beverages,2,4.25,8.5,0,8.5,0.5,1,7.5,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10077,8/1/2026,14:57:00,14,Saturday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10077,8/1/2026,15:04:00,15,Saturday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10077,8/1/2026,15:07:00,15,Saturday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10078,8/1/2026,15:14:00,15,Saturday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Cash,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10078,8/1/2026,15:20:00,15,Saturday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10078,8/1/2026,15:21:00,15,Saturday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10079,8/1/2026,15:25:00,15,Saturday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10080,8/1/2026,15:31:00,15,Saturday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10080,8/1/2026,15:32:00,15,Saturday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10081,8/1/2026,15:38:00,15,Saturday,Iced Latte,Beverages,2,5.75,11.5,0,11.5,0.9,1.8,9.7,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10082,8/1/2026,15:40:00,15,Saturday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10082,8/1/2026,15:47:00,15,Saturday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10082,8/1/2026,15:49:00,15,Saturday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10083,8/1/2026,15:51:00,15,Saturday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10083,8/1/2026,15:55:00,15,Saturday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10083,8/1/2026,16:03:00,16,Saturday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10084,8/1/2026,16:04:00,16,Saturday,Cappuccino,Beverages,2,4.95,9.9,0,9.9,0.75,1.5,8.4,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10085,8/1/2026,16:09:00,16,Saturday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10085,8/1/2026,16:16:00,16,Saturday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10086,8/1/2026,16:18:00,16,Saturday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10086,8/1/2026,16:24:00,16,Saturday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10086,8/1/2026,16:26:00,16,Saturday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10087,8/1/2026,16:32:00,16,Saturday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10088,8/1/2026,16:34:00,16,Saturday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10088,8/1/2026,16:36:00,16,Saturday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10088,8/1/2026,16:42:00,16,Saturday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10088,8/1/2026,16:45:00,16,Saturday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Gift Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10088,8/1/2026,16:53:00,16,Saturday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10088,8/1/2026,16:59:00,16,Saturday,Avocado Toast,Food,1,9.5,9.5,1.43,8.07,2.2,2.2,5.87,Cash,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10088,8/1/2026,17:04:00,17,Saturday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10088,8/1/2026,17:12:00,17,Saturday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10088,8/1/2026,17:14:00,17,Saturday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10088,8/1/2026,17:15:00,17,Saturday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10088,8/1/2026,17:18:00,17,Saturday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10088,8/1/2026,17:20:00,17,Saturday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10089,8/1/2026,17:23:00,17,Saturday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10089,8/1/2026,17:24:00,17,Saturday,Avocado Toast,Food,1,9.5,9.5,1.43,8.07,2.2,2.2,5.87,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10090,8/1/2026,17:31:00,17,Saturday,Whole Bean Bag (12oz),Retail,2,18,36,0,36,7.5,15,21,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10090,8/1/2026,17:34:00,17,Saturday,Cappuccino,Beverages,2,4.95,9.9,0,9.9,0.75,1.5,8.4,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10090,8/1/2026,17:37:00,17,Saturday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10090,8/1/2026,17:40:00,17,Saturday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Cash,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10091,8/1/2026,17:46:00,17,Saturday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Cash,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10092,8/1/2026,17:50:00,17,Saturday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Cash,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10092,8/1/2026,17:51:00,17,Saturday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10092,8/1/2026,17:54:00,17,Saturday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10092,8/1/2026,17:55:00,17,Saturday,Cold Brew,Beverages,2,5.5,11,0,11,0.8,1.6,9.4,Cash,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10093,8/2/2026,7:00:00,7,Sunday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10094,8/2/2026,7:04:00,7,Sunday,Whole Bean Bag (12oz),Retail,3,18,54,0,54,7.5,22.5,31.5,Cash,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10094,8/2/2026,7:11:00,7,Sunday,Breakfast Sandwich,Food,2,8.25,16.5,0,16.5,2.1,4.2,12.3,Cash,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10094,8/2/2026,7:14:00,7,Sunday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Cash,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10094,8/2/2026,7:16:00,7,Sunday,Blueberry Muffin,Bakery,2,3.75,7.5,0,7.5,0.85,1.7,5.8,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10094,8/2/2026,7:21:00,7,Sunday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10094,8/2/2026,7:29:00,7,Sunday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Cash,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10095,8/2/2026,7:33:00,7,Sunday,Americano,Beverages,1,4.25,4.25,0.64,3.61,0.5,0.5,3.11,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10095,8/2/2026,7:39:00,7,Sunday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10095,8/2/2026,7:42:00,7,Sunday,Almond Croissant,Bakery,1,4.5,4.5,0.67,3.83,1.1,1.1,2.73,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10096,8/2/2026,7:43:00,7,Sunday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Cash,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10097,8/2/2026,7:50:00,7,Sunday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10097,8/2/2026,7:57:00,7,Sunday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10097,8/2/2026,7:58:00,7,Sunday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10097,8/2/2026,7:59:00,7,Sunday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10097,8/2/2026,8:01:00,8,Sunday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Gift Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10098,8/2/2026,8:02:00,8,Sunday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10098,8/2/2026,8:07:00,8,Sunday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10098,8/2/2026,8:09:00,8,Sunday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Cash,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10098,8/2/2026,8:12:00,8,Sunday,Almond Croissant,Bakery,3,4.5,13.5,0,13.5,1.1,3.3,10.2,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10099,8/2/2026,8:15:00,8,Sunday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10100,8/2/2026,8:16:00,8,Sunday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10101,8/2/2026,8:24:00,8,Sunday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10102,8/2/2026,8:30:00,8,Sunday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10103,8/2/2026,8:37:00,8,Sunday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10103,8/2/2026,8:42:00,8,Sunday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10104,8/2/2026,8:47:00,8,Sunday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Cash,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10105,8/2/2026,8:54:00,8,Sunday,Almond Croissant,Bakery,1,4.5,4.5,0.67,3.83,1.1,1.1,2.73,Cash,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10106,8/2/2026,9:01:00,9,Sunday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10106,8/2/2026,9:04:00,9,Sunday,Iced Latte,Beverages,2,5.75,11.5,0,11.5,0.9,1.8,9.7,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10107,8/2/2026,9:05:00,9,Sunday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10107,8/2/2026,9:06:00,9,Sunday,Almond Croissant,Bakery,2,4.5,9,0,9,1.1,2.2,6.8,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10107,8/2/2026,9:09:00,9,Sunday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10107,8/2/2026,9:10:00,9,Sunday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10107,8/2/2026,9:15:00,9,Sunday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Cash,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10108,8/2/2026,9:23:00,9,Sunday,Iced Latte,Beverages,2,5.75,11.5,0,11.5,0.9,1.8,9.7,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10108,8/2/2026,9:31:00,9,Sunday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10108,8/2/2026,9:36:00,9,Sunday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10108,8/2/2026,9:39:00,9,Sunday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10108,8/2/2026,9:43:00,9,Sunday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10108,8/2/2026,9:46:00,9,Sunday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10108,8/2/2026,9:54:00,9,Sunday,Breakfast Sandwich,Food,2,8.25,16.5,2.48,14.02,2.1,4.2,9.82,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10108,8/2/2026,9:56:00,9,Sunday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10108,8/2/2026,9:59:00,9,Sunday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10108,8/2/2026,10:01:00,10,Sunday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10109,8/2/2026,10:05:00,10,Sunday,Blueberry Muffin,Bakery,2,3.75,7.5,0,7.5,0.85,1.7,5.8,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10109,8/2/2026,10:09:00,10,Sunday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10109,8/2/2026,10:11:00,10,Sunday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10109,8/2/2026,10:17:00,10,Sunday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10109,8/2/2026,10:18:00,10,Sunday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10109,8/2/2026,10:25:00,10,Sunday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10109,8/2/2026,10:30:00,10,Sunday,Breakfast Sandwich,Food,1,8.25,8.25,1.24,7.01,2.1,2.1,4.91,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10109,8/2/2026,10:33:00,10,Sunday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10109,8/2/2026,10:39:00,10,Sunday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10109,8/2/2026,10:42:00,10,Sunday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10110,8/2/2026,10:44:00,10,Sunday,Cold Brew,Beverages,1,5.5,5.5,0.82,4.68,0.8,0.8,3.88,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10111,8/2/2026,10:51:00,10,Sunday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10112,8/2/2026,10:57:00,10,Sunday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10112,8/2/2026,11:02:00,11,Sunday,Americano,Beverages,2,4.25,8.5,0,8.5,0.5,1,7.5,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10112,8/2/2026,11:06:00,11,Sunday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Gift Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10113,8/2/2026,11:14:00,11,Sunday,Espresso,Beverages,2,3.5,7,0,7,0.4,0.8,6.2,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10113,8/2/2026,11:20:00,11,Sunday,Avocado Toast,Food,1,9.5,9.5,1.43,8.07,2.2,2.2,5.87,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10114,8/2/2026,11:24:00,11,Sunday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10114,8/2/2026,11:29:00,11,Sunday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10115,8/2/2026,11:36:00,11,Sunday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10115,8/2/2026,11:40:00,11,Sunday,Breakfast Sandwich,Food,1,8.25,8.25,1.24,7.01,2.1,2.1,4.91,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10115,8/2/2026,11:46:00,11,Sunday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10116,8/2/2026,11:49:00,11,Sunday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Cash,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10116,8/2/2026,11:54:00,11,Sunday,Blueberry Muffin,Bakery,2,3.75,7.5,0,7.5,0.85,1.7,5.8,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10116,8/2/2026,11:59:00,11,Sunday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10116,8/2/2026,12:04:00,12,Sunday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10116,8/2/2026,12:08:00,12,Sunday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10117,8/2/2026,12:15:00,12,Sunday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10118,8/2/2026,12:19:00,12,Sunday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10118,8/2/2026,12:26:00,12,Sunday,Whole Bean Bag (12oz),Retail,2,18,36,0,36,7.5,15,21,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10118,8/2/2026,12:27:00,12,Sunday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10118,8/2/2026,12:35:00,12,Sunday,Avocado Toast,Food,2,9.5,19,0,19,2.2,4.4,14.6,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10118,8/2/2026,12:41:00,12,Sunday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10118,8/2/2026,12:46:00,12,Sunday,Cold Brew,Beverages,2,5.5,11,0,11,0.8,1.6,9.4,Cash,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10118,8/2/2026,12:50:00,12,Sunday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10119,8/2/2026,12:55:00,12,Sunday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10119,8/2/2026,13:01:00,13,Sunday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10120,8/2/2026,13:03:00,13,Sunday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10120,8/2/2026,13:07:00,13,Sunday,Cappuccino,Beverages,2,4.95,9.9,0,9.9,0.75,1.5,8.4,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10120,8/2/2026,13:09:00,13,Sunday,Whole Bean Bag (12oz),Retail,1,18,18,2.7,15.3,7.5,7.5,7.8,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10120,8/2/2026,13:13:00,13,Sunday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10120,8/2/2026,13:15:00,13,Sunday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10120,8/2/2026,13:22:00,13,Sunday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10121,8/2/2026,13:28:00,13,Sunday,Espresso,Beverages,2,3.5,7,1.05,5.95,0.4,0.8,5.15,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10121,8/2/2026,13:32:00,13,Sunday,Espresso,Beverages,2,3.5,7,0,7,0.4,0.8,6.2,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10121,8/2/2026,13:33:00,13,Sunday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Cash,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10121,8/2/2026,13:38:00,13,Sunday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10121,8/2/2026,13:43:00,13,Sunday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10122,8/2/2026,13:51:00,13,Sunday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10122,8/2/2026,13:56:00,13,Sunday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10123,8/2/2026,14:00:00,14,Sunday,Breakfast Sandwich,Food,2,8.25,16.5,0,16.5,2.1,4.2,12.3,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10123,8/2/2026,14:07:00,14,Sunday,Iced Latte,Beverages,3,5.75,17.25,0,17.25,0.9,2.7,14.55,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10124,8/2/2026,14:08:00,14,Sunday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10124,8/2/2026,14:13:00,14,Sunday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10125,8/2/2026,14:17:00,14,Sunday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10125,8/2/2026,14:22:00,14,Sunday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10126,8/2/2026,14:30:00,14,Sunday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10126,8/2/2026,14:34:00,14,Sunday,Whole Bean Bag (12oz),Retail,2,18,36,5.4,30.6,7.5,15,15.6,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10127,8/2/2026,14:40:00,14,Sunday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10127,8/2/2026,14:44:00,14,Sunday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10127,8/2/2026,14:46:00,14,Sunday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Cash,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10127,8/2/2026,14:47:00,14,Sunday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10127,8/2/2026,14:55:00,14,Sunday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10127,8/2/2026,14:59:00,14,Sunday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10127,8/2/2026,15:00:00,15,Sunday,Americano,Beverages,3,4.25,12.75,0,12.75,0.5,1.5,11.25,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10128,8/2/2026,15:07:00,15,Sunday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10129,8/2/2026,15:14:00,15,Sunday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10130,8/2/2026,15:21:00,15,Sunday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Cash,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10130,8/2/2026,15:24:00,15,Sunday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10130,8/2/2026,15:25:00,15,Sunday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10130,8/2/2026,15:32:00,15,Sunday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10131,8/2/2026,15:34:00,15,Sunday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10132,8/2/2026,15:38:00,15,Sunday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10133,8/2/2026,15:39:00,15,Sunday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Cash,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10134,8/2/2026,15:40:00,15,Sunday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10134,8/2/2026,15:46:00,15,Sunday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Cash,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10134,8/2/2026,15:50:00,15,Sunday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Cash,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10134,8/2/2026,15:53:00,15,Sunday,Breakfast Sandwich,Food,1,8.25,8.25,1.24,7.01,2.1,2.1,4.91,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10134,8/2/2026,16:00:00,16,Sunday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10135,8/2/2026,16:07:00,16,Sunday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10135,8/2/2026,16:10:00,16,Sunday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10136,8/2/2026,16:13:00,16,Sunday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10137,8/2/2026,16:19:00,16,Sunday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10137,8/2/2026,16:20:00,16,Sunday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10137,8/2/2026,16:24:00,16,Sunday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10137,8/2/2026,16:28:00,16,Sunday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10138,8/2/2026,16:32:00,16,Sunday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10138,8/2/2026,16:40:00,16,Sunday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10139,8/2/2026,16:48:00,16,Sunday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10140,8/2/2026,16:54:00,16,Sunday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10141,8/2/2026,16:55:00,16,Sunday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10142,8/2/2026,16:59:00,16,Sunday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10143,8/2/2026,17:05:00,17,Sunday,Almond Croissant,Bakery,2,4.5,9,0,9,1.1,2.2,6.8,Cash,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10144,8/2/2026,17:13:00,17,Sunday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10144,8/2/2026,17:16:00,17,Sunday,Blueberry Muffin,Bakery,3,3.75,11.25,0,11.25,0.85,2.55,8.7,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10144,8/2/2026,17:17:00,17,Sunday,Americano,Beverages,2,4.25,8.5,0,8.5,0.5,1,7.5,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10145,8/2/2026,17:24:00,17,Sunday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10146,8/2/2026,17:32:00,17,Sunday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10147,8/2/2026,17:40:00,17,Sunday,Blueberry Muffin,Bakery,1,3.75,3.75,0.56,3.19,0.85,0.85,2.34,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10147,8/2/2026,17:45:00,17,Sunday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Gift Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10147,8/2/2026,17:52:00,17,Sunday,Iced Latte,Beverages,1,5.75,5.75,0.86,4.89,0.9,0.9,3.99,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10148,8/2/2026,17:56:00,17,Sunday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10149,8/2/2026,17:58:00,17,Sunday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10150,8/3/2026,7:00:00,7,Monday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10150,8/3/2026,7:02:00,7,Monday,Breakfast Sandwich,Food,1,8.25,8.25,1.24,7.01,2.1,2.1,4.91,Cash,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10151,8/3/2026,7:05:00,7,Monday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Cash,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10152,8/3/2026,7:06:00,7,Monday,Whole Bean Bag (12oz),Retail,1,18,18,2.7,15.3,7.5,7.5,7.8,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10152,8/3/2026,7:11:00,7,Monday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Apple Pay,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10152,8/3/2026,7:12:00,7,Monday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Apple Pay,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10153,8/3/2026,7:14:00,7,Monday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10154,8/3/2026,7:20:00,7,Monday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Cash,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10155,8/3/2026,7:26:00,7,Monday,Breakfast Sandwich,Food,1,8.25,8.25,1.24,7.01,2.1,2.1,4.91,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10155,8/3/2026,7:33:00,7,Monday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Apple Pay,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10156,8/3/2026,7:41:00,7,Monday,Blueberry Muffin,Bakery,2,3.75,7.5,0,7.5,0.85,1.7,5.8,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10157,8/3/2026,7:48:00,7,Monday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Cash,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10158,8/3/2026,7:50:00,7,Monday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10159,8/3/2026,7:57:00,7,Monday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10159,8/3/2026,8:03:00,8,Monday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Cash,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10160,8/3/2026,8:10:00,8,Monday,Americano,Beverages,1,4.25,4.25,0.64,3.61,0.5,0.5,3.11,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10160,8/3/2026,8:16:00,8,Monday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10160,8/3/2026,8:20:00,8,Monday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Cash,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10161,8/3/2026,8:25:00,8,Monday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Cash,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10161,8/3/2026,8:30:00,8,Monday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Apple Pay,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10161,8/3/2026,8:38:00,8,Monday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Apple Pay,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10162,8/3/2026,8:45:00,8,Monday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10162,8/3/2026,8:51:00,8,Monday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10162,8/3/2026,8:55:00,8,Monday,Iced Latte,Beverages,2,5.75,11.5,0,11.5,0.9,1.8,9.7,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10162,8/3/2026,9:03:00,9,Monday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Apple Pay,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10163,8/3/2026,9:09:00,9,Monday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Apple Pay,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10163,8/3/2026,9:10:00,9,Monday,Almond Croissant,Bakery,2,4.5,9,0,9,1.1,2.2,6.8,Apple Pay,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10163,8/3/2026,9:12:00,9,Monday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Apple Pay,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10164,8/3/2026,9:16:00,9,Monday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10164,8/3/2026,9:24:00,9,Monday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10164,8/3/2026,9:31:00,9,Monday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10165,8/3/2026,9:33:00,9,Monday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10165,8/3/2026,9:34:00,9,Monday,Breakfast Sandwich,Food,2,8.25,16.5,0,16.5,2.1,4.2,12.3,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10166,8/3/2026,9:36:00,9,Monday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Cash,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10166,8/3/2026,9:40:00,9,Monday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10167,8/3/2026,9:43:00,9,Monday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10167,8/3/2026,9:45:00,9,Monday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10168,8/3/2026,9:53:00,9,Monday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Apple Pay,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10169,8/3/2026,9:55:00,9,Monday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Apple Pay,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10169,8/3/2026,9:58:00,9,Monday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10169,8/3/2026,10:05:00,10,Monday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10170,8/3/2026,10:12:00,10,Monday,Whole Bean Bag (12oz),Retail,2,18,36,0,36,7.5,15,21,Apple Pay,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10171,8/3/2026,10:19:00,10,Monday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10171,8/3/2026,10:21:00,10,Monday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Apple Pay,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10172,8/3/2026,10:23:00,10,Monday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Apple Pay,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10172,8/3/2026,10:30:00,10,Monday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10172,8/3/2026,10:33:00,10,Monday,Cappuccino,Beverages,2,4.95,9.9,0,9.9,0.75,1.5,8.4,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10173,8/3/2026,10:36:00,10,Monday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Gift Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10173,8/3/2026,10:39:00,10,Monday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10173,8/3/2026,10:42:00,10,Monday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10173,8/3/2026,10:45:00,10,Monday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Apple Pay,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10173,8/3/2026,10:46:00,10,Monday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Cash,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10173,8/3/2026,10:54:00,10,Monday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Gift Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10174,8/3/2026,10:57:00,10,Monday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Apple Pay,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10175,8/3/2026,11:02:00,11,Monday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10175,8/3/2026,11:10:00,11,Monday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10175,8/3/2026,11:16:00,11,Monday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Apple Pay,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10176,8/3/2026,11:23:00,11,Monday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Apple Pay,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10177,8/3/2026,11:28:00,11,Monday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10177,8/3/2026,11:32:00,11,Monday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Cash,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10178,8/3/2026,11:39:00,11,Monday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10178,8/3/2026,11:45:00,11,Monday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10179,8/3/2026,11:50:00,11,Monday,Cappuccino,Beverages,2,4.95,9.9,0,9.9,0.75,1.5,8.4,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10180,8/3/2026,11:52:00,11,Monday,Breakfast Sandwich,Food,2,8.25,16.5,0,16.5,2.1,4.2,12.3,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10180,8/3/2026,11:55:00,11,Monday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10180,8/3/2026,12:02:00,12,Monday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10181,8/3/2026,12:10:00,12,Monday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10181,8/3/2026,12:16:00,12,Monday,Almond Croissant,Bakery,1,4.5,4.5,0.67,3.83,1.1,1.1,2.73,Apple Pay,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10181,8/3/2026,12:18:00,12,Monday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Apple Pay,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10182,8/3/2026,12:25:00,12,Monday,Breakfast Sandwich,Food,2,8.25,16.5,0,16.5,2.1,4.2,12.3,Apple Pay,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10183,8/3/2026,12:30:00,12,Monday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Cash,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10184,8/3/2026,12:31:00,12,Monday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10184,8/3/2026,12:39:00,12,Monday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10185,8/3/2026,12:44:00,12,Monday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Cash,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10185,8/3/2026,12:50:00,12,Monday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10185,8/3/2026,12:54:00,12,Monday,Americano,Beverages,1,4.25,4.25,0.64,3.61,0.5,0.5,3.11,Cash,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10186,8/3/2026,12:56:00,12,Monday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10186,8/3/2026,13:02:00,13,Monday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Cash,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10187,8/3/2026,13:09:00,13,Monday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10188,8/3/2026,13:12:00,13,Monday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Cash,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10188,8/3/2026,13:13:00,13,Monday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10188,8/3/2026,13:16:00,13,Monday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Gift Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10189,8/3/2026,13:18:00,13,Monday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10189,8/3/2026,13:24:00,13,Monday,Cold Brew,Beverages,1,5.5,5.5,0.82,4.68,0.8,0.8,3.88,Apple Pay,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10189,8/3/2026,13:29:00,13,Monday,Espresso,Beverages,2,3.5,7,0,7,0.4,0.8,6.2,Cash,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10189,8/3/2026,13:33:00,13,Monday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10189,8/3/2026,13:34:00,13,Monday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Apple Pay,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10189,8/3/2026,13:36:00,13,Monday,Espresso,Beverages,3,3.5,10.5,0,10.5,0.4,1.2,9.3,Apple Pay,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10189,8/3/2026,13:43:00,13,Monday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10189,8/3/2026,13:51:00,13,Monday,Americano,Beverages,1,4.25,4.25,0.64,3.61,0.5,0.5,3.11,Apple Pay,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10190,8/3/2026,13:55:00,13,Monday,Espresso,Beverages,2,3.5,7,0,7,0.4,0.8,6.2,Apple Pay,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10190,8/3/2026,14:02:00,14,Monday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Cash,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10191,8/3/2026,14:05:00,14,Monday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10192,8/3/2026,14:11:00,14,Monday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10193,8/3/2026,14:12:00,14,Monday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Cash,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10193,8/3/2026,14:17:00,14,Monday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Cash,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10194,8/3/2026,14:18:00,14,Monday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10195,8/3/2026,14:23:00,14,Monday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Apple Pay,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10195,8/3/2026,14:25:00,14,Monday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10196,8/3/2026,14:27:00,14,Monday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10197,8/3/2026,14:33:00,14,Monday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10198,8/3/2026,14:35:00,14,Monday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10199,8/3/2026,14:39:00,14,Monday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Apple Pay,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10200,8/3/2026,14:46:00,14,Monday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10200,8/3/2026,14:48:00,14,Monday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Gift Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10200,8/3/2026,14:52:00,14,Monday,Espresso,Beverages,2,3.5,7,1.05,5.95,0.4,0.8,5.15,Gift Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10200,8/3/2026,14:57:00,14,Monday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Apple Pay,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10201,8/3/2026,15:03:00,15,Monday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10202,8/3/2026,15:11:00,15,Monday,Almond Croissant,Bakery,3,4.5,13.5,0,13.5,1.1,3.3,10.2,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10203,8/3/2026,15:15:00,15,Monday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Apple Pay,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10203,8/3/2026,15:16:00,15,Monday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Apple Pay,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10204,8/3/2026,15:21:00,15,Monday,Blueberry Muffin,Bakery,3,3.75,11.25,0,11.25,0.85,2.55,8.7,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10204,8/3/2026,15:24:00,15,Monday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Cash,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10204,8/3/2026,15:31:00,15,Monday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Apple Pay,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10204,8/3/2026,15:33:00,15,Monday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Cash,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10205,8/3/2026,15:36:00,15,Monday,Cappuccino,Beverages,2,4.95,9.9,0,9.9,0.75,1.5,8.4,Apple Pay,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10206,8/3/2026,15:42:00,15,Monday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Apple Pay,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10207,8/3/2026,15:44:00,15,Monday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10207,8/3/2026,15:50:00,15,Monday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Cash,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10208,8/3/2026,15:52:00,15,Monday,Cappuccino,Beverages,2,4.95,9.9,0,9.9,0.75,1.5,8.4,Cash,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10208,8/3/2026,15:56:00,15,Monday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10208,8/3/2026,16:03:00,16,Monday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10208,8/3/2026,16:10:00,16,Monday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10208,8/3/2026,16:12:00,16,Monday,Iced Latte,Beverages,1,5.75,5.75,0.86,4.89,0.9,0.9,3.99,Apple Pay,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10209,8/3/2026,16:15:00,16,Monday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Gift Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10209,8/3/2026,16:17:00,16,Monday,Cappuccino,Beverages,2,4.95,9.9,1.49,8.41,0.75,1.5,6.91,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10209,8/3/2026,16:21:00,16,Monday,Almond Croissant,Bakery,1,4.5,4.5,0.67,3.83,1.1,1.1,2.73,Apple Pay,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10210,8/3/2026,16:23:00,16,Monday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10210,8/3/2026,16:30:00,16,Monday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Cash,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10211,8/3/2026,16:33:00,16,Monday,Almond Croissant,Bakery,2,4.5,9,1.35,7.65,1.1,2.2,5.45,Apple Pay,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10211,8/3/2026,16:37:00,16,Monday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Apple Pay,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10212,8/3/2026,16:39:00,16,Monday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10212,8/3/2026,16:43:00,16,Monday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10212,8/3/2026,16:49:00,16,Monday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10213,8/3/2026,16:56:00,16,Monday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10213,8/3/2026,16:57:00,16,Monday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Cash,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10214,8/3/2026,17:00:00,17,Monday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Apple Pay,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10214,8/3/2026,17:01:00,17,Monday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Gift Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10214,8/3/2026,17:07:00,17,Monday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Gift Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10214,8/3/2026,17:13:00,17,Monday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Apple Pay,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10214,8/3/2026,17:16:00,17,Monday,Cold Brew,Beverages,2,5.5,11,0,11,0.8,1.6,9.4,Apple Pay,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10215,8/3/2026,17:21:00,17,Monday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Cash,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10215,8/3/2026,17:22:00,17,Monday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Apple Pay,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10215,8/3/2026,17:28:00,17,Monday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10215,8/3/2026,17:31:00,17,Monday,Blueberry Muffin,Bakery,2,3.75,7.5,0,7.5,0.85,1.7,5.8,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10215,8/3/2026,17:38:00,17,Monday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10215,8/3/2026,17:45:00,17,Monday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Cash,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10216,8/3/2026,17:51:00,17,Monday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Apple Pay,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10217,8/3/2026,17:56:00,17,Monday,Espresso,Beverages,2,3.5,7,0,7,0.4,0.8,6.2,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10218,8/3/2026,17:57:00,17,Monday,Avocado Toast,Food,2,9.5,19,0,19,2.2,4.4,14.6,Apple Pay,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10218,8/3/2026,17:59:00,17,Monday,Iced Latte,Beverages,1,5.75,5.75,0.86,4.89,0.9,0.9,3.99,Apple Pay,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10219,8/4/2026,7:00:00,7,Tuesday,Americano,Beverages,2,4.25,8.5,0,8.5,0.5,1,7.5,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10219,8/4/2026,7:06:00,7,Tuesday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10219,8/4/2026,7:11:00,7,Tuesday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10219,8/4/2026,7:14:00,7,Tuesday,Almond Croissant,Bakery,2,4.5,9,0,9,1.1,2.2,6.8,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10219,8/4/2026,7:16:00,7,Tuesday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10220,8/4/2026,7:24:00,7,Tuesday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10221,8/4/2026,7:26:00,7,Tuesday,Breakfast Sandwich,Food,1,8.25,8.25,1.24,7.01,2.1,2.1,4.91,Cash,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10221,8/4/2026,7:32:00,7,Tuesday,Whole Bean Bag (12oz),Retail,2,18,36,0,36,7.5,15,21,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10221,8/4/2026,7:35:00,7,Tuesday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10221,8/4/2026,7:39:00,7,Tuesday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Cash,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10222,8/4/2026,7:44:00,7,Tuesday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10223,8/4/2026,7:47:00,7,Tuesday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10224,8/4/2026,7:55:00,7,Tuesday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10224,8/4/2026,8:03:00,8,Tuesday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10225,8/4/2026,8:08:00,8,Tuesday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10226,8/4/2026,8:14:00,8,Tuesday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10226,8/4/2026,8:19:00,8,Tuesday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10226,8/4/2026,8:25:00,8,Tuesday,Breakfast Sandwich,Food,3,8.25,24.75,0,24.75,2.1,6.3,18.45,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10226,8/4/2026,8:26:00,8,Tuesday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10226,8/4/2026,8:30:00,8,Tuesday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10227,8/4/2026,8:33:00,8,Tuesday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10228,8/4/2026,8:37:00,8,Tuesday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10228,8/4/2026,8:40:00,8,Tuesday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10229,8/4/2026,8:42:00,8,Tuesday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Cash,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10229,8/4/2026,8:50:00,8,Tuesday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10230,8/4/2026,8:57:00,8,Tuesday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10230,8/4/2026,8:59:00,8,Tuesday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10231,8/4/2026,9:06:00,9,Tuesday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10231,8/4/2026,9:11:00,9,Tuesday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10231,8/4/2026,9:18:00,9,Tuesday,Avocado Toast,Food,1,9.5,9.5,1.43,8.07,2.2,2.2,5.87,Cash,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10231,8/4/2026,9:23:00,9,Tuesday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Cash,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10231,8/4/2026,9:28:00,9,Tuesday,Americano,Beverages,3,4.25,12.75,0,12.75,0.5,1.5,11.25,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10231,8/4/2026,9:36:00,9,Tuesday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Cash,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10232,8/4/2026,9:38:00,9,Tuesday,Cold Brew,Beverages,2,5.5,11,0,11,0.8,1.6,9.4,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10232,8/4/2026,9:44:00,9,Tuesday,Blueberry Muffin,Bakery,1,3.75,3.75,0.56,3.19,0.85,0.85,2.34,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10233,8/4/2026,9:51:00,9,Tuesday,Blueberry Muffin,Bakery,2,3.75,7.5,1.12,6.38,0.85,1.7,4.68,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10233,8/4/2026,9:55:00,9,Tuesday,Cold Brew,Beverages,1,5.5,5.5,0.82,4.68,0.8,0.8,3.88,Gift Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10234,8/4/2026,9:59:00,9,Tuesday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10235,8/4/2026,10:00:00,10,Tuesday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10236,8/4/2026,10:06:00,10,Tuesday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10237,8/4/2026,10:07:00,10,Tuesday,Iced Latte,Beverages,2,5.75,11.5,0,11.5,0.9,1.8,9.7,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10237,8/4/2026,10:11:00,10,Tuesday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10237,8/4/2026,10:12:00,10,Tuesday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10238,8/4/2026,10:16:00,10,Tuesday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10238,8/4/2026,10:23:00,10,Tuesday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10238,8/4/2026,10:30:00,10,Tuesday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10239,8/4/2026,10:35:00,10,Tuesday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10239,8/4/2026,10:41:00,10,Tuesday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10240,8/4/2026,10:46:00,10,Tuesday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10240,8/4/2026,10:53:00,10,Tuesday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Cash,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10240,8/4/2026,10:58:00,10,Tuesday,Breakfast Sandwich,Food,1,8.25,8.25,1.24,7.01,2.1,2.1,4.91,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10241,8/4/2026,11:02:00,11,Tuesday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10241,8/4/2026,11:08:00,11,Tuesday,Iced Latte,Beverages,2,5.75,11.5,0,11.5,0.9,1.8,9.7,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10242,8/4/2026,11:13:00,11,Tuesday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10242,8/4/2026,11:16:00,11,Tuesday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10242,8/4/2026,11:21:00,11,Tuesday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10242,8/4/2026,11:23:00,11,Tuesday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10242,8/4/2026,11:27:00,11,Tuesday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10242,8/4/2026,11:30:00,11,Tuesday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10243,8/4/2026,11:33:00,11,Tuesday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10244,8/4/2026,11:36:00,11,Tuesday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10244,8/4/2026,11:39:00,11,Tuesday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10244,8/4/2026,11:46:00,11,Tuesday,Almond Croissant,Bakery,1,4.5,4.5,0.67,3.83,1.1,1.1,2.73,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10244,8/4/2026,11:52:00,11,Tuesday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10244,8/4/2026,11:53:00,11,Tuesday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10245,8/4/2026,11:56:00,11,Tuesday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10245,8/4/2026,12:01:00,12,Tuesday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10245,8/4/2026,12:08:00,12,Tuesday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10246,8/4/2026,12:12:00,12,Tuesday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10246,8/4/2026,12:16:00,12,Tuesday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Cash,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10247,8/4/2026,12:17:00,12,Tuesday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Cash,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10247,8/4/2026,12:18:00,12,Tuesday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10248,8/4/2026,12:25:00,12,Tuesday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10249,8/4/2026,12:26:00,12,Tuesday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10249,8/4/2026,12:29:00,12,Tuesday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10249,8/4/2026,12:31:00,12,Tuesday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10250,8/4/2026,12:35:00,12,Tuesday,Breakfast Sandwich,Food,1,8.25,8.25,1.24,7.01,2.1,2.1,4.91,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10250,8/4/2026,12:39:00,12,Tuesday,Almond Croissant,Bakery,1,4.5,4.5,0.67,3.83,1.1,1.1,2.73,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10250,8/4/2026,12:41:00,12,Tuesday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10250,8/4/2026,12:43:00,12,Tuesday,Americano,Beverages,2,4.25,8.5,0,8.5,0.5,1,7.5,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10251,8/4/2026,12:48:00,12,Tuesday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10252,8/4/2026,12:53:00,12,Tuesday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10252,8/4/2026,12:54:00,12,Tuesday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10252,8/4/2026,12:59:00,12,Tuesday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10252,8/4/2026,13:06:00,13,Tuesday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10252,8/4/2026,13:13:00,13,Tuesday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10253,8/4/2026,13:16:00,13,Tuesday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Cash,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10253,8/4/2026,13:19:00,13,Tuesday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10253,8/4/2026,13:22:00,13,Tuesday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10254,8/4/2026,13:24:00,13,Tuesday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10254,8/4/2026,13:28:00,13,Tuesday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10254,8/4/2026,13:30:00,13,Tuesday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10255,8/4/2026,13:37:00,13,Tuesday,Blueberry Muffin,Bakery,2,3.75,7.5,0,7.5,0.85,1.7,5.8,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10255,8/4/2026,13:40:00,13,Tuesday,Almond Croissant,Bakery,2,4.5,9,0,9,1.1,2.2,6.8,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10256,8/4/2026,13:48:00,13,Tuesday,Avocado Toast,Food,3,9.5,28.5,4.27,24.23,2.2,6.6,17.63,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10256,8/4/2026,13:55:00,13,Tuesday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10257,8/4/2026,14:03:00,14,Tuesday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10258,8/4/2026,14:04:00,14,Tuesday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10258,8/4/2026,14:09:00,14,Tuesday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10258,8/4/2026,14:15:00,14,Tuesday,Cold Brew,Beverages,2,5.5,11,0,11,0.8,1.6,9.4,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10258,8/4/2026,14:23:00,14,Tuesday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Cash,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10259,8/4/2026,14:27:00,14,Tuesday,Avocado Toast,Food,2,9.5,19,0,19,2.2,4.4,14.6,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10259,8/4/2026,14:33:00,14,Tuesday,Espresso,Beverages,2,3.5,7,0,7,0.4,0.8,6.2,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10260,8/4/2026,14:40:00,14,Tuesday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10260,8/4/2026,14:44:00,14,Tuesday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10260,8/4/2026,14:45:00,14,Tuesday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10260,8/4/2026,14:48:00,14,Tuesday,Espresso,Beverages,1,3.5,3.5,0.53,2.97,0.4,0.4,2.57,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10260,8/4/2026,14:56:00,14,Tuesday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10261,8/4/2026,14:58:00,14,Tuesday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10261,8/4/2026,15:05:00,15,Tuesday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10261,8/4/2026,15:13:00,15,Tuesday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10261,8/4/2026,15:18:00,15,Tuesday,Blueberry Muffin,Bakery,2,3.75,7.5,0,7.5,0.85,1.7,5.8,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10262,8/4/2026,15:22:00,15,Tuesday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10262,8/4/2026,15:25:00,15,Tuesday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10262,8/4/2026,15:27:00,15,Tuesday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10262,8/4/2026,15:34:00,15,Tuesday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10263,8/4/2026,15:36:00,15,Tuesday,Iced Latte,Beverages,1,5.75,5.75,0.86,4.89,0.9,0.9,3.99,Gift Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10263,8/4/2026,15:39:00,15,Tuesday,Cappuccino,Beverages,1,4.95,4.95,0.74,4.21,0.75,0.75,3.46,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10263,8/4/2026,15:43:00,15,Tuesday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10263,8/4/2026,15:47:00,15,Tuesday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10263,8/4/2026,15:52:00,15,Tuesday,Espresso,Beverages,2,3.5,7,0,7,0.4,0.8,6.2,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10263,8/4/2026,15:58:00,15,Tuesday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10263,8/4/2026,16:06:00,16,Tuesday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10263,8/4/2026,16:10:00,16,Tuesday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10264,8/4/2026,16:12:00,16,Tuesday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10265,8/4/2026,16:19:00,16,Tuesday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10266,8/4/2026,16:20:00,16,Tuesday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Cash,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10266,8/4/2026,16:21:00,16,Tuesday,Whole Bean Bag (12oz),Retail,2,18,36,0,36,7.5,15,21,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10267,8/4/2026,16:27:00,16,Tuesday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10267,8/4/2026,16:29:00,16,Tuesday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10268,8/4/2026,16:35:00,16,Tuesday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Gift Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10268,8/4/2026,16:39:00,16,Tuesday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10269,8/4/2026,16:40:00,16,Tuesday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10269,8/4/2026,16:44:00,16,Tuesday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Cash,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10270,8/4/2026,16:51:00,16,Tuesday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Cash,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10270,8/4/2026,16:59:00,16,Tuesday,Cappuccino,Beverages,2,4.95,9.9,0,9.9,0.75,1.5,8.4,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10270,8/4/2026,17:01:00,17,Tuesday,Iced Latte,Beverages,3,5.75,17.25,0,17.25,0.9,2.7,14.55,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10270,8/4/2026,17:02:00,17,Tuesday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10270,8/4/2026,17:09:00,17,Tuesday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10270,8/4/2026,17:16:00,17,Tuesday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Cash,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10271,8/4/2026,17:22:00,17,Tuesday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10271,8/4/2026,17:24:00,17,Tuesday,Cold Brew,Beverages,2,5.5,11,0,11,0.8,1.6,9.4,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10271,8/4/2026,17:31:00,17,Tuesday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10271,8/4/2026,17:33:00,17,Tuesday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10272,8/4/2026,17:35:00,17,Tuesday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10273,8/4/2026,17:42:00,17,Tuesday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10273,8/4/2026,17:49:00,17,Tuesday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10273,8/4/2026,17:55:00,17,Tuesday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10274,8/4/2026,17:56:00,17,Tuesday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10275,8/5/2026,7:00:00,7,Wednesday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10276,8/5/2026,7:03:00,7,Wednesday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10276,8/5/2026,7:06:00,7,Wednesday,Whole Bean Bag (12oz),Retail,2,18,36,0,36,7.5,15,21,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10276,8/5/2026,7:14:00,7,Wednesday,Americano,Beverages,1,4.25,4.25,0.64,3.61,0.5,0.5,3.11,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10276,8/5/2026,7:18:00,7,Wednesday,Almond Croissant,Bakery,2,4.5,9,0,9,1.1,2.2,6.8,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10277,8/5/2026,7:22:00,7,Wednesday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10278,8/5/2026,7:30:00,7,Wednesday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10278,8/5/2026,7:36:00,7,Wednesday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10279,8/5/2026,7:43:00,7,Wednesday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10279,8/5/2026,7:51:00,7,Wednesday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10279,8/5/2026,7:53:00,7,Wednesday,Iced Latte,Beverages,2,5.75,11.5,0,11.5,0.9,1.8,9.7,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10279,8/5/2026,7:55:00,7,Wednesday,Espresso,Beverages,2,3.5,7,0,7,0.4,0.8,6.2,Gift Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10279,8/5/2026,8:02:00,8,Wednesday,Cold Brew,Beverages,2,5.5,11,0,11,0.8,1.6,9.4,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10279,8/5/2026,8:10:00,8,Wednesday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10280,8/5/2026,8:15:00,8,Wednesday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10280,8/5/2026,8:16:00,8,Wednesday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10281,8/5/2026,8:24:00,8,Wednesday,Whole Bean Bag (12oz),Retail,2,18,36,0,36,7.5,15,21,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10281,8/5/2026,8:32:00,8,Wednesday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10282,8/5/2026,8:37:00,8,Wednesday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10282,8/5/2026,8:44:00,8,Wednesday,Almond Croissant,Bakery,2,4.5,9,1.35,7.65,1.1,2.2,5.45,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10283,8/5/2026,8:50:00,8,Wednesday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10283,8/5/2026,8:55:00,8,Wednesday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Cash,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10283,8/5/2026,8:57:00,8,Wednesday,Breakfast Sandwich,Food,3,8.25,24.75,0,24.75,2.1,6.3,18.45,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10283,8/5/2026,9:03:00,9,Wednesday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Cash,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10283,8/5/2026,9:04:00,9,Wednesday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10284,8/5/2026,9:09:00,9,Wednesday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10284,8/5/2026,9:13:00,9,Wednesday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Cash,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10285,8/5/2026,9:21:00,9,Wednesday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10286,8/5/2026,9:22:00,9,Wednesday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10287,8/5/2026,9:25:00,9,Wednesday,Cappuccino,Beverages,2,4.95,9.9,0,9.9,0.75,1.5,8.4,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10287,8/5/2026,9:26:00,9,Wednesday,Cappuccino,Beverages,2,4.95,9.9,0,9.9,0.75,1.5,8.4,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10287,8/5/2026,9:34:00,9,Wednesday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10287,8/5/2026,9:37:00,9,Wednesday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10287,8/5/2026,9:45:00,9,Wednesday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10288,8/5/2026,9:46:00,9,Wednesday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10289,8/5/2026,9:48:00,9,Wednesday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10290,8/5/2026,9:50:00,9,Wednesday,Iced Latte,Beverages,2,5.75,11.5,0,11.5,0.9,1.8,9.7,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10290,8/5/2026,9:57:00,9,Wednesday,Avocado Toast,Food,2,9.5,19,0,19,2.2,4.4,14.6,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10290,8/5/2026,10:01:00,10,Wednesday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10290,8/5/2026,10:03:00,10,Wednesday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10290,8/5/2026,10:08:00,10,Wednesday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10290,8/5/2026,10:09:00,10,Wednesday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Cash,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10290,8/5/2026,10:15:00,10,Wednesday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10290,8/5/2026,10:20:00,10,Wednesday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10290,8/5/2026,10:27:00,10,Wednesday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10290,8/5/2026,10:33:00,10,Wednesday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10290,8/5/2026,10:40:00,10,Wednesday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10291,8/5/2026,10:43:00,10,Wednesday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10292,8/5/2026,10:44:00,10,Wednesday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10293,8/5/2026,10:51:00,10,Wednesday,Cappuccino,Beverages,1,4.95,4.95,0.74,4.21,0.75,0.75,3.46,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10293,8/5/2026,10:58:00,10,Wednesday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10293,8/5/2026,10:59:00,10,Wednesday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Cash,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10294,8/5/2026,11:04:00,11,Wednesday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10294,8/5/2026,11:07:00,11,Wednesday,Avocado Toast,Food,1,9.5,9.5,1.43,8.07,2.2,2.2,5.87,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10294,8/5/2026,11:09:00,11,Wednesday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Cash,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10294,8/5/2026,11:13:00,11,Wednesday,Americano,Beverages,2,4.25,8.5,0,8.5,0.5,1,7.5,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10295,8/5/2026,11:19:00,11,Wednesday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10295,8/5/2026,11:26:00,11,Wednesday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Cash,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10295,8/5/2026,11:28:00,11,Wednesday,Avocado Toast,Food,2,9.5,19,0,19,2.2,4.4,14.6,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10295,8/5/2026,11:33:00,11,Wednesday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10295,8/5/2026,11:41:00,11,Wednesday,Whole Bean Bag (12oz),Retail,2,18,36,0,36,7.5,15,21,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10296,8/5/2026,11:43:00,11,Wednesday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10296,8/5/2026,11:50:00,11,Wednesday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10297,8/5/2026,11:54:00,11,Wednesday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10297,8/5/2026,11:57:00,11,Wednesday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Cash,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10297,8/5/2026,12:01:00,12,Wednesday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10298,8/5/2026,12:05:00,12,Wednesday,Cold Brew,Beverages,2,5.5,11,0,11,0.8,1.6,9.4,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10298,8/5/2026,12:07:00,12,Wednesday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10298,8/5/2026,12:08:00,12,Wednesday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10298,8/5/2026,12:13:00,12,Wednesday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10299,8/5/2026,12:16:00,12,Wednesday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10300,8/5/2026,12:22:00,12,Wednesday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10301,8/5/2026,12:30:00,12,Wednesday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10302,8/5/2026,12:32:00,12,Wednesday,Whole Bean Bag (12oz),Retail,2,18,36,0,36,7.5,15,21,Cash,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10303,8/5/2026,12:36:00,12,Wednesday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10303,8/5/2026,12:40:00,12,Wednesday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10303,8/5/2026,12:43:00,12,Wednesday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10303,8/5/2026,12:48:00,12,Wednesday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10303,8/5/2026,12:51:00,12,Wednesday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10303,8/5/2026,12:57:00,12,Wednesday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10304,8/5/2026,13:04:00,13,Wednesday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10304,8/5/2026,13:06:00,13,Wednesday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10305,8/5/2026,13:11:00,13,Wednesday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10305,8/5/2026,13:15:00,13,Wednesday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10305,8/5/2026,13:21:00,13,Wednesday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10305,8/5/2026,13:28:00,13,Wednesday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10305,8/5/2026,13:34:00,13,Wednesday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10306,8/5/2026,13:36:00,13,Wednesday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10306,8/5/2026,13:41:00,13,Wednesday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10306,8/5/2026,13:49:00,13,Wednesday,Iced Latte,Beverages,2,5.75,11.5,0,11.5,0.9,1.8,9.7,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10306,8/5/2026,13:54:00,13,Wednesday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10306,8/5/2026,13:56:00,13,Wednesday,Almond Croissant,Bakery,1,4.5,4.5,0.67,3.83,1.1,1.1,2.73,Cash,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10307,8/5/2026,13:58:00,13,Wednesday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10308,8/5/2026,14:03:00,14,Wednesday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10309,8/5/2026,14:06:00,14,Wednesday,Avocado Toast,Food,2,9.5,19,0,19,2.2,4.4,14.6,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10309,8/5/2026,14:14:00,14,Wednesday,Blueberry Muffin,Bakery,2,3.75,7.5,0,7.5,0.85,1.7,5.8,Cash,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10309,8/5/2026,14:17:00,14,Wednesday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10309,8/5/2026,14:24:00,14,Wednesday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10309,8/5/2026,14:28:00,14,Wednesday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10310,8/5/2026,14:33:00,14,Wednesday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10310,8/5/2026,14:38:00,14,Wednesday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10311,8/5/2026,14:43:00,14,Wednesday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Cash,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10312,8/5/2026,14:49:00,14,Wednesday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Cash,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10312,8/5/2026,14:56:00,14,Wednesday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10313,8/5/2026,15:01:00,15,Wednesday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10314,8/5/2026,15:04:00,15,Wednesday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Cash,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10315,8/5/2026,15:12:00,15,Wednesday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10315,8/5/2026,15:15:00,15,Wednesday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10316,8/5/2026,15:16:00,15,Wednesday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10316,8/5/2026,15:21:00,15,Wednesday,Almond Croissant,Bakery,3,4.5,13.5,0,13.5,1.1,3.3,10.2,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10317,8/5/2026,15:27:00,15,Wednesday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10318,8/5/2026,15:35:00,15,Wednesday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10319,8/5/2026,15:39:00,15,Wednesday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Cash,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10319,8/5/2026,15:47:00,15,Wednesday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Cash,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10319,8/5/2026,15:54:00,15,Wednesday,Cappuccino,Beverages,2,4.95,9.9,0,9.9,0.75,1.5,8.4,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10319,8/5/2026,15:55:00,15,Wednesday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10320,8/5/2026,16:00:00,16,Wednesday,Espresso,Beverages,2,3.5,7,0,7,0.4,0.8,6.2,Gift Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10320,8/5/2026,16:04:00,16,Wednesday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10321,8/5/2026,16:06:00,16,Wednesday,Cold Brew,Beverages,1,5.5,5.5,0.82,4.68,0.8,0.8,3.88,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10321,8/5/2026,16:14:00,16,Wednesday,Iced Latte,Beverages,1,5.75,5.75,0.86,4.89,0.9,0.9,3.99,Cash,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10322,8/5/2026,16:22:00,16,Wednesday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Cash,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10323,8/5/2026,16:23:00,16,Wednesday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10324,8/5/2026,16:31:00,16,Wednesday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10325,8/5/2026,16:35:00,16,Wednesday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10325,8/5/2026,16:43:00,16,Wednesday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10325,8/5/2026,16:46:00,16,Wednesday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10326,8/5/2026,16:49:00,16,Wednesday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10326,8/5/2026,16:55:00,16,Wednesday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10326,8/5/2026,17:01:00,17,Wednesday,Cold Brew,Beverages,1,5.5,5.5,0.82,4.68,0.8,0.8,3.88,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10327,8/5/2026,17:08:00,17,Wednesday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10327,8/5/2026,17:14:00,17,Wednesday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10327,8/5/2026,17:15:00,17,Wednesday,Iced Latte,Beverages,1,5.75,5.75,0.86,4.89,0.9,0.9,3.99,Cash,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10328,8/5/2026,17:23:00,17,Wednesday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10328,8/5/2026,17:31:00,17,Wednesday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10329,8/5/2026,17:33:00,17,Wednesday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10329,8/5/2026,17:41:00,17,Wednesday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10329,8/5/2026,17:47:00,17,Wednesday,Espresso,Beverages,2,3.5,7,0,7,0.4,0.8,6.2,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10329,8/5/2026,17:49:00,17,Wednesday,Americano,Beverages,2,4.25,8.5,0,8.5,0.5,1,7.5,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10329,8/5/2026,17:51:00,17,Wednesday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10329,8/5/2026,17:55:00,17,Wednesday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10329,8/5/2026,17:57:00,17,Wednesday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10329,8/6/2026,7:00:00,7,Thursday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10329,8/6/2026,7:06:00,7,Thursday,Blueberry Muffin,Bakery,3,3.75,11.25,0,11.25,0.85,2.55,8.7,Cash,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10329,8/6/2026,7:12:00,7,Thursday,Avocado Toast,Food,2,9.5,19,0,19,2.2,4.4,14.6,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10329,8/6/2026,7:19:00,7,Thursday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Apple Pay,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10329,8/6/2026,7:26:00,7,Thursday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Apple Pay,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10329,8/6/2026,7:27:00,7,Thursday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10330,8/6/2026,7:28:00,7,Thursday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Apple Pay,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10330,8/6/2026,7:33:00,7,Thursday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10331,8/6/2026,7:35:00,7,Thursday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Cash,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10332,8/6/2026,7:39:00,7,Thursday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10332,8/6/2026,7:41:00,7,Thursday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10332,8/6/2026,7:43:00,7,Thursday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10332,8/6/2026,7:45:00,7,Thursday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Gift Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10332,8/6/2026,7:47:00,7,Thursday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10333,8/6/2026,7:54:00,7,Thursday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Apple Pay,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10333,8/6/2026,8:00:00,8,Thursday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10333,8/6/2026,8:08:00,8,Thursday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Apple Pay,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10334,8/6/2026,8:15:00,8,Thursday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10335,8/6/2026,8:22:00,8,Thursday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Cash,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10335,8/6/2026,8:25:00,8,Thursday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10336,8/6/2026,8:29:00,8,Thursday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10337,8/6/2026,8:31:00,8,Thursday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10337,8/6/2026,8:37:00,8,Thursday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10337,8/6/2026,8:45:00,8,Thursday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Apple Pay,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10338,8/6/2026,8:51:00,8,Thursday,Americano,Beverages,1,4.25,4.25,0.64,3.61,0.5,0.5,3.11,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10338,8/6/2026,8:54:00,8,Thursday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Apple Pay,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10338,8/6/2026,8:59:00,8,Thursday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10338,8/6/2026,9:03:00,9,Thursday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10339,8/6/2026,9:04:00,9,Thursday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10339,8/6/2026,9:08:00,9,Thursday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10340,8/6/2026,9:10:00,9,Thursday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Apple Pay,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10341,8/6/2026,9:12:00,9,Thursday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10341,8/6/2026,9:14:00,9,Thursday,Almond Croissant,Bakery,2,4.5,9,0,9,1.1,2.2,6.8,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10341,8/6/2026,9:18:00,9,Thursday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Cash,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10341,8/6/2026,9:22:00,9,Thursday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Cash,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10342,8/6/2026,9:23:00,9,Thursday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10342,8/6/2026,9:28:00,9,Thursday,Cappuccino,Beverages,2,4.95,9.9,0,9.9,0.75,1.5,8.4,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10343,8/6/2026,9:33:00,9,Thursday,Avocado Toast,Food,2,9.5,19,0,19,2.2,4.4,14.6,Apple Pay,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10343,8/6/2026,9:40:00,9,Thursday,Whole Bean Bag (12oz),Retail,2,18,36,0,36,7.5,15,21,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10343,8/6/2026,9:44:00,9,Thursday,Breakfast Sandwich,Food,3,8.25,24.75,0,24.75,2.1,6.3,18.45,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10343,8/6/2026,9:52:00,9,Thursday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10343,8/6/2026,9:56:00,9,Thursday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Apple Pay,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10343,8/6/2026,10:03:00,10,Thursday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Apple Pay,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10344,8/6/2026,10:09:00,10,Thursday,Blueberry Muffin,Bakery,2,3.75,7.5,0,7.5,0.85,1.7,5.8,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10344,8/6/2026,10:12:00,10,Thursday,Avocado Toast,Food,2,9.5,19,0,19,2.2,4.4,14.6,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10344,8/6/2026,10:17:00,10,Thursday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10345,8/6/2026,10:20:00,10,Thursday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Apple Pay,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10345,8/6/2026,10:24:00,10,Thursday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10346,8/6/2026,10:32:00,10,Thursday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10346,8/6/2026,10:39:00,10,Thursday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Apple Pay,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10346,8/6/2026,10:40:00,10,Thursday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10347,8/6/2026,10:44:00,10,Thursday,Almond Croissant,Bakery,2,4.5,9,0,9,1.1,2.2,6.8,Apple Pay,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10347,8/6/2026,10:52:00,10,Thursday,Breakfast Sandwich,Food,1,8.25,8.25,1.24,7.01,2.1,2.1,4.91,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10347,8/6/2026,10:59:00,10,Thursday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10347,8/6/2026,11:00:00,11,Thursday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10347,8/6/2026,11:07:00,11,Thursday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Apple Pay,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10348,8/6/2026,11:08:00,11,Thursday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Cash,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10349,8/6/2026,11:16:00,11,Thursday,Cappuccino,Beverages,1,4.95,4.95,0.74,4.21,0.75,0.75,3.46,Apple Pay,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10349,8/6/2026,11:19:00,11,Thursday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10350,8/6/2026,11:22:00,11,Thursday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Apple Pay,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10350,8/6/2026,11:26:00,11,Thursday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10350,8/6/2026,11:29:00,11,Thursday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10351,8/6/2026,11:35:00,11,Thursday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Cash,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10352,8/6/2026,11:38:00,11,Thursday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10353,8/6/2026,11:41:00,11,Thursday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10354,8/6/2026,11:46:00,11,Thursday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10355,8/6/2026,11:50:00,11,Thursday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10355,8/6/2026,11:51:00,11,Thursday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10355,8/6/2026,11:59:00,11,Thursday,Americano,Beverages,1,4.25,4.25,0.64,3.61,0.5,0.5,3.11,Apple Pay,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10355,8/6/2026,12:04:00,12,Thursday,Blueberry Muffin,Bakery,2,3.75,7.5,0,7.5,0.85,1.7,5.8,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10356,8/6/2026,12:07:00,12,Thursday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Cash,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10357,8/6/2026,12:12:00,12,Thursday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Apple Pay,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10357,8/6/2026,12:15:00,12,Thursday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10357,8/6/2026,12:18:00,12,Thursday,Whole Bean Bag (12oz),Retail,1,18,18,2.7,15.3,7.5,7.5,7.8,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10358,8/6/2026,12:24:00,12,Thursday,Breakfast Sandwich,Food,2,8.25,16.5,0,16.5,2.1,4.2,12.3,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10359,8/6/2026,12:26:00,12,Thursday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Apple Pay,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10359,8/6/2026,12:33:00,12,Thursday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10359,8/6/2026,12:35:00,12,Thursday,Whole Bean Bag (12oz),Retail,2,18,36,0,36,7.5,15,21,Apple Pay,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10359,8/6/2026,12:42:00,12,Thursday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10359,8/6/2026,12:48:00,12,Thursday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Apple Pay,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10359,8/6/2026,12:56:00,12,Thursday,Iced Latte,Beverages,2,5.75,11.5,0,11.5,0.9,1.8,9.7,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10360,8/6/2026,13:00:00,13,Thursday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10360,8/6/2026,13:04:00,13,Thursday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Cash,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10361,8/6/2026,13:08:00,13,Thursday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Apple Pay,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10362,8/6/2026,13:13:00,13,Thursday,Blueberry Muffin,Bakery,1,3.75,3.75,0.56,3.19,0.85,0.85,2.34,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10363,8/6/2026,13:19:00,13,Thursday,Whole Bean Bag (12oz),Retail,1,18,18,2.7,15.3,7.5,7.5,7.8,Cash,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10364,8/6/2026,13:23:00,13,Thursday,Avocado Toast,Food,2,9.5,19,0,19,2.2,4.4,14.6,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10364,8/6/2026,13:24:00,13,Thursday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Cash,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10364,8/6/2026,13:30:00,13,Thursday,Breakfast Sandwich,Food,2,8.25,16.5,2.48,14.02,2.1,4.2,9.82,Apple Pay,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10364,8/6/2026,13:35:00,13,Thursday,Avocado Toast,Food,1,9.5,9.5,1.43,8.07,2.2,2.2,5.87,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10364,8/6/2026,13:41:00,13,Thursday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10364,8/6/2026,13:47:00,13,Thursday,Blueberry Muffin,Bakery,2,3.75,7.5,0,7.5,0.85,1.7,5.8,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10364,8/6/2026,13:50:00,13,Thursday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10364,8/6/2026,13:55:00,13,Thursday,Almond Croissant,Bakery,2,4.5,9,0,9,1.1,2.2,6.8,Apple Pay,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10364,8/6/2026,13:59:00,13,Thursday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10364,8/6/2026,14:01:00,14,Thursday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10365,8/6/2026,14:05:00,14,Thursday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Apple Pay,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10365,8/6/2026,14:08:00,14,Thursday,Americano,Beverages,2,4.25,8.5,0,8.5,0.5,1,7.5,Gift Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10366,8/6/2026,14:11:00,14,Thursday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10367,8/6/2026,14:13:00,14,Thursday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10367,8/6/2026,14:19:00,14,Thursday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10368,8/6/2026,14:24:00,14,Thursday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10369,8/6/2026,14:28:00,14,Thursday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Cash,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10370,8/6/2026,14:33:00,14,Thursday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10371,8/6/2026,14:35:00,14,Thursday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Apple Pay,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10371,8/6/2026,14:40:00,14,Thursday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10372,8/6/2026,14:48:00,14,Thursday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Apple Pay,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10373,8/6/2026,14:55:00,14,Thursday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Apple Pay,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10373,8/6/2026,15:03:00,15,Thursday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Apple Pay,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10373,8/6/2026,15:05:00,15,Thursday,Almond Croissant,Bakery,1,4.5,4.5,0.67,3.83,1.1,1.1,2.73,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10374,8/6/2026,15:13:00,15,Thursday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10375,8/6/2026,15:21:00,15,Thursday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10376,8/6/2026,15:27:00,15,Thursday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Cash,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10377,8/6/2026,15:35:00,15,Thursday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Cash,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10377,8/6/2026,15:40:00,15,Thursday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Apple Pay,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10378,8/6/2026,15:42:00,15,Thursday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Apple Pay,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10379,8/6/2026,15:49:00,15,Thursday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Apple Pay,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10380,8/6/2026,15:51:00,15,Thursday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10380,8/6/2026,15:57:00,15,Thursday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Cash,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10381,8/6/2026,16:05:00,16,Thursday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10382,8/6/2026,16:08:00,16,Thursday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10383,8/6/2026,16:15:00,16,Thursday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10383,8/6/2026,16:16:00,16,Thursday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10384,8/6/2026,16:24:00,16,Thursday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10384,8/6/2026,16:29:00,16,Thursday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Apple Pay,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10384,8/6/2026,16:30:00,16,Thursday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10385,8/6/2026,16:31:00,16,Thursday,Blueberry Muffin,Bakery,2,3.75,7.5,1.12,6.38,0.85,1.7,4.68,Apple Pay,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10386,8/6/2026,16:37:00,16,Thursday,Cappuccino,Beverages,2,4.95,9.9,0,9.9,0.75,1.5,8.4,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10386,8/6/2026,16:44:00,16,Thursday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10386,8/6/2026,16:47:00,16,Thursday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10387,8/6/2026,16:54:00,16,Thursday,Iced Latte,Beverages,1,5.75,5.75,0.86,4.89,0.9,0.9,3.99,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10387,8/6/2026,16:57:00,16,Thursday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Apple Pay,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10388,8/6/2026,16:59:00,16,Thursday,Breakfast Sandwich,Food,2,8.25,16.5,0,16.5,2.1,4.2,12.3,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10388,8/6/2026,17:06:00,17,Thursday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Apple Pay,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10389,8/6/2026,17:13:00,17,Thursday,Iced Latte,Beverages,1,5.75,5.75,0.86,4.89,0.9,0.9,3.99,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10389,8/6/2026,17:17:00,17,Thursday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Apple Pay,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10389,8/6/2026,17:18:00,17,Thursday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Cash,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10389,8/6/2026,17:26:00,17,Thursday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Apple Pay,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10389,8/6/2026,17:34:00,17,Thursday,Blueberry Muffin,Bakery,2,3.75,7.5,1.12,6.38,0.85,1.7,4.68,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10389,8/6/2026,17:36:00,17,Thursday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Credit Card,EMP-101,Sarah M.,Rainy 65¬?F,Main St. Cafe
+TXN-10389,8/6/2026,17:42:00,17,Thursday,Espresso,Beverages,1,3.5,3.5,0,3.5,0.4,0.4,3.1,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10389,8/6/2026,17:48:00,17,Thursday,Cappuccino,Beverages,1,4.95,4.95,0.74,4.21,0.75,0.75,3.46,Apple Pay,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10389,8/6/2026,17:53:00,17,Thursday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Credit Card,EMP-103,Elena R.,Rainy 65¬?F,Main St. Cafe
+TXN-10389,8/6/2026,17:56:00,17,Thursday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Credit Card,EMP-102,James T.,Rainy 65¬?F,Main St. Cafe
+TXN-10390,8/7/2026,7:00:00,7,Friday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10390,8/7/2026,7:03:00,7,Friday,Cappuccino,Beverages,2,4.95,9.9,1.49,8.41,0.75,1.5,6.91,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10390,8/7/2026,7:06:00,7,Friday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10390,8/7/2026,7:11:00,7,Friday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10390,8/7/2026,7:17:00,7,Friday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10390,8/7/2026,7:24:00,7,Friday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10390,8/7/2026,7:28:00,7,Friday,Avocado Toast,Food,1,9.5,9.5,0,9.5,2.2,2.2,7.3,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10391,8/7/2026,7:29:00,7,Friday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10392,8/7/2026,7:33:00,7,Friday,Breakfast Sandwich,Food,1,8.25,8.25,0,8.25,2.1,2.1,6.15,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10393,8/7/2026,7:34:00,7,Friday,Almond Croissant,Bakery,1,4.5,4.5,0,4.5,1.1,1.1,3.4,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10394,8/7/2026,7:35:00,7,Friday,Blueberry Muffin,Bakery,1,3.75,3.75,0,3.75,0.85,0.85,2.9,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10395,8/7/2026,7:40:00,7,Friday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Apple Pay,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10395,8/7/2026,7:47:00,7,Friday,Cold Brew,Beverages,1,5.5,5.5,0,5.5,0.8,0.8,4.7,Apple Pay,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10395,8/7/2026,7:53:00,7,Friday,Iced Latte,Beverages,1,5.75,5.75,0.86,4.89,0.9,0.9,3.99,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10396,8/7/2026,7:55:00,7,Friday,Americano,Beverages,1,4.25,4.25,0,4.25,0.5,0.5,3.75,Apple Pay,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe
+TXN-10396,8/7/2026,7:59:00,7,Friday,Cappuccino,Beverages,1,4.95,4.95,0.74,4.21,0.75,0.75,3.46,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10396,8/7/2026,8:00:00,8,Friday,Cold Brew,Beverages,2,5.5,11,0,11,0.8,1.6,9.4,Credit Card,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10397,8/7/2026,8:02:00,8,Friday,Whole Bean Bag (12oz),Retail,1,18,18,0,18,7.5,7.5,10.5,Cash,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10397,8/7/2026,8:05:00,8,Friday,Iced Latte,Beverages,1,5.75,5.75,0,5.75,0.9,0.9,4.85,Credit Card,EMP-101,Sarah M.,Sunny 78¬?F,Main St. Cafe
+TXN-10397,8/7/2026,8:13:00,8,Friday,Cappuccino,Beverages,1,4.95,4.95,0,4.95,0.75,0.75,4.2,Cash,EMP-103,Elena R.,Sunny 78¬?F,Main St. Cafe
+TXN-10398,8/7/2026,8:19:00,8,Friday,Americano,Beverages,1,4.25,4.25,0.64,3.61,0.5,0.5,3.11,Credit Card,EMP-102,James T.,Sunny 78¬?F,Main St. Cafe

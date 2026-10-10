@@ -1,0 +1,503 @@
+:root {
+  color-scheme: light;
+}
+*[hidden] {
+  display: none !important;
+}
+header #datasetName {
+  display: block;
+  max-width: 230px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.setup {
+  max-width: 1100px;
+  margin: 30px auto;
+  padding: 24px;
+  background: #fff;
+  border: 1px solid #dce5eb;
+  border-radius: 14px;
+}
+.setup h2 {
+  font-size: 25px;
+}
+.setup p {
+  color: #526377;
+}
+.setupGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+.setup label {
+  display: grid;
+  gap: 7px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.setup input,
+.setup select {
+  width: 100%;
+  min-width: 0;
+  font-weight: 400;
+}
+.setupActions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+.setupActions button.primary {
+  background: #008d79;
+  color: white;
+  border: 0;
+}
+.setup hr {
+  border: 0;
+  border-top: 1px solid #e0e7ed;
+  margin: 24px 0;
+}
+.mappingGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+.mappingGrid label small {
+  font-weight: 400;
+  color: #657686;
+}
+.mapInfo {
+  background: #ecf8f5;
+  border-left: 3px solid #008d79;
+  padding: 12px 16px;
+  margin: 16px 0;
+  font-size: 14px;
+}
+.error {
+  color: #a61a31;
+  padding: 10px 0;
+  min-height: 18px;
+  font-size: 14px;
+}
+#setupStatus {
+  font-size: 14px;
+  color: #0c7665;
+}
+#preview {
+  overflow: auto;
+  max-height: 180px;
+}
+.setup th,
+.setup td {
+  white-space: nowrap;
+}
+.filters details {
+  font-size: 12px;
+  margin-top: 6px;
+  color: #56677b;
+}
+.filters details p {
+  margin: 6px 0;
+}
+.modelRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0;
+  font-size: 13px;
+}
+.modelRow select {
+  min-width: 0;
+  max-width: 250px;
+  padding: 3px 7px;
+  font-size: 13px;
+}
+.modelRow button {
+  padding: 3px 7px;
+  font-size: 12px;
+}
+.muted {
+  color: #627185;
+}
+.chartNote {
+  font-size: 13px;
+  color: #657686;
+  padding: 16px 0;
+}
+.scroll {
+  overflow: auto;
+}
+.insightsPanel #insightAnswer {
+  white-space: pre-wrap;
+}
+button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+input:focus-visible,
+button:focus-visible,
+select:focus-visible {
+  outline: 3px solid #6cd8c0;
+  outline-offset: 2px;
+}
+body:not(.overviewMode) #dashboardMain {
+  display: block;
+}
+body:not(.overviewMode) .setup {
+  background: white;
+}
+#detailPage .legend {
+  margin: 5px 0;
+}
+.legendBox {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 12px;
+  margin: 6px 0 0;
+  font-size: 12px;
+}
+.legendBox span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.legendBox i {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+.categoryLegend {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  gap: 7px;
+  margin: 6px 0;
+}
+.overviewBottom {
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+}
+@media (min-width: 1000px) and (min-height: 650px) {
+  body.overviewMode .overviewBottom {
+    min-height: 320px;
+  }
+  body.overviewMode .insightCards article {
+    padding: 8px !important;
+    font-size: 12px !important;
+    line-height: 1.3 !important;
+  }
+  body.overviewMode .insightsPanel form {
+    padding: 6px !important;
+  }
+  body.overviewMode .insightsPanel .modelRow {
+    margin: 4px 0;
+  }
+  body.overviewMode #ovCategory .categoryLegend {
+    margin: 0;
+    flex-wrap: wrap;
+    line-height: 1.2;
+    font-size: 12px;
+  }
+  body.overviewMode .overviewGrid .panel:nth-child(-n + 3) {
+    grid-column: span 4;
+  }
+  body.overviewMode .filters {
+    overflow: auto;
+  }
+  body.overviewMode .filters label {
+    font-size: 13px;
+  }
+  body.overviewMode .filters input,
+  body.overviewMode .filters select {
+    height: 29px;
+  }
+}
+@media (max-width: 850px) {
+  .setup {
+    margin: 16px;
+    padding: 18px;
+  }
+  .setupGrid,
+  .mappingGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .overviewBottom {
+    grid-template-columns: 1fr;
+  }
+  header {
+    flex-wrap: wrap;
+  }
+  header > small {
+    display: none;
+  }
+}
+@media (max-width: 550px) {
+  .setupGrid,
+  .mappingGrid {
+    grid-template-columns: 1fr;
+  }
+  .modelRow {
+    flex-wrap: wrap;
+  }
+  .topnav {
+    flex-wrap: wrap;
+  }
+}
+@media (min-width: 1000px) and (max-height: 649px) {
+  body.overviewMode {
+    overflow: auto;
+  }
+  body.overviewMode main {
+    height: auto;
+    display: block;
+  }
+  body.overviewMode .filters {
+    flex-direction: row;
+  }
+  .overviewGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1000px) and (min-height: 650px) {
+  body.overviewMode #ovCategory {
+    grid-template-rows: minmax(0, 1fr);
+  }
+  body.overviewMode #ovCategory svg {
+    grid-row: 1;
+  }
+  body.overviewMode #ovCategory .categoryLegendList {
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    min-width: 0;
+    max-height: 100%;
+    overflow: auto;
+  }
+}
+
+.overviewBottom {
+  display: block;
+  grid-template-columns: 1fr;
+}
+.overviewBottom .insightsPanel {
+  margin: 16px 0 0;
+}
+.insightsPanel {
+  border-color: #d8e4e7;
+  background: #fbfdfd;
+}
+.insightsPanel h2 {
+  color: #152637;
+  font-size: 20px;
+  margin-bottom: 2px;
+}
+.insightsPanel .sub {
+  color: #66758a;
+}
+.insightsPanel form {
+  border-color: #dbe7e8;
+  background: white;
+  padding: 10px;
+}
+.insightsPanel label {
+  color: #223344;
+}
+.askRow input {
+  min-height: 42px;
+}
+.askRow button {
+  background: #008d79;
+  border-color: #008d79;
+  color: white;
+  min-width: 78px;
+}
+.suggestions {
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 6px;
+}
+.suggestions button {
+  border-color: #d3e2e4;
+  color: #28515a;
+  background: #f7fbfb;
+  padding: 5px 10px;
+}
+.suggestions button:hover {
+  background: #edf6f5;
+}
+.insightsPanel #insightAnswer {
+  background: white;
+  border: 1px solid #dbe7e8;
+  border-radius: 8px;
+  color: #172435;
+  font-size: 15px;
+  line-height: 1.55;
+  margin: 8px 0 0;
+  padding: 12px 14px;
+}
+.insightsPanel #insightAnswer:empty {
+  display: none;
+}
+.insightCards {
+  gap: 12px;
+}
+.insightCards article {
+  border-color: #dbe7e8;
+  box-shadow: none;
+  color: #263746;
+}
+.insightCards strong,
+.insightCards small {
+  color: #27535c;
+}
+.insightHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+.insightHeader h2 {
+  margin-top: 0;
+}
+.insightHeader .sub {
+  margin-bottom: 0;
+}
+.insightHeader .modelRow {
+  flex: 0 0 auto;
+  justify-content: flex-end;
+  margin: 0;
+}
+.insightBody {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+  gap: 12px;
+  margin-top: 8px;
+  align-items: stretch;
+}
+.insightAsk {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.insightAsk form {
+  flex: 0 0 auto;
+}
+.insightsPanel #insightAnswer,
+.insightsPanel #insightAnswer:empty {
+  display: block;
+}
+.insightsPanel #insightAnswer {
+  flex: 1 1 auto;
+  min-height: 150px;
+  height: 150px;
+  max-height: 150px;
+  overflow: auto;
+}
+.insightsPanel #insightAnswer:empty::before {
+  content: "Ask a question to see the answer here.";
+  color: #7b8998;
+}
+.insightCards {
+  align-self: stretch;
+  grid-template-columns: 1fr;
+}
+.insightCards article {
+  min-height: 0;
+}
+@media (min-width: 1000px) and (min-height: 650px) {
+  body.overviewMode #overview {
+    gap: 6px;
+  }
+  body.overviewMode #overviewCards {
+    flex-basis: 68px;
+  }
+  body.overviewMode .overviewGrid {
+    flex: 1.65 1 0;
+    gap: 8px;
+  }
+  body.overviewMode .overviewGrid .panel {
+    padding: 12px 14px;
+  }
+  body.overviewMode .overviewBottom {
+    display: block;
+    flex: 0 0 auto;
+    min-height: 0;
+    margin-top: 4px;
+  }
+  body.overviewMode .overviewBottom .insightsPanel {
+    display: block;
+    padding: 12px 16px;
+  }
+  body.overviewMode .insightHeader {
+    align-items: center;
+  }
+  body.overviewMode .insightHeader .modelRow {
+    max-width: 430px;
+  }
+  body.overviewMode .insightsPanel h2 {
+    font-size: 20px;
+    margin-bottom: 2px;
+  }
+  body.overviewMode .insightsPanel .sub {
+    font-size: 13px;
+    margin-bottom: 0;
+  }
+  body.overviewMode .insightsPanel form {
+    padding: 8px 10px;
+  }
+  body.overviewMode .insightBody {
+    gap: 10px;
+    margin-top: 6px;
+  }
+  body.overviewMode .suggestions {
+    gap: 4px;
+    margin-top: 5px;
+  }
+  body.overviewMode .suggestions button {
+    padding: 4px 9px;
+  }
+  body.overviewMode .insightsPanel #insightAnswer {
+    margin-top: 6px;
+  }
+  body.overviewMode .askRow input,
+  body.overviewMode .askRow button {
+    padding: 9px 12px;
+  }
+  body.overviewMode .insightsPanel #insightAnswer {
+    height: 118px;
+    min-height: 118px;
+    max-height: 118px;
+    overflow: auto;
+  }
+  body.overviewMode .insightCards {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 0;
+  }
+  body.overviewMode .insightCards article {
+    font-size: 13px !important;
+    line-height: 1.4 !important;
+    padding: 10px 12px !important;
+  }
+}
+@media (max-width: 850px) {
+  .insightHeader,
+  .insightHeader .modelRow {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .insightBody {
+    grid-template-columns: 1fr;
+  }
+  .insightsPanel #insightAnswer {
+    height: 180px;
+    min-height: 180px;
+    max-height: 180px;
+  }
+}
