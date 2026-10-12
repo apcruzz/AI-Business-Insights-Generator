@@ -4,6 +4,22 @@ A local version of your two-page dashboard with business setup, CSV/Excel upload
 
 There are no API keys, subscriptions, cloud model calls, or hosting bills in this app. It runs on your existing computer. You still supply the computer, electricity, and initial downloads. Uploaded files are processed in memory and are not saved by the server.
 
+## Project structure
+
+```text
+free_business_dashboard/
+├── backend/              # Python API, file analysis, Ollama integration
+├── src/                  # React/Vite frontend
+├── data/samples/         # Included sample CSV files
+├── docs/                 # Supporting project documentation
+├── tests/                # Validation checks
+├── app.py                # Root launcher for the Python server
+├── index.html            # Vite entry HTML
+├── package.json          # Frontend scripts/dependencies
+├── requirements.txt      # Python dependencies
+└── README.md
+```
+
 ## Start on Mac
 
 Install Python 3.10 or newer from https://www.python.org/downloads/ if needed. Extract the ZIP. In Terminal, change to its `free_business_dashboard` folder, then run:
@@ -12,10 +28,12 @@ Install Python 3.10 or newer from https://www.python.org/downloads/ if needed. E
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
+npm install
+npm run build
 python app.py
 ```
 
-The dashboard opens at http://127.0.0.1:8765. Keep Terminal open while using it. Press Control+C to stop. This version uses React and Vite for the browser app; the included `dist` folder is what `python app.py` serves.
+The dashboard opens at http://127.0.0.1:8765. Keep Terminal open while using it. Press Control+C to stop. This version uses React and Vite for the browser app; `npm run build` creates the local `dist/` folder that `python app.py` serves.
 
 After the first setup, start again with:
 
@@ -31,6 +49,8 @@ Install Python 3.10 or newer if needed. In PowerShell, change to the extracted `
 ```powershell
 py -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
+npm install
+npm run build
 .\.venv\Scripts\python.exe app.py
 ```
 
@@ -112,9 +132,9 @@ The model files are not bundled. Internet is needed for initial Python package/m
 
 ## Samples and validation
 
-The furniture, restaurant, and retail samples are fictional test data spanning June 1–August 29, 2026. `Cafe.csv` is the original provided café dataset and includes receipt-grouping warnings.
+The furniture, restaurant, and retail samples in `data/samples/` are fictional test data spanning June 1–August 29, 2026. `Cafe.csv` is the original provided café dataset and includes receipt-grouping warnings.
 
-Run `python validate_samples.py` to verify expected totals and key missing-data behavior. CSV/Excel ingestion, number/date parsing, model request wiring, adaptive chart generation, filtering, and page switching were checked. Actual language-model inference requires your installed Ollama model and was not run during packaging. Browser layout was not visually checked here; the desktop overview uses a compact layout, with scrolling retained on small screens for access to controls.
+Run `npm test` on Mac after creating `.venv`, or run `python -m tests.validate_samples` from an activated environment, to verify expected totals and key missing-data behavior. CSV/Excel ingestion, number/date parsing, model request wiring, adaptive chart generation, filtering, and page switching were checked. Actual language-model inference requires your installed Ollama model and was not run during packaging. Browser layout was not visually checked here; the desktop overview uses a compact layout, with scrolling retained on small screens for access to controls.
 
 ## Sources
 

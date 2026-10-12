@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { initDashboard } from "./dashboard.js";
 import "./styles.css";
-import "../setup.css";
+import "./setup.css";
 
 export default function App() {
   useEffect(() => {
