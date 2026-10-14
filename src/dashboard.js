@@ -683,6 +683,28 @@ function shareText(value, total) {
     ? ` (${pct((value / total) * 100)} of selected revenue)`
     : "";
 }
+function median(values) {
+  // Finds the middle value for order-size and sales-consistency questions.
+  const numbers = values
+    .map(Number)
+    .filter((value) => Number.isFinite(value))
+    .sort((a, b) => a - b);
+  if (!numbers.length) return null;
+  const middle = Math.floor(numbers.length / 2);
+  return numbers.length % 2
+    ? numbers[middle]
+    : (numbers[middle - 1] + numbers[middle]) / 2;
+}
+function standardDeviation(values) {
+  // Measures how much daily sales vary around their average.
+  const numbers = values.map(Number).filter((value) => Number.isFinite(value));
+  if (numbers.length < 2) return null;
+  const average = sum(numbers.map((value) => ({ value })), "value") / numbers.length,
+    variance =
+      numbers.reduce((total, value) => total + (value - average) ** 2, 0) /
+      numbers.length;
+  return Math.sqrt(variance);
+}
 function findNamed(items, q) {
   // Best-effort product/category lookup for questions naming a specific item.
   return items
@@ -728,6 +750,17 @@ function compareHalves(rows, key) {
     })
     .filter((x) => x.firstHalfNetSales || x.secondHalfNetSales)
     .sort((a, b) => b.change - a.change);
+}
+function missingDataAnswer(topic, needed) {
+  // Plainly explains that a question needs data the current dashboard does not collect.
+  return `${topic} is not available from the mapped sales file. To answer it reliably, add ${needed} to the dataset or connect a matching source that contains it.`;
+}
+function listNames(items, limit = 3) {
+  // Short readable list used in calculated answers.
+  return items
+    .slice(0, limit)
+    .map((item) => item.name)
+    .join("; ");
 }
 function facts(rows = selected) {
   // Build the fact package used by both calculated answers and Ollama.
@@ -909,6 +942,164 @@ function facts(rows = selected) {
             }))
             .sort((a, b) => b.netSales - a.netSales)
         : [],
+    orderFacts = c.orders
+      ? group(rows, "Order_Key")
+          .map(([name, r]) => {
+            const netSales = round2(sum(r, "Net_Sales")),
+              grossProfit = c.Gross_Profit
+                ? round2(sum(r, "Gross_Profit"))
+                : null,
+              orderUnits = c.Quantity ? sum(r, "Quantity") : null,
+              productNames = [...new Set(r.map((item) => item.Product_Name))],
+              categoryNames = [...new Set(r.map((item) => item.Category))];
+            return {
+              name,
+              netSales,
+              grossProfit,
+              grossMarginPercent:
+                grossProfit !== null && netSales > 0
+                  ? Math.round((grossProfit / netSales) * 1000) / 10
+                  : null,
+              units: orderUnits,
+              lines: r.length,
+              products: productNames,
+              categories: categoryNames,
+              productCount: productNames.length,
+              categoryCount: categoryNames.length,
+              hasDiscount: c.Discount_Amount
+                ? r.some((item) => Number(item.Discount_Amount) > 0)
+                : null,
+              hasNegativeSales: r.some((item) => Number(item.Net_Sales) < 0),
+            };
+          })
+          .sort((a, b) => b.netSales - a.netSales)
+      : [],
+    averageOrderSales =
+      orderFacts.length > 0
+        ? round2(sum(orderFacts, "netSales") / orderFacts.length)
+        : null,
+    medianOrderSales = orderFacts.length
+      ? round2(median(orderFacts.map((order) => order.netSales)))
+      : null,
+    topOrders = orderFacts.slice(0, 5),
+    topOrdersByGrossProfit = c.Gross_Profit
+      ? topBy(orderFacts, "grossProfit").slice(0, 5)
+      : [],
+    largeOrders =
+      averageOrderSales !== null
+        ? orderFacts.filter((order) => order.netSales > averageOrderSales)
+        : [],
+    multiProductOrders = orderFacts.filter((order) => order.productCount > 1),
+    singleProductOrders = orderFacts.filter((order) => order.productCount <= 1),
+    productPairFacts = c.orders
+      ? Object.values(
+          orderFacts.reduce((pairs, order) => {
+            const names = [...order.products].sort();
+            for (let i = 0; i < names.length; i++)
+              for (let j = i + 1; j < names.length; j++) {
+                const key = `${names[i]} + ${names[j]}`;
+                if (!pairs[key])
+                  pairs[key] = { name: key, orders: 0, netSales: 0 };
+                pairs[key].orders += 1;
+                pairs[key].netSales = round2(pairs[key].netSales + order.netSales);
+              }
+            return pairs;
+          }, {}),
+        ).sort((a, b) => b.orders - a.orders || b.netSales - a.netSales)
+      : [],
+    categoryPairFacts = c.orders
+      ? Object.values(
+          orderFacts.reduce((pairs, order) => {
+            const names = [...order.categories].sort();
+            for (let i = 0; i < names.length; i++)
+              for (let j = i + 1; j < names.length; j++) {
+                const key = `${names[i]} + ${names[j]}`;
+                if (!pairs[key])
+                  pairs[key] = { name: key, orders: 0, netSales: 0 };
+                pairs[key].orders += 1;
+                pairs[key].netSales = round2(pairs[key].netSales + order.netSales);
+              }
+            return pairs;
+          }, {}),
+        ).sort((a, b) => b.orders - a.orders || b.netSales - a.netSales)
+      : [],
+    productsInLargeOrders =
+      largeOrders.length > 0
+        ? Object.values(
+            largeOrders.reduce((result, order) => {
+              order.products.forEach((name) => {
+                if (!result[name])
+                  result[name] = { name, orders: 0, netSales: 0 };
+                result[name].orders += 1;
+                result[name].netSales = round2(result[name].netSales + order.netSales);
+              });
+              return result;
+            }, {}),
+          ).sort((a, b) => b.orders - a.orders || b.netSales - a.netSales)
+        : [],
+    productQuantityPerOrder = c.orders
+      ? productFacts
+          .map((product) => {
+            const matchingOrders = orderFacts.filter((order) =>
+              order.products.includes(product.name),
+            ).length;
+            return {
+              name: product.name,
+              unitsPerOrder:
+                c.Quantity && matchingOrders
+                  ? round2(product.units / matchingOrders)
+                  : null,
+              matchingOrders,
+            };
+          })
+          .filter((item) => item.unitsPerOrder !== null)
+          .sort((a, b) => b.unitsPerOrder - a.unitsPerOrder)
+      : [],
+    dailySalesValues = dayFacts.map((day) => day.netSales),
+    dailySalesStdDev = standardDeviation(dailySalesValues),
+    dailySalesAverage =
+      dayFacts.length > 0 ? sum(dayFacts, "netSales") / dayFacts.length : null,
+    uniqueHours = c.Hour ? [...new Set(rows.map((r) => r.Hour))].sort((a, b) => a - b) : [],
+    recordedOperatingHours =
+      c.Date && c.Hour
+        ? new Set(rows.map((r) => `${r.Date}|${r.Hour}`)).size
+        : null,
+    firstSaleHours = c.Date && c.Hour
+      ? group(rows, "Date").map(([, r]) => Math.min(...r.map((item) => item.Hour)))
+      : [],
+    lastSaleHours = c.Date && c.Hour
+      ? group(rows, "Date").map(([, r]) => Math.max(...r.map((item) => item.Hour)))
+      : [],
+    lastHourRevenue = c.Date && c.Hour
+      ? round2(
+          sum(
+            group(rows, "Date").flatMap(([, r]) => {
+              const lastHour = Math.max(...r.map((item) => item.Hour));
+              return r.filter((item) => item.Hour === lastHour);
+            }),
+            "Net_Sales",
+          ),
+        )
+      : null,
+    beginningMonthRows = c.Date
+      ? rows.filter((r) => Number(r.Date.slice(8, 10)) <= 10)
+      : [],
+    endMonthRows = c.Date
+      ? rows.filter((r) => Number(r.Date.slice(8, 10)) >= 21)
+      : [],
+    weatherFacts =
+      "Weather" in (rows[0] || {}) && c.Date
+        ? group(rows, "Weather")
+            .map(([name, r]) => ({
+              name,
+              netSales: round2(sum(r, "Net_Sales")),
+              days: new Set(r.map((item) => item.Date)).size,
+              averageDailyNetSales: round2(
+                sum(r, "Net_Sales") / new Set(r.map((item) => item.Date)).size,
+              ),
+            }))
+            .sort((a, b) => b.averageDailyNetSales - a.averageDailyNetSales)
+        : [],
     productGrowth = compareHalves(rows, "Product_Name"),
     categoryGrowth = compareHalves(rows, "Category"),
     firstHalfSales =
@@ -960,6 +1151,50 @@ function facts(rows = selected) {
         ? Math.round((n / new Set(rows.map((r) => r.Order_Key)).size) * 100) /
           100
         : null,
+    orderStats: c.orders
+      ? {
+          averageOrderValue: averageOrderSales,
+          medianOrderValue: medianOrderSales,
+          medianVsAverage:
+            averageOrderSales && medianOrderSales !== null
+              ? round2(medianOrderSales - averageOrderSales)
+              : null,
+          percentOrdersUnder10: orderFacts.length
+            ? Math.round(
+                (orderFacts.filter((order) => order.netSales < 10).length /
+                  orderFacts.length) *
+                  1000,
+              ) / 10
+            : null,
+          percentNegativeOrders: orderFacts.length
+            ? Math.round(
+                (orderFacts.filter((order) => order.netSales < 0).length /
+                  orderFacts.length) *
+                  1000,
+              ) / 10
+            : null,
+          zeroNetOrders: orderFacts.filter((order) => order.netSales === 0).length,
+          percentRevenueTop3Orders:
+            n > 0
+              ? Math.round((sum(orderFacts.slice(0, 3), "netSales") / n) * 1000) /
+                10
+              : null,
+          revenueAboveAverageOrder: round2(sum(largeOrders, "netSales")),
+          averageLinesPerOrder: orderFacts.length
+            ? round2(sum(orderFacts, "lines") / orderFacts.length)
+            : null,
+          singleProductOrders: singleProductOrders.length,
+          multiProductOrders: multiProductOrders.length,
+          singleProductRevenue: round2(sum(singleProductOrders, "netSales")),
+          multiProductRevenue: round2(sum(multiProductOrders, "netSales")),
+        }
+      : null,
+    topOrders,
+    topOrdersByGrossProfit,
+    productPairs: productPairFacts.slice(0, 8),
+    categoryPairs: categoryPairFacts.slice(0, 8),
+    productsInLargeOrders: productsInLargeOrders.slice(0, 8),
+    productQuantityPerOrder: productQuantityPerOrder.slice(0, 8),
     filters: Object.fromEntries(
       ["from", "to", "category", "product", "weekday", "period"].map((id) => [
         id,
@@ -1019,9 +1254,47 @@ function facts(rows = selected) {
     bottomDays: [...sortedDaysBySales].reverse().slice(0, 7),
     topWeeks: weekFacts.slice(0, 5),
     topMonths: monthFacts.slice(0, 5),
+    dateSummary: c.Date
+      ? {
+          earliestDate: dayFacts[0]?.date || null,
+          latestDate: dayFacts[dayFacts.length - 1]?.date || null,
+          monthsCovered: new Set(dayFacts.map((day) => day.date.slice(0, 7))).size,
+          averageBusinessDayRevenue:
+            dayFacts.length > 0 ? round2(n / dayFacts.length) : null,
+          dailySalesStdDev:
+            dailySalesStdDev !== null ? round2(dailySalesStdDev) : null,
+          dailySalesVariationPercent:
+            dailySalesStdDev !== null && dailySalesAverage
+              ? Math.round((dailySalesStdDev / dailySalesAverage) * 1000) / 10
+              : null,
+          beginningMonthRevenue: round2(sum(beginningMonthRows, "Net_Sales")),
+          endMonthRevenue: round2(sum(endMonthRows, "Net_Sales")),
+        }
+      : null,
     weekdays: weekdayFacts,
     periods: periodFacts,
     topHours: hourFacts.slice(0, 6),
+    hourSummary: c.Hour
+      ? {
+          recordedHours: uniqueHours,
+          recordedOperatingHours,
+          revenuePerRecordedOperatingHour:
+            recordedOperatingHours && recordedOperatingHours > 0
+              ? round2(n / recordedOperatingHours)
+              : null,
+          unitsPerRecordedOperatingHour:
+            recordedOperatingHours && recordedOperatingHours > 0 && c.Quantity
+              ? round2(sum(rows, "Quantity") / recordedOperatingHours)
+              : null,
+          typicalFirstSaleHour: firstSaleHours.length
+            ? round2(median(firstSaleHours))
+            : null,
+          typicalLastSaleHour: lastSaleHours.length
+            ? round2(median(lastSaleHours))
+            : null,
+          lastRecordedHourRevenue: lastHourRevenue,
+        }
+      : null,
     bottomHoursByUnits: c.Quantity
       ? bottomBy(hourFacts, "units").slice(0, 6)
       : [],
@@ -1070,8 +1343,38 @@ function facts(rows = selected) {
       0,
       8,
     ),
+    weather: weatherFacts.slice(0, 8),
     topEmployees: employeeFacts.slice(0, 8),
     topEmployeesByOrders: topBy(employeeFacts, "orders").slice(0, 8),
+    dataQuality: {
+      zeroQuantityLines: c.Quantity
+        ? rows.filter((row) => Number(row.Quantity) === 0).length
+        : null,
+      negativeSalesLines: rows.filter((row) => Number(row.Net_Sales) < 0).length,
+      unusuallyLargeLines:
+        rows.length > 0
+          ? rows
+              .map((row) => Number(row.Net_Sales) || 0)
+              .filter((value) => value > 0)
+              .sort((a, b) => b - a)
+              .slice(0, 5)
+          : [],
+      activeFilters: Object.fromEntries(
+        ["from", "to", "category", "product", "weekday", "period"]
+          .filter((id) => $(id).value)
+          .map((id) => [id, $(id).value]),
+      ),
+      suppliedMetrics: Object.entries(c)
+        .filter(([, available]) => available)
+        .map(([key]) => key),
+      calculatedMetrics: [
+        "net sales",
+        "gross margin when profit is available",
+        "rankings",
+        "trend comparison",
+        "average order value when order IDs are valid",
+      ],
+    },
     availableMetrics: {
       product: c.product,
       category: c.category,
@@ -1158,6 +1461,72 @@ function calculatedAnswer(question) {
     topDay = f.topDays[0],
     lowDay = f.bottomDays[0],
     trend = f.trendComparison;
+  if (
+    /promotion|coupon|free[- ]?delivery|upsell|price override|giveaway|given away|bundle/.test(
+      q,
+    )
+  )
+    return missingDataAnswer(
+      "Promotion, coupon, bundle, and campaign performance",
+      "promotion names, coupon codes, campaign dates, bundle IDs, direct promotion costs, and return/refund flags",
+    );
+  if (
+    /inventory|stock|supplier|purchase order|reorder|stockout|available stock|counted stock|ingredient|expire|damaged stock|stolen|lost/.test(
+      q,
+    )
+  ) {
+    if (/restock|restocking|reorder candidate/.test(q))
+      return `${topProduct.name} is a restocking candidate because it leads selected revenue at ${money(topProduct.netSales)}${topProduct.units !== null ? " and " + topProduct.units + " units" : ""}. True inventory decisions need stock-on-hand, reorder levels, supplier lead time, and spoilage or storage limits.`;
+    return missingDataAnswer(
+      "Inventory, stockout, supplier, ingredient, and purchase-order analysis",
+      "current stock, stock counts, reorder levels, supplier records, purchase orders, delivery dates, stockout dates, ingredient recipes, and waste/expiry records",
+    );
+  }
+  if (
+    /customer|customers|loyalty|repeat|new customer|lifetime|contact information|segment|business customer|bulk customer|joined/.test(
+      q,
+    )
+  )
+    return missingDataAnswer(
+      "Customer, loyalty, retention, and customer-segment analysis",
+      "customer IDs, customer type, first-purchase dates, contact fields, loyalty membership, and customer-order history",
+    );
+  if (
+    /operating expense|expenses|net profit|rent|payroll|labor|staff hour|fixed cost|variable expense|card-processing|transaction fee|delivery fee|cash flow|owe|unpaid invoice|deposit|collected cash|recognized sales/.test(
+      q,
+    )
+  )
+    return f.grossProfit === null
+      ? missingDataAnswer(
+          "Operating expense, cash collection, and net profit analysis",
+          "product costs or gross profit, rent, payroll, labor hours, payment fees, invoices, deposits, refunds, and cash collection records",
+        )
+      : `Gross profit is ${money(f.grossProfit)}, but net profit and cash collection are not available because operating expenses, labor, fees, invoices, deposits, and collected-cash records are not mapped.`;
+  if (
+    /website|online|cart|conversion|mobile|desktop|advertising|referral|shipping|sales channel|delivery area|pickup|delivery orders|in-store|in store/.test(
+      q,
+    )
+  )
+    return missingDataAnswer(
+      "Online, channel, delivery, conversion, and advertising analysis",
+      "sales channel, website visits, carts, device type, shipping costs, delivery area, pickup/delivery timestamps, referral source, ad spend, and return records by channel",
+    );
+  if (
+    /restaurant|dish|preparation|prep|table|guest|party size|dine[- ]?in|takeaway|kitchen station|seated|seating|food waste|remade|appetizer|topping|upgrade/.test(
+      q,
+    )
+  )
+    return missingDataAnswer(
+      "Restaurant operations analysis",
+      "prep times, table times, party size, guest count, dining mode, cancellations, food waste, remakes, modifiers, and kitchen station data",
+    );
+  if (
+    /quotation|quote|assembly|installation|warranty|furniture.*delay/.test(q)
+  )
+    return missingDataAnswer(
+      "Furniture quotation, delivery, service, and warranty analysis",
+      "quotation dates/statuses, delivery promises, assembly and installation fees/costs, warranty claims, and product service records",
+    );
   if (/target|goal|quota/.test(q))
     // Targets are business inputs, not something the sales file can infer.
     return "Sales targets are not included in this dataset. I can show current sales, but I need a target amount to say whether the business met it or how much more revenue is needed.";
@@ -1165,14 +1534,6 @@ function calculatedAnswer(question) {
     return trend
       ? `A simple trend check shows second-half sales were ${trend.secondVsFirstPercent >= 0 ? "up" : "down"} ${pct(Math.abs(trend.secondVsFirstPercent))} versus the first half. That is not a forecast; use it as a starting point and compare it with seasonality, promotions, and upcoming business changes.`
       : "There is not enough dated sales history in the current selection to estimate a next-month pattern.";
-  if (/inventory|stock|restock|restocking/.test(q))
-    return `${topProduct.name} is a restocking candidate because it leads selected revenue at ${money(topProduct.netSales)}${topProduct.units !== null ? " and " + topProduct.units + " units" : ""}. True inventory decisions need stock-on-hand, supplier lead time, and spoilage or storage limits.`;
-  if (/customer|customers|repeat|new customer/.test(q))
-    return "Customer-level data is not mapped in this dashboard, so I cannot compare customers, new customers, or repeat customers. Add customer IDs or customer type to answer that reliably.";
-  if (/operating expense|expenses|net profit|rent|payroll/.test(q))
-    return f.grossProfit === null
-      ? "Operating expenses and product costs are not fully mapped, so net profit is unavailable."
-      : `Gross profit is ${money(f.grossProfit)}, but net profit after rent, payroll, utilities, and other operating expenses is not available because those expenses are not in the dataset.`;
   if (/duplicate/.test(q))
     return f.limitations.some((w) => /duplicate/i.test(w))
       ? f.limitations.find((w) => /duplicate/i.test(w))
@@ -1198,6 +1559,66 @@ function calculatedAnswer(question) {
     return f.matchingOrders === null
       ? "Order IDs are missing or inconsistent, so order count is unavailable."
       : `The selected data contains ${f.matchingOrders.toLocaleString()} matching orders.`;
+  if (/largest order|biggest order/.test(q))
+    return f.topOrders[0]
+      ? `The largest matching order by revenue is ${money(f.topOrders[0].netSales)} with ${f.topOrders[0].lines} sales lines.`
+      : "Largest order needs valid order IDs.";
+  if (/most profitable order/.test(q))
+    return f.topOrdersByGrossProfit[0]
+      ? `The most profitable matching order generated ${money(f.topOrdersByGrossProfit[0].grossProfit)} of gross profit from ${money(f.topOrdersByGrossProfit[0].netSales)} in net sales.`
+      : "Most profitable order needs valid order IDs and gross profit or cost data.";
+  if (/median order/.test(q))
+    return f.orderStats?.medianOrderValue != null
+      ? `The median matching order value is ${money(f.orderStats.medianOrderValue)}. The average order value is ${money(f.orderStats.averageOrderValue)}, so the median is ${money(Math.abs(f.orderStats.medianVsAverage))} ${f.orderStats.medianVsAverage >= 0 ? "higher" : "lower"} than the average.`
+      : "Median order value needs valid order IDs.";
+  if (/orders?.*(less than|under|below).*\$?10/.test(q))
+    return f.orderStats?.percentOrdersUnder10 != null
+      ? `${pct(f.orderStats.percentOrdersUnder10)} of matching orders are worth less than $10.`
+      : "This needs valid order IDs.";
+  if (/three largest orders|top 3 orders|3 largest orders/.test(q))
+    return f.orderStats?.percentRevenueTop3Orders != null
+      ? `The three largest matching orders contribute ${pct(f.orderStats.percentRevenueTop3Orders)} of selected revenue.`
+      : "This needs valid order IDs and positive selected revenue.";
+  if (/negative net sales/.test(q) && /order/.test(q))
+    return f.orderStats?.percentNegativeOrders != null
+      ? `${pct(f.orderStats.percentNegativeOrders)} of matching orders have negative net sales.`
+      : "Negative-order analysis needs valid order IDs.";
+  if (/zero net sales/.test(q) && /order/.test(q))
+    return f.orderStats
+      ? `${f.orderStats.zeroNetOrders.toLocaleString()} matching orders have zero net sales.`
+      : "Zero-order analysis needs valid order IDs.";
+  if (/product lines|lines.*order|typical order contain/.test(q))
+    return f.orderStats?.averageLinesPerOrder != null
+      ? `A matching order contains about ${f.orderStats.averageLinesPerOrder} sales lines on average.`
+      : "Product-line-per-order analysis needs valid order IDs.";
+  if (/single-product|single product|multiple products|multi-product/.test(q))
+    return f.orderStats
+      ? `Single-product orders: ${f.orderStats.singleProductOrders.toLocaleString()} orders and ${money(f.orderStats.singleProductRevenue)} revenue. Multi-product orders: ${f.orderStats.multiProductOrders.toLocaleString()} orders and ${money(f.orderStats.multiProductRevenue)} revenue.`
+      : "Single-product versus multi-product comparison needs valid order IDs.";
+  if (/above the average order value|orders above average/.test(q))
+    return f.orderStats
+      ? `${money(f.orderStats.revenueAboveAverageOrder)} of selected revenue comes from matching orders above the average order value.`
+      : "This needs valid order IDs.";
+  if (/purchased together|usually purchased|buy alongside|combinations|commonly purchased/.test(q)) {
+    if (/categor/.test(q) && f.categoryPairs[0])
+      return `Most common category combinations include ${f.categoryPairs
+        .slice(0, 3)
+        .map((pair) => `${pair.name} (${pair.orders} orders)`)
+        .join("; ")}.`;
+    return f.productPairs[0]
+      ? `Most common product combinations include ${f.productPairs
+          .slice(0, 3)
+          .map((pair) => `${pair.name} (${pair.orders} orders)`)
+          .join("; ")}.`
+      : "Product-combination analysis needs valid order IDs with multiple product lines per order.";
+  }
+  if (/large orders/.test(q) && /product/.test(q))
+    return f.productsInLargeOrders[0]
+      ? `Products that appear most often in above-average orders include ${f.productsInLargeOrders
+          .slice(0, 3)
+          .map((item) => `${item.name} (${item.orders} orders)`)
+          .join("; ")}.`
+      : "This needs valid order IDs and enough above-average orders.";
   if (/average order value|aov/.test(q) && !/payment|day|hour/.test(q))
     return f.selectedRevenuePerMatchingOrder === null
       ? "Average order value needs valid order IDs."
@@ -1295,6 +1716,18 @@ function calculatedAnswer(question) {
     ];
     return `The dashboard shows ${signals.join(", ")}. That can indicate business health, but it cannot prove overall success without targets, rent, payroll, cash flow, and owner goals. Next, compare these numbers with your break-even point and expected monthly sales target.`;
   }
+  if (/selling price|listed price|price vary|price changed|price difference|different selling prices|actual selling price/.test(q))
+    return missingDataAnswer(
+      "Detailed price-change and listed-price analysis",
+      "listed/base price, transaction-level selling price, price override flags, approval records, and enough repeated product sales to compare prices over time, employee, and time of day",
+    );
+  if (/less profitable after.*cost|costs increased|product costs changed|cost.*over time/.test(q))
+    return missingDataAnswer(
+      "Product cost-change analysis",
+      "historical product costs with effective dates, or line-level cost at the time of each sale",
+    );
+  if (/dependent.*gross profit|gross profit.*one product/.test(q) && f.topProductsByGrossProfit[0])
+    return `${f.topProductsByGrossProfit[0].name} contributes the most gross profit at ${money(f.topProductsByGrossProfit[0].grossProfit)}. Compare its share with total gross profit before relying too heavily on one product.`;
   if (/profit|margin|cost/.test(q))
     if (
       /highest|most/.test(q) &&
@@ -1331,6 +1764,22 @@ function calculatedAnswer(question) {
     return f.matchingOrders === null
       ? "Order IDs are missing or inconsistent. Order count and average order value are unavailable until grouping is verified."
       : `${f.matchingOrders.toLocaleString()} distinct orders match these filters. Selected revenue per matching order is ${money(f.selectedRevenuePerMatchingOrder)}. Product or category filters include only their portion of each order's revenue.`;
+  if (/quantity.*greater than one|typical quantity.*per order/.test(q))
+    return f.productQuantityPerOrder[0]
+      ? `Highest typical quantity per matching order: ${f.productQuantityPerOrder
+          .slice(0, 3)
+          .map((item) => `${item.name} (${item.unitsPerOrder} units/order)`)
+          .join("; ")}.`
+      : "Quantity per product per order needs valid order IDs and quantity data.";
+  if (/newly introduced|discontinued|preferred item unavailable/.test(q))
+    return missingDataAnswer(
+      "New product, discontinued product, and substitute-product analysis",
+      "product launch dates, discontinued dates, stockout/unavailability records, and substitution records",
+    );
+  if (/largest share.*discount|lose.*revenue.*discount/.test(q))
+    return f.topProductsByDiscounts[0]
+      ? `${f.topProductsByDiscounts[0].name} has the highest recorded discounts at ${money(f.topProductsByDiscounts[0].discounts)}. Review discount rate and margin before changing price.`
+      : "Product discount analysis needs mapped discount data.";
   if (/product|item|dish|sold/.test(q)) {
     // Product questions include rankings, named product lookups, and sales mix.
     if (namedProduct)
@@ -1396,6 +1845,62 @@ function calculatedAnswer(question) {
       return `${f.categoryGrowth[0].name} grew the most, up ${money(f.categoryGrowth[0].change)} versus the earlier half of the selected dates.`;
     return `${topCategory.name} leads selected category revenue at ${money(topCategory.netSales)}.${leastCategory ? " " + leastCategory.name + " is lowest at " + money(leastCategory.netSales) + "." : ""} Category totals can be affected by the number of products in each category.`;
   }
+  if (/earliest|latest|date range|dates in the dataset/.test(q))
+    return f.dateSummary
+      ? `The selected dataset runs from ${f.dateSummary.earliestDate} to ${f.dateSummary.latestDate}.`
+      : "Map a date column to identify the earliest and latest dates.";
+  if (/months of sales|how many months/.test(q))
+    return f.dateSummary
+      ? `${f.dateSummary.monthsCovered} month(s) of sales history are available in the current selection.`
+      : "Map a date column to count months of sales history.";
+  if (/average revenue per business day|average.*business day/.test(q))
+    return f.dateSummary
+      ? `Average revenue per recorded business day is ${money(f.dateSummary.averageBusinessDayRevenue)}. This uses days present in the file, not closed or missing days.`
+      : "Map a date column to calculate revenue per business day.";
+  if (/consistent|consistency|vary|variation|stable.*daily|daily sales.*stable/.test(q))
+    return f.dateSummary?.dailySalesStdDev != null
+      ? `Daily sales vary by about ${money(f.dateSummary.dailySalesStdDev)} around the average, a variation of ${pct(f.dateSummary.dailySalesVariationPercent)}. Lower variation means sales are more consistent.`
+      : "Daily-sales consistency needs at least two recorded dates.";
+  if (/same weekdays last week|this week.*last week/.test(q))
+    return "The dashboard does not yet calculate same-weekday week-over-week comparisons. It can compare current selected dates by weekday, but a precise same-weekday comparison needs a dedicated weekly comparison view.";
+  if (/same point last month|so far this month|month.*same point/.test(q))
+    return "The dashboard does not yet calculate month-to-date versus the same point last month. It can show monthly totals, but this question needs a month-to-date comparison calculation.";
+  if (/beginning and end of the month|beginning.*end.*month|payday/.test(q))
+    return f.dateSummary
+      ? `Recorded revenue from days 1-10 is ${money(f.dateSummary.beginningMonthRevenue)}. Recorded revenue from days 21-end is ${money(f.dateSummary.endMonthRevenue)}. Payday effects need actual payday dates to confirm.`
+      : "Map a date column to compare beginning and end of month sales.";
+  if (/seasonal|seasonality|holiday/.test(q))
+    return f.dateSummary?.monthsCovered > 2
+      ? `There are ${f.dateSummary.monthsCovered} recorded months. That can hint at seasonality, but reliable seasonal or holiday analysis needs holiday flags and more history across comparable seasons.`
+      : "There is not enough dated history to judge seasonal or holiday patterns reliably.";
+  if (/revenue.*operating hour|per operating hour/.test(q))
+    return f.hourSummary?.revenuePerRecordedOperatingHour != null
+      ? `Revenue per recorded sales hour is ${money(f.hourSummary.revenuePerRecordedOperatingHour)}. This uses hours that appear in the data, not scheduled open hours.`
+      : "Revenue per operating hour needs date and hour/time columns.";
+  if (/units.*operating hour/.test(q))
+    return f.hourSummary?.unitsPerRecordedOperatingHour != null
+      ? `Units sold per recorded sales hour are about ${f.hourSummary.unitsPerRecordedOperatingHour}. This uses hours that appear in the data, not scheduled open hours.`
+      : "Units per operating hour needs quantity plus date and hour/time columns.";
+  if (/first sale|last sale/.test(q))
+    return f.hourSummary
+      ? `The typical first recorded sale hour is about ${f.hourSummary.typicalFirstSaleHour}:00, and the typical last recorded sale hour is about ${f.hourSummary.typicalLastSaleHour}:00. Scheduled opening and closing times are not mapped.`
+      : "First/last sale timing needs date and hour/time columns.";
+  if (/final hour|last hour/.test(q))
+    return f.hourSummary?.lastRecordedHourRevenue != null
+      ? `The final recorded sales hour of each day contributes ${money(f.hourSummary.lastRecordedHourRevenue)} in selected revenue. Closing-time analysis needs scheduled closing hours.`
+      : "Final-hour revenue needs date and hour/time columns.";
+  if (/30-minute|30 minute|time between orders|outside business hours|opening time|closing/.test(q))
+    return missingDataAnswer(
+      "Detailed time-interval and business-hours analysis",
+      "full timestamps, scheduled opening/closing hours, and ideally one row per transaction line with reliable order times",
+    );
+  if (/weather|rainy|sunny/.test(q))
+    return f.weather[0]
+      ? `Weather comparison by average recorded daily sales: ${f.weather
+          .slice(0, 3)
+          .map((item) => `${item.name} ${money(item.averageDailyNetSales)} per recorded day`)
+          .join("; ")}. Compare similar weekdays before treating this as a weather effect.`
+      : "Weather analysis needs mapped date and weather columns.";
   if (/weekend|weekday/.test(q) && f.weekdays.length) {
     // Weekend/weekday comparison sums the weekday groups.
     const weekend = f.weekdays.filter(
@@ -1424,6 +1929,39 @@ function calculatedAnswer(question) {
       return `${f.topHoursByAov[0].hour}:00 had the highest average order value at ${money(f.topHoursByAov[0].averageOrderValue)}.`;
     return `${f.topHours[0].hour}:00 generates the most revenue at ${money(f.topHours[0].netSales)}.`;
   }
+  if (/zero quantity|quantity.*zero/.test(q))
+    return f.dataQuality.zeroQuantityLines === null
+      ? "Quantity is not mapped, so zero-quantity sales lines cannot be counted."
+      : `${f.dataQuality.zeroQuantityLines.toLocaleString()} selected sales lines have zero quantity.`;
+  if (/unusually large|unusually small|outlier|transaction amounts/.test(q))
+    return f.dataQuality.unusuallyLargeLines.length
+      ? `Largest selected line amounts are ${f.dataQuality.unusuallyLargeLines
+          .map((value) => money(value))
+          .join("; ")}. Very small, zero, or negative amounts should be reviewed as discounts, returns, tests, or data-entry issues.`
+      : "There are no positive sales-line amounts to review for unusually large values.";
+  if (/active filters|filters.*affecting/.test(q)) {
+    const entries = Object.entries(f.dataQuality.activeFilters);
+    return entries.length
+      ? `Active filters: ${entries.map(([key, value]) => `${key}=${value}`).join(", ")}.`
+      : "No dashboard filters are currently active.";
+  }
+  if (/supplied directly|calculated|displayed metrics/.test(q))
+    return `Available source-backed metrics include ${f.dataQuality.suppliedMetrics.join(", ") || "net sales only"}. Calculated metrics include ${f.dataQuality.calculatedMetrics.join(", ")}.`;
+  if (/multiple currencies|currency/.test(q))
+    return "The dashboard uses the single currency code chosen during setup. It does not detect or convert multiple currencies inside the uploaded file.";
+  if (/quantity.*items sold|items remaining|quantity units|kilograms|pieces/.test(q))
+    return "The dashboard treats the mapped quantity column as units sold. It cannot verify mixed units or whether the source column means stock remaining unless your file includes separate unit-of-measure and inventory fields.";
+  if (/same product.*different categories|product assigned.*categories/.test(q))
+    return "The dashboard can show product and category totals, but it does not yet flag products assigned to multiple categories. Review the product table or source file if category consistency matters.";
+  if (/canceled|cancelled|return.*original|test transactions|placeholder|last updated|settlement|reconcile/.test(q))
+    return missingDataAnswer(
+      "Cancellation, return-linking, test-transaction, dataset-update, and settlement reconciliation checks",
+      "order status, original-sale IDs for returns, test flags, source export timestamp, and point-of-sale settlement totals",
+    );
+  if (/filtered totals.*full dataset|reconcile.*full/.test(q))
+    return `The current filter selects ${f.selectedRows.toLocaleString()} of ${f.sourceRows.toLocaleString()} source rows and totals ${money(f.netSales)} in net sales. Reset filters to compare against the full dataset.`;
+  if (/assumptions|verify before acting|before acting/.test(q))
+    return `Before acting, verify: the file covers the full period, returns and discounts are recorded correctly, order IDs group receipts correctly, product costs are current, operating expenses are considered, and stock/customer data supports any inventory or retention decision.`;
   if (/when|day|sales|revenue/.test(q))
     return `Selected net sales total ${money(f.netSales)}.${topDay ? " The highest recorded day is " + topDay.date + " at " + money(topDay.netSales) + "." : ""}${lowDay ? " The lowest recorded day is " + lowDay.date + " at " + money(lowDay.netSales) + "." : ""}${f.topHours[0] ? " The highest recorded hour is " + f.topHours[0].hour + ":00 at " + money(f.topHours[0].netSales) + " across selected days." : ""} These totals reflect recorded coverage, not sales per open hour.`;
   if (/next|recommend|investigate|should/.test(q))

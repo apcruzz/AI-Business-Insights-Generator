@@ -311,6 +311,18 @@ def business_summary(facts):
     trend = facts.get("trendComparison")
     if isinstance(trend, dict):
         lines.append(f"Trend: second-half sales were {trend.get('secondVsFirstPercent')}% versus the first half.")
+    order_stats = facts.get("orderStats")
+    if isinstance(order_stats, dict):
+        lines.append(f"Order facts: average order value {compact_money(order_stats.get('averageOrderValue'), currency)}; median order value {compact_money(order_stats.get('medianOrderValue'), currency)}; top 3 orders contribute {order_stats.get('percentRevenueTop3Orders') if order_stats.get('percentRevenueTop3Orders') is not None else 'not available'}%; average lines per order {order_stats.get('averageLinesPerOrder') if order_stats.get('averageLinesPerOrder') is not None else 'not available'}.")
+    if facts.get("topOrders"):
+        orders = "; ".join(f"{compact_money(d.get('netSales'), currency)} across {d.get('lines')} lines" for d in facts["topOrders"][:3])
+        lines.append(f"Largest matching orders: {orders}.")
+    if facts.get("productPairs"):
+        pairs = "; ".join(f"{d.get('name')}: {d.get('orders')} orders" for d in facts["productPairs"][:3])
+        lines.append(f"Common product combinations: {pairs}.")
+    date_summary = facts.get("dateSummary")
+    if isinstance(date_summary, dict):
+        lines.append(f"Date coverage: {date_summary.get('earliestDate')} to {date_summary.get('latestDate')}; {date_summary.get('monthsCovered')} recorded months; average recorded business-day revenue {compact_money(date_summary.get('averageBusinessDayRevenue'), currency)}; daily variation {date_summary.get('dailySalesVariationPercent') if date_summary.get('dailySalesVariationPercent') is not None else 'not available'}%.")
     if facts.get("topDays"):
         days = "; ".join(f"{d.get('date')}: {compact_money(d.get('netSales'), currency)}" for d in facts["topDays"][:3])
         lines.append(f"Highest recorded days: {days}.")
@@ -332,6 +344,12 @@ def business_summary(facts):
     if facts.get("topHours"):
         hours = "; ".join(f"{d.get('hour')}:00: {compact_money(d.get('netSales'), currency)}" for d in facts["topHours"][:5])
         lines.append(f"Top hours by revenue: {hours}.")
+    hour_summary = facts.get("hourSummary")
+    if isinstance(hour_summary, dict):
+        lines.append(f"Hour facts: revenue per recorded sales hour {compact_money(hour_summary.get('revenuePerRecordedOperatingHour'), currency)}; units per recorded sales hour {hour_summary.get('unitsPerRecordedOperatingHour') if hour_summary.get('unitsPerRecordedOperatingHour') is not None else 'not available'}; typical first sale hour {hour_summary.get('typicalFirstSaleHour') if hour_summary.get('typicalFirstSaleHour') is not None else 'not available'}; typical last sale hour {hour_summary.get('typicalLastSaleHour') if hour_summary.get('typicalLastSaleHour') is not None else 'not available'}.")
+    if facts.get("weather"):
+        weather = "; ".join(f"{d.get('name')}: {compact_money(d.get('averageDailyNetSales'), currency)} average per recorded day" for d in facts["weather"][:3])
+        lines.append(f"Weather comparison: {weather}.")
     discount = facts.get("discountSummary")
     if isinstance(discount, dict):
         lines.append(f"Discounted revenue: {compact_money(discount.get('discountedRevenue'), currency)}; undiscounted revenue: {compact_money(discount.get('undiscountedRevenue'), currency)}; discounted order share: {discount.get('discountedOrderPercent') if discount.get('discountedOrderPercent') is not None else 'not available'}%.")
