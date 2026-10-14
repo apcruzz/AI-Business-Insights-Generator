@@ -1,33 +1,23 @@
+import {
+  $,
+  bottomBy,
+  dayNames,
+  esc,
+  findNamed,
+  group,
+  median,
+  missingDataAnswer,
+  pct,
+  period,
+  round2,
+  sourceOptions,
+  standardDeviation,
+  sum,
+  topBy,
+  weekKey,
+} from "./dashboard-utils.js";
+
 export function initDashboard() {
-
-// Finds one element on the page by its id.
-const $ = (id) => document.getElementById(id);
-
-// Escapes user-provided text before placing it inside HTML.
-const esc = (value) =>
-  String(value ?? "").replace(
-    /[&<>"']/g,
-    (c) =>
-      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
-        c
-      ],
-  );
-
-// Adds one numeric column across a set of rows.
-const sum = (rows, key) => rows.reduce((n, r) => n + (Number(r[key]) || 0), 0);
-
-// Groups rows by a field, for example all rows for each product or category.
-const group = (rows, key) => [
-  ...rows.reduce((map, r) => {
-    const k = r[key];
-    if (!map.has(k)) map.set(k, []);
-    map.get(k).push(r);
-    return map;
-  }, new Map()),
-];
-
-// Formats a percent value and handles missing or invalid numbers cleanly.
-const pct = (value) => (Number.isFinite(value) ? value.toFixed(1) + "%" : "—");
 
 // Shared app state. `data` holds normalized rows returned by the Python server.
 let data = [],
@@ -130,21 +120,6 @@ function showPage(page) {
   document.body.classList.toggle("overviewMode", overview);
   $("overviewNav").setAttribute("aria-current", overview ? "page" : "false");
   $("detailNav").setAttribute("aria-current", overview ? "false" : "page");
-}
-function sourceOptions(select, options, defaultValue = "") {
-  // Rebuild a dropdown from scratch so old choices do not remain.
-  select.replaceChildren();
-  const blank = document.createElement("option");
-  blank.value = "";
-  blank.textContent = "Not provided";
-  select.append(blank);
-  options.forEach((value) => {
-    const o = document.createElement("option");
-    o.value = value;
-    o.textContent = value;
-    select.append(o);
-  });
-  select.value = defaultValue;
 }
 async function inspect() {
   // Read the chosen sample/upload and ask the server for column suggestions.
@@ -282,16 +257,6 @@ function resetFilters() {
     (id) => ($(id).value = ""),
   );
   render();
-}
-function period(hour) {
-  // Buckets hours into the same time-of-day groups used by the filter.
-  return hour < 6
-    ? "overnight"
-    : hour < 12
-      ? "morning"
-      : hour < 18
-        ? "afternoon"
-        : "evening";
 }
 function filtered() {
   // Apply all current dashboard filters to the normalized rows.
@@ -649,17 +614,6 @@ function render() {
   renderInsights(rows);
   $("insightAnswer").textContent = "";
 }
-// Rounds a number to two decimal places for calculations and AI facts.
-const round2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
-const dayNames = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-];
 function uniqueOrders(rows) {
   // Returns null when order IDs are missing or failed validation.
   return meta.capabilities.orders
@@ -670,58 +624,6 @@ function aov(rows) {
   // Average order value is revenue divided by valid order count.
   const orders = uniqueOrders(rows);
   return orders ? round2(sum(rows, "Net_Sales") / orders) : null;
-}
-function weekKey(date) {
-  // Converts a date into the Monday that starts its week.
-  const d = new Date(date + "T12:00:00Z");
-  d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7));
-  return d.toISOString().slice(0, 10);
-}
-function shareText(value, total) {
-  // Adds a readable revenue-share note when the total is positive.
-  return total > 0
-    ? ` (${pct((value / total) * 100)} of selected revenue)`
-    : "";
-}
-function median(values) {
-  // Finds the middle value for order-size and sales-consistency questions.
-  const numbers = values
-    .map(Number)
-    .filter((value) => Number.isFinite(value))
-    .sort((a, b) => a - b);
-  if (!numbers.length) return null;
-  const middle = Math.floor(numbers.length / 2);
-  return numbers.length % 2
-    ? numbers[middle]
-    : (numbers[middle - 1] + numbers[middle]) / 2;
-}
-function standardDeviation(values) {
-  // Measures how much daily sales vary around their average.
-  const numbers = values.map(Number).filter((value) => Number.isFinite(value));
-  if (numbers.length < 2) return null;
-  const average = sum(numbers.map((value) => ({ value })), "value") / numbers.length,
-    variance =
-      numbers.reduce((total, value) => total + (value - average) ** 2, 0) /
-      numbers.length;
-  return Math.sqrt(variance);
-}
-function findNamed(items, q) {
-  // Best-effort product/category lookup for questions naming a specific item.
-  return items
-    .filter((item) => item.name && q.includes(item.name.toLowerCase()))
-    .sort((a, b) => b.name.length - a.name.length)[0];
-}
-function topBy(items, key) {
-  // Sorts largest-to-smallest for rankings like top products or top margins.
-  return [...items]
-    .filter((x) => x[key] !== null && x[key] !== undefined)
-    .sort((a, b) => b[key] - a[key]);
-}
-function bottomBy(items, key) {
-  // Sorts smallest-to-largest, ignoring zero/missing values that are not useful.
-  return [...items]
-    .filter((x) => x[key] !== null && x[key] !== undefined && x[key] > 0)
-    .sort((a, b) => a[key] - b[key]);
 }
 function compareHalves(rows, key) {
   // Simple trend proxy: compare earlier dates with later dates in the selection.
@@ -750,17 +652,6 @@ function compareHalves(rows, key) {
     })
     .filter((x) => x.firstHalfNetSales || x.secondHalfNetSales)
     .sort((a, b) => b.change - a.change);
-}
-function missingDataAnswer(topic, needed) {
-  // Plainly explains that a question needs data the current dashboard does not collect.
-  return `${topic} is not available from the mapped sales file. To answer it reliably, add ${needed} to the dataset or connect a matching source that contains it.`;
-}
-function listNames(items, limit = 3) {
-  // Short readable list used in calculated answers.
-  return items
-    .slice(0, limit)
-    .map((item) => item.name)
-    .join("; ");
 }
 function facts(rows = selected) {
   // Build the fact package used by both calculated answers and Ollama.

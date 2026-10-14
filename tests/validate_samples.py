@@ -1,6 +1,7 @@
 """Verify sample totals and missing-data behavior: python -m tests.validate_samples"""
 import pandas as pd
-from backend.app import frame_from_payload, normalize, suggest_mapping
+from backend.data_loader import frame_from_payload
+from backend.normalizer import normalize, suggest_mapping
 
 expected = {
     "Cafe.csv": (1000, 8125.23, 5999.23, False),

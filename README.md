@@ -8,8 +8,21 @@ There are no API keys, subscriptions, cloud model calls, or hosting bills in thi
 
 ```text
 free_business_dashboard/
-├── backend/              # Python API, file analysis, Ollama integration
+├── backend/              # Python API, file analysis, and Ollama integration
+│   ├── app.py            # Backward-compatible backend entry point
+│   ├── config.py         # Shared paths and local service settings
+│   ├── data_loader.py    # CSV/Excel/sample loading
+│   ├── fields.py         # Dashboard field names and column aliases
+│   ├── normalizer.py     # Mapping validation and sales-data normalization
+│   ├── ollama_client.py  # Local AI prompt and Ollama API calls
+│   └── server.py         # Local HTTP routes used by the browser
 ├── src/                  # React/Vite frontend
+│   ├── App.jsx           # React shell for the dashboard
+│   ├── dashboard.js      # Dashboard behavior, charts, and business answers
+│   ├── dashboard-utils.js # Shared browser helper functions
+│   ├── main.jsx          # React mount point
+│   ├── setup.css         # Setup and mapping styles
+│   └── styles.css        # Main dashboard styling
 ├── data/samples/         # Included sample CSV files
 ├── docs/                 # Supporting project documentation
 ├── tests/                # Validation checks
