@@ -54,6 +54,78 @@ header #datasetName {
   color: white;
   border: 0;
 }
+.chartChooser {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.42);
+}
+.chartChooserPanel {
+  width: min(760px, 100%);
+  max-height: min(760px, calc(100vh - 48px));
+  overflow: auto;
+  padding: 22px;
+  background: #fff;
+  border: 1px solid #d6e1e8;
+  border-radius: 8px;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.24);
+}
+.chartChooserPanel h2 {
+  margin: 0 0 5px;
+  font-size: 24px;
+}
+.chartChoices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+.chartChoice {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  padding: 12px;
+  background: #f8fafc;
+  border: 1px solid #dce5eb;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.chartChoice input {
+  margin-top: 3px;
+}
+.chartChoice:has(input:disabled) {
+  opacity: 0.62;
+  cursor: not-allowed;
+}
+.chartChoice span {
+  display: grid;
+  gap: 3px;
+}
+.chartChoice strong {
+  font-size: 14px;
+}
+.chartChoice small,
+.chartChoiceEmpty {
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.chartChooserActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+.chartChooserActions button.primary {
+  background: #008d79;
+  color: white;
+  border: 0;
+}
 .setup hr {
   border: 0;
   border-top: 1px solid #e0e7ed;
@@ -178,6 +250,69 @@ body:not(.overviewMode) .setup {
 }
 .overviewBottom {
   grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+}
+.overviewChartSlot {
+  min-width: 0;
+}
+body.overviewMode .overviewChartSlot {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+body.overviewMode .overviewChartContent {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+body.overviewMode .overviewChartContent svg {
+  width: 100%;
+  max-height: 100%;
+}
+body.overviewMode .overviewChartContent[data-overview-chart="trend"],
+body.overviewMode .overviewChartContent[data-overview-chart="weekday"],
+body.overviewMode .overviewChartContent[data-overview-chart="weather"],
+body.overviewMode .overviewChartContent[data-overview-chart="hour"] {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+body.overviewMode .overviewChartContent[data-overview-chart="category"] {
+  display: grid;
+  grid-template-columns: minmax(100px, 1fr) minmax(110px, 1fr);
+  align-items: center;
+  gap: 2px 8px;
+}
+body.overviewMode .overviewChartContent[data-overview-chart="category"] svg {
+  min-width: 0;
+}
+body.overviewMode .overviewChartContent[data-overview-chart="category"]
+  .categoryLegendList {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  max-height: 100%;
+  overflow: auto;
+}
+body.overviewMode .overviewChartContent[data-overview-chart="products"],
+body.overviewMode .overviewChartContent[data-overview-chart="profitability"],
+body.overviewMode .overviewChartContent[data-overview-chart="staff"] {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+}
+body.overviewMode .overviewChartContent .barrow {
+  margin: 0;
+}
+body.overviewMode .overviewChartContent .barhead {
+  font-size: 13px;
+  line-height: 1.2;
+}
+body.overviewMode .overviewChartContent .track {
+  height: 8px;
+  margin-top: 4px;
+}
+body.overviewMode .overviewChartContent .chartNote {
+  margin: auto 0;
 }
 @media (min-width: 1000px) and (min-height: 650px) {
   body.overviewMode .overviewBottom {
@@ -487,6 +622,19 @@ body:not(.overviewMode) .setup {
   }
 }
 @media (max-width: 850px) {
+  .chartChooser {
+    align-items: stretch;
+    padding: 14px;
+  }
+  .chartChooserPanel {
+    max-height: calc(100vh - 28px);
+  }
+  .chartChoices {
+    grid-template-columns: 1fr;
+  }
+  .chartChooserActions {
+    flex-direction: column;
+  }
   .insightHeader,
   .insightHeader .modelRow {
     align-items: stretch;

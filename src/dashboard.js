@@ -27,7 +27,8 @@ let data = [],
   profile = null,
   token = "",
   busy = false,
-  revision = 0;
+  revision = 0,
+  overviewChartIds = [];
 
 // Preferred local model for this project. Other downloaded local models still work.
 const preferredLocalModel = "llama3.2:3b";
@@ -123,6 +124,136 @@ function showPage(page) {
   document.body.classList.toggle("overviewMode", overview);
   $("overviewNav").setAttribute("aria-current", overview ? "page" : "false");
   $("detailNav").setAttribute("aria-current", overview ? "false" : "page");
+}
+function chartOptions() {
+  // Build the chart menu from the columns that survived backend validation.
+  const c = meta.capabilities || {};
+  return [
+    {
+      id: "trend",
+      title: "Net sales trend",
+      detail: "Uses the mapped date and net sales columns.",
+      available: c.Date,
+    },
+    {
+      id: "category",
+      title: "Sales by category",
+      detail: "Uses the mapped category and net sales columns.",
+      available: c.category,
+    },
+    {
+      id: "products",
+      title: "Top products",
+      detail: "Uses the mapped product and net sales columns.",
+      available: c.product,
+    },
+    {
+      id: "weekday",
+      title: "Sales by day of week",
+      detail: "Uses the mapped date column.",
+      available: c.Date,
+    },
+    {
+      id: "hour",
+      title: "Sales by hour",
+      detail: "Uses mapped hour or time data.",
+      available: c.Hour,
+    },
+    {
+      id: "profitability",
+      title: "Product profitability",
+      detail: "Uses product and gross profit or cost data.",
+      available: c.product && c.Gross_Profit,
+    },
+    {
+      id: "weather",
+      title: "Weather versus sales",
+      detail: "Uses mapped date and weather columns.",
+      available: c.Date && c.weather,
+    },
+    {
+      id: "staff",
+      title: "Staff sales comparison",
+      detail: "Uses the mapped employee column.",
+      available: c.employee,
+    },
+  ].filter((option) => option.available);
+}
+function applyChartVisibility() {
+  // Detailed Dashboard shows the available charts not chosen for Business Overview.
+  const available = new Set(chartOptions().map((option) => option.id)),
+    overview = new Set(overviewChartIds);
+  document.querySelectorAll("[data-chart-panel]").forEach((panel) => {
+    const id = panel.dataset.chartPanel;
+    panel.hidden = !available.has(id) || overview.has(id);
+  });
+  document.querySelectorAll("[data-chart-group]").forEach((group) => {
+    group.hidden = ![...group.querySelectorAll("[data-chart-panel]")].some(
+      (panel) => !panel.hidden,
+    );
+  });
+}
+function showChartChooser(resetSelection = false) {
+  // Ask which three available charts should be featured in Business Overview.
+  if (!data.length) return;
+  const options = chartOptions(),
+    optionIds = options.map((option) => option.id);
+  overviewChartIds = overviewChartIds.filter((id) => optionIds.includes(id));
+  if (resetSelection || !overviewChartIds.length)
+    overviewChartIds = optionIds.slice(0, 3);
+  $("chartChooserSummary").textContent = options.length
+    ? `Choose up to 3 charts for Business Overview. The rest will appear in Detailed Dashboard.`
+    : "No optional charts are available from the mapped columns.";
+  $("chartChoices").innerHTML = options.length
+    ? options
+        .map(
+          (option) =>
+            `<label class="chartChoice"><input type="checkbox" name="chartChoice" value="${esc(option.id)}" ${overviewChartIds.includes(option.id) ? "checked" : ""}><span><strong>${esc(option.title)}</strong><small>${esc(option.detail)}</small></span></label>`,
+        )
+        .join("")
+    : `<p class="chartChoiceEmpty">Summary cards and Business insights will still load.</p>`;
+  document
+    .querySelectorAll('input[name="chartChoice"]')
+    .forEach((input) => input.addEventListener("change", updateChartChoiceState));
+  updateChartChoiceState();
+  $("chartChooser").hidden = false;
+  $("loadSelectedCharts").focus();
+}
+function updateChartChoiceState() {
+  // Limit Business Overview to three featured charts.
+  const inputs = [...document.querySelectorAll('input[name="chartChoice"]')],
+    checked = inputs.filter((input) => input.checked),
+    max = Math.min(3, inputs.length);
+  inputs.forEach((input) => {
+    input.disabled = !input.checked && checked.length >= max;
+  });
+  $("loadSelectedCharts").disabled = inputs.length > 0 && checked.length === 0;
+  if (inputs.length) {
+    $("chartChooserSummary").textContent =
+      `${checked.length}/${max} overview charts selected. Remaining available charts will appear in Detailed Dashboard.`;
+  }
+}
+function loadSelectedCharts() {
+  // Save the selected overview chart ids, then draw Overview and Detail.
+  const selectedIds = [
+    ...document.querySelectorAll('input[name="chartChoice"]:checked'),
+  ].map((input) => input.value);
+  overviewChartIds = selectedIds.length
+    ? selectedIds.slice(0, 3)
+    : chartOptions()
+        .slice(0, 3)
+        .map((option) => option.id);
+  $("chartChooser").hidden = true;
+  applyChartVisibility();
+  render();
+  $("setupStatus").textContent = "Dashboard ready.";
+}
+function selectRecommendedCharts() {
+  const recommended = new Set(chartOptions().slice(0, 3).map((option) => option.id));
+  document.querySelectorAll('input[name="chartChoice"]').forEach((input) => {
+    input.checked = recommended.has(input.value);
+  });
+  updateChartChoiceState();
 }
 async function inspect() {
   // Read the chosen sample/upload and ask the server for column suggestions.
@@ -243,22 +374,26 @@ async function build() {
       .map((w) => `<p>${esc(w)}</p>`)
       .join("");
     $("dataNotes").textContent = meta.warnings.join(" ");
-    resetFilters();
+    setDefaultFilterValues();
     showPage("overview");
-    $("setupStatus").textContent = "Dashboard ready.";
+    showChartChooser(true);
+    $("setupStatus").textContent = "Choose charts to load.";
   } catch (e) {
     $("setupError").textContent = e.message;
   } finally {
     $("buildButton").disabled = false;
   }
 }
-function resetFilters() {
+function setDefaultFilterValues() {
   // Return all filters to the full dataset range.
   $("from").value = meta.dateMin || "";
   $("to").value = meta.dateMax || "";
   ["category", "product", "weekday", "period"].forEach(
     (id) => ($(id).value = ""),
   );
+}
+function resetFilters() {
+  setDefaultFilterValues();
   render();
 }
 function filtered() {
@@ -527,7 +662,127 @@ function metrics(rows, overview = false) {
       (m) =>
         `<article class="card"><div class="label">${esc(m[0])}</div><div class="value">${esc(m[1])}</div><div class="hint">${esc(m[2])}</div></article>`,
     )
-    .join("");
+	    .join("");
+}
+function weekdayChart(rows, c) {
+  const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  return c.Date
+    ? chart(
+        days.map((day, index) => [
+          day,
+          sum(
+            rows.filter(
+              (row) =>
+                (new Date(row.Date + "T12:00:00Z").getUTCDay() + 6) % 7 ===
+                index,
+            ),
+            "Net_Sales",
+          ),
+        ]),
+      )
+    : note("Map a date column to compare weekdays.");
+}
+function topProductsChart(products, c) {
+  if (!c.product) return note("Map a product column to rank products.");
+  const top = products.slice(0, 5),
+    max = Math.max(...top.map((item) => sum(item[1], "Net_Sales")), 1);
+  return (
+    top
+      .map(
+        ([product, rows]) =>
+          `<div class="barrow"><div class="barhead"><span>${esc(product)}</span><strong>${money(sum(rows, "Net_Sales"))}</strong></div><div class="track"><div class="fill" style="background:#008d79;width:${Math.max(0, (sum(rows, "Net_Sales") / max) * 100)}%"></div></div></div>`,
+      )
+      .join("") || note("No matching sales.")
+  );
+}
+function profitabilityChart(products, c) {
+  return c.Gross_Profit
+    ? products
+        .map(([product, rows]) => [
+          product,
+          sum(rows, "Net_Sales"),
+          sum(rows, "Gross_Profit"),
+        ])
+        .filter((item) => item[1] > 0)
+        .sort((a, b) => b[2] / b[1] - a[2] / a[1])
+        .map(
+          ([product, netSales, grossProfit]) =>
+            `<div class="barrow"><div class="barhead"><strong>${esc(product)}</strong><span>${pct((grossProfit / netSales) * 100)}</span></div><div class="track"><div class="fill" style="background:#438dcc;width:${Math.max(0, Math.min(100, (grossProfit / netSales) * 100))}%"></div></div></div>`,
+        )
+        .join("") || note("No positive sales for a margin comparison.")
+    : note("Map product costs or gross profit to show profitability.");
+}
+function staffGroups(rows) {
+  return group(rows, "Employee_Name").sort(
+    (a, b) => sum(b[1], "Net_Sales") - sum(a[1], "Net_Sales"),
+  );
+}
+function staffTable(rows, c) {
+  return (
+    staffGroups(rows)
+      .map(([name, items]) => {
+        const netSales = sum(items, "Net_Sales"),
+          grossProfit = sum(items, "Gross_Profit");
+        return `<tr><td>${esc(name)}</td><td class="num">${c.Gross_Sales ? money(sum(items, "Gross_Sales")) : "—"}</td><td class="num">${c.Discount_Amount ? money(sum(items, "Discount_Amount")) : "—"}</td><td class="num">${money(netSales)}</td><td class="num">${c.Gross_Profit ? money(grossProfit) : "—"}</td><td class="num">${c.Gross_Profit && netSales > 0 ? pct((grossProfit / netSales) * 100) : "—"}</td></tr>`;
+      })
+      .join("") || '<tr><td colspan="6">No matching sales.</td></tr>'
+  );
+}
+function staffChart(rows, c) {
+  if (!c.employee) return note("Map an employee column to compare staff sales.");
+  const top = staffGroups(rows).slice(0, 5),
+    max = Math.max(...top.map((item) => sum(item[1], "Net_Sales")), 1);
+  return (
+    top
+      .map(
+        ([name, items]) =>
+          `<div class="barrow"><div class="barhead"><span>${esc(name)}</span><strong>${money(sum(items, "Net_Sales"))}</strong></div><div class="track"><div class="fill" style="background:#6750a4;width:${Math.max(0, (sum(items, "Net_Sales") / max) * 100)}%"></div></div></div>`,
+      )
+      .join("") || note("No matching sales.")
+  );
+}
+function weatherChart(rows, c) {
+  return c.weather && c.Date
+    ? chart(
+        group(rows, "Weather").map(([weather, items]) => [
+          weather,
+          sum(items, "Net_Sales") / new Set(items.map((row) => row.Date)).size,
+        ]),
+      ) +
+        note(
+          "Average per recorded day; coverage and other factors can affect this comparison.",
+        )
+    : note("Map date and weather columns to compare sales by weather.");
+}
+function overviewChartHtml(id, rows, products, c) {
+  if (id === "trend") return trend(rows);
+  if (id === "category") return categoryPie(rows);
+  if (id === "products") return topProductsChart(products, c);
+  if (id === "weekday") return weekdayChart(rows, c);
+  if (id === "hour") return hourStack(rows);
+  if (id === "profitability") return profitabilityChart(products, c);
+  if (id === "weather") return weatherChart(rows, c);
+  if (id === "staff") return staffChart(rows, c);
+  return note("Choose a chart to show here.");
+}
+function renderOverviewCharts(rows, products, c) {
+  // Fill the three Business Overview slots with the user's selected charts.
+  const options = chartOptions(),
+    optionById = new Map(options.map((option) => [option.id, option])),
+    availableIds = new Set(options.map((option) => option.id));
+  overviewChartIds = overviewChartIds
+    .filter((id) => availableIds.has(id))
+    .slice(0, 3);
+  if (!overviewChartIds.length)
+    overviewChartIds = options.slice(0, 3).map((option) => option.id);
+  document.querySelectorAll(".overviewChartSlot").forEach((slot, index) => {
+    const id = overviewChartIds[index],
+      option = optionById.get(id);
+    slot.hidden = !option;
+    slot.innerHTML = option
+      ? `<h2>${esc(option.title)}</h2><div class="overviewChartContent" data-overview-chart="${esc(id)}">${overviewChartHtml(id, rows, products, c)}</div>`
+      : "";
+  });
 }
 function render() {
   // Recalculate every chart/table whenever filters or data change.
@@ -540,30 +795,15 @@ function render() {
     rows.length.toLocaleString() + " sales lines selected";
   $("cards").innerHTML = metrics(rows);
   $("overviewCards").innerHTML = metrics(rows, true);
-  $("daily").innerHTML = trend(rows, c.Gross_Profit);
-  $("ovTrend").innerHTML = trend(rows);
-  $("categories").innerHTML = categoryPie(rows);
-  $("ovCategory").innerHTML = categoryPie(rows);
-  $("hours").innerHTML = hourStack(rows);
-  $("peak").textContent = "";
-  const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-  $("ovDays").innerHTML = c.Date
-    ? chart(
-        days.map((d, i) => [
-          d,
-          sum(
-            rows.filter(
-              (r) =>
-                (new Date(r.Date + "T12:00:00Z").getUTCDay() + 6) % 7 === i,
-            ),
-            "Net_Sales",
-          ),
-        ]),
-      )
-    : note("Map a date column to compare weekdays.");
   const products = group(rows, "Product_Name").sort(
     (a, b) => sum(b[1], "Net_Sales") - sum(a[1], "Net_Sales"),
   );
+  renderOverviewCharts(rows, products, c);
+  $("daily").innerHTML = trend(rows, c.Gross_Profit);
+  $("categories").innerHTML = categoryPie(rows);
+  $("hours").innerHTML = hourStack(rows);
+  $("peak").textContent = "";
+  $("ovDays").innerHTML = weekdayChart(rows, c);
   $("products").innerHTML =
     products
       .map(([p, r]) => {
@@ -572,48 +812,10 @@ function render() {
         return `<tr><td>${esc(p)}</td><td class="num">${c.Quantity ? sum(r, "Quantity") : "—"}</td><td class="num">${money(n)}</td><td class="num">${c.Gross_Profit ? money(g) : "—"}</td><td class="num">${c.Gross_Profit && n > 0 ? pct((g / n) * 100) : "—"}</td></tr>`;
       })
       .join("") || '<tr><td colspan="5">No matching sales.</td></tr>';
-  const top = products.slice(0, 5),
-    max = Math.max(...top.map((x) => sum(x[1], "Net_Sales")), 1);
-  $("ovTop").innerHTML = c.product
-    ? top
-        .map(
-          ([p, r]) =>
-            `<div class="barrow"><div class="barhead"><span>${esc(p)}</span><strong>${money(sum(r, "Net_Sales"))}</strong></div><div class="track"><div class="fill" style="background:#008d79;width:${Math.max(0, (sum(r, "Net_Sales") / max) * 100)}%"></div></div></div>`,
-        )
-        .join("") || note("No matching sales.")
-    : note("Map a product column to rank products.");
-  $("profitability").innerHTML = c.Gross_Profit
-    ? products
-        .map(([p, r]) => [p, sum(r, "Net_Sales"), sum(r, "Gross_Profit")])
-        .filter((x) => x[1] > 0)
-        .sort((a, b) => b[2] / b[1] - a[2] / a[1])
-        .map(
-          ([p, n, g]) =>
-            `<div class="barrow"><div class="barhead"><strong>${esc(p)}</strong><span>${pct((g / n) * 100)}</span></div><div class="track"><div class="fill" style="background:#438dcc;width:${Math.max(0, Math.min(100, (g / n) * 100))}%"></div></div></div>`,
-        )
-        .join("") || note("No positive sales for a margin comparison.")
-    : note("Map product costs or gross profit to show profitability.");
-  $("staff").innerHTML =
-    group(rows, "Employee_Name")
-      .sort((a, b) => sum(b[1], "Net_Sales") - sum(a[1], "Net_Sales"))
-      .map(([name, r]) => {
-        const n = sum(r, "Net_Sales"),
-          g = sum(r, "Gross_Profit");
-        return `<tr><td>${esc(name)}</td><td class="num">${c.Gross_Sales ? money(sum(r, "Gross_Sales")) : "—"}</td><td class="num">${c.Discount_Amount ? money(sum(r, "Discount_Amount")) : "—"}</td><td class="num">${money(n)}</td><td class="num">${c.Gross_Profit ? money(g) : "—"}</td><td class="num">${c.Gross_Profit && n > 0 ? pct((g / n) * 100) : "—"}</td></tr>`;
-      })
-      .join("") || '<tr><td colspan="6">No matching sales.</td></tr>';
-  $("weather").innerHTML =
-    c.weather && c.Date
-      ? chart(
-          group(rows, "Weather").map(([w, r]) => [
-            w,
-            sum(r, "Net_Sales") / new Set(r.map((x) => x.Date)).size,
-          ]),
-        ) +
-        note(
-          "Average per recorded day; coverage and other factors can affect this comparison.",
-        )
-      : note("Map date and weather columns to compare sales by weather.");
+  $("profitability").innerHTML = profitabilityChart(products, c);
+  $("staff").innerHTML = staffTable(rows, c);
+  $("weather").innerHTML = weatherChart(rows, c);
+  applyChartVisibility();
   renderInsights(rows);
   $("insightAnswer").textContent = "";
 }
@@ -1969,6 +2171,9 @@ $("cancelSetup").onclick = () => showPage("overview");
   $(id).addEventListener("change", render),
 );
 $("reset").onclick = resetFilters;
+$("chooseCharts").onclick = () => showChartChooser(false);
+$("selectRecommendedCharts").onclick = selectRecommendedCharts;
+$("loadSelectedCharts").onclick = loadSelectedCharts;
 $("refreshModels").onclick = refreshModels;
 $("insightForm").onsubmit = (e) => {
   // Keep the form on the same page and answer the typed question.

@@ -131,22 +131,40 @@ export default function App() {
         <div id="setupError" className="error" role="alert"></div>
       </section>
 
+      <section
+        className="chartChooser"
+        id="chartChooser"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="chartChooserTitle"
+        hidden
+      >
+        <div className="chartChooserPanel">
+          <div>
+            <h2 id="chartChooserTitle">Choose overview charts</h2>
+            <p id="chartChooserSummary" className="sub">
+              Pick up to 3 charts for Business Overview
+            </p>
+          </div>
+          <div id="chartChoices" className="chartChoices"></div>
+          <div className="chartChooserActions">
+            <button id="selectRecommendedCharts" type="button">
+              Recommended 3
+            </button>
+            <button className="primary" id="loadSelectedCharts" type="button">
+              Load dashboard
+            </button>
+          </div>
+        </div>
+      </section>
+
       <main id="dashboardMain" hidden>
         <div id="overview">
           <div id="overviewCards" className="cards"></div>
           <div className="overviewGrid">
-            <section className="panel">
-              <h2>Net sales trend</h2>
-              <div id="ovTrend"></div>
-            </section>
-            <section className="panel">
-              <h2>Sales by category</h2>
-              <div id="ovCategory"></div>
-            </section>
-            <section className="panel">
-              <h2>Top 5 products by net sales</h2>
-              <div id="ovTop"></div>
-            </section>
+            <section className="panel overviewChartSlot" id="overviewSlot0"></section>
+            <section className="panel overviewChartSlot" id="overviewSlot1"></section>
+            <section className="panel overviewChartSlot" id="overviewSlot2"></section>
           </div>
 
           <div className="overviewBottom">
@@ -266,6 +284,9 @@ export default function App() {
           <button id="reset" type="button">
             Reset filters
           </button>
+          <button id="chooseCharts" type="button">
+            Choose charts
+          </button>
           <span className="hint" id="count" aria-live="polite"></span>
           <details>
             <summary>Data notes</summary>
@@ -274,13 +295,13 @@ export default function App() {
         </div>
 
         <div id="detailPage" hidden>
-          <section className="panel">
+          <section className="panel" data-chart-panel="weekday">
             <h2>Sales by day of week</h2>
             <div id="ovDays"></div>
           </section>
           <div className="cards" id="cards"></div>
-          <div className="grid">
-            <section className="panel">
+          <div className="grid" data-chart-group>
+            <section className="panel" data-chart-panel="trend">
               <h2>Daily performance</h2>
               <p className="sub">
                 Revenue and gross profit across the selected period
@@ -291,15 +312,15 @@ export default function App() {
               </div>
               <div className="chart" id="daily"></div>
             </section>
-            <section className="panel">
+            <section className="panel" data-chart-panel="category">
               <h2>Sales by category</h2>
               <p className="sub">Share of selected net sales</p>
               <div id="categories"></div>
             </section>
           </div>
 
-          <div className="grid">
-            <section className="panel">
+          <div className="grid" data-chart-group>
+            <section className="panel" data-chart-panel="products">
               <h2>Product performance</h2>
               <p className="sub">
                 Ranked by net sales · margin uses net sales after discounts
@@ -319,7 +340,7 @@ export default function App() {
                 </table>
               </div>
             </section>
-            <section className="panel">
+            <section className="panel" data-chart-panel="hour">
               <h2>Sales by hour</h2>
               <p className="sub">
                 Net sales by hour, split by product · hover or tap a segment for
@@ -330,13 +351,13 @@ export default function App() {
             </section>
           </div>
 
-          <div className="grid">
-            <section className="panel">
+          <div className="grid" data-chart-group>
+            <section className="panel" data-chart-panel="profitability">
               <h2>Product profitability leaderboard</h2>
               <p className="sub">Products ranked by gross margin, after discounts</p>
               <div id="profitability"></div>
             </section>
-            <section className="panel">
+            <section className="panel" data-chart-panel="weather">
               <h2>Weather versus sales</h2>
               <p className="sub">
                 Net sales by weather condition and product category
@@ -350,7 +371,11 @@ export default function App() {
             </section>
           </div>
 
-          <section className="panel" style={{ marginTop: 20 }}>
+          <section
+            className="panel"
+            data-chart-panel="staff"
+            style={{ marginTop: 20 }}
+          >
             <h2>Staff sales comparison</h2>
             <p className="sub">
               Sales handled by each employee in the current selection
