@@ -29,6 +29,9 @@ let data = [],
   busy = false,
   revision = 0;
 
+// Preferred local model for this project. Other downloaded local models still work.
+const preferredLocalModel = "llama3.2:3b";
+
 // Fields the dashboard understands. The mapping UI connects source columns to these names.
 const fields = {
   Date: "Date",
@@ -1909,11 +1912,20 @@ async function refreshModels() {
   $("refreshModels").disabled = true;
   try {
     const result = await (await fetch("/api/models")).json(),
-      current = $("localModel").value;
-    sourceOptions($("localModel"), result.models, current);
+      current = $("localModel").value,
+      recommended =
+        result.models.find((model) => model === preferredLocalModel) ||
+        result.models.find(
+          (model) => model === "llama3.2" || model === "llama3.2:latest",
+        ) ||
+        result.models.find((model) => model.startsWith("llama3.2:")) ||
+        "";
+    sourceOptions($("localModel"), result.models, current || recommended);
     $("localModel").firstChild.textContent = "Calculated answers";
     $("insightMode").textContent = result.models.length
-      ? "Calculated insights · local AI available"
+      ? recommended
+        ? "Calculated insights · Llama 3.2 local AI ready"
+        : "Calculated insights · local AI available"
       : "Calculated insights · install Ollama for optional local AI";
   } finally {
     $("refreshModels").disabled = false;

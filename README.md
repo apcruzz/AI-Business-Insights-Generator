@@ -116,13 +116,17 @@ Without a model, **Calculated answers** already handles product sales, gross mar
 For broader explanations:
 
 1. Install Ollama from https://ollama.com/download.
-2. Download a local model. For example:
+2. Download the recommended local model:
 
 ```sh
-ollama pull qwen3:4b
+ollama pull llama3.2:3b
 ```
 
-This is an existing trained model; you do not need to train a new one. The listed Qwen3 4B quantized download is about 2.5 GB; working memory needs are higher and speed depends on your hardware. A smaller model can be used if your computer struggles.
+This is an existing trained model; you do not need to train a new one. The Llama 3.2 3B download is about 2 GB; working memory needs are higher and speed depends on your hardware. A smaller Llama 3.2 model can be used if your computer struggles:
+
+```sh
+ollama pull llama3.2:1b
+```
 
 3. Start Ollama in **local-only** mode. Quit an already running Ollama app/service first, then run it in a separate terminal:
 
@@ -137,7 +141,7 @@ $env:OLLAMA_NO_CLOUD="1"
 ollama serve
 ```
 
-4. In your dashboard, click **Check local AI** and select a downloaded local model under **Answer mode**.
+4. In your dashboard, click **Check local AI**. If `llama3.2:3b` is installed, the dashboard selects it automatically under **Answer mode**. You can still choose a different downloaded local model.
 
 The app connects only to `127.0.0.1:11434`, excludes cloud-linked model entries, and does not sign in or download models automatically. It sends your question and a small summary of filtered totals/rankings to the local model, not the entire workbook. Calculations and chart values remain controlled by code. Model answers are explanations and can still make mistakes. No generated code is executed. No fine-tuning/training is performed.
 
@@ -154,7 +158,7 @@ Run `npm test` on Mac after creating `.venv`, or run `python -m tests.validate_s
 - Ollama local-only configuration: https://docs.ollama.com/faq
 - Model listing API: https://docs.ollama.com/api/tags
 - Local chat API: https://docs.ollama.com/api/chat
-- Example model and license: https://ollama.com/library/qwen3:4b
+- Example model and license: https://ollama.com/library/llama3.2
 - Ollama pricing, including local use: https://ollama.com/pricing
 
 The app code is provided under the included MIT license. Python packages and downloaded models retain their own licenses.
