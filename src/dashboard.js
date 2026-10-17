@@ -46,9 +46,11 @@ const fields = {
   Category: "Category",
   Quantity: "Quantity sold",
   Unit_Price: "Unit selling price",
-  Gross_Sales: "Gross sales amount",
+  Modifier_Amount: "Add-on / modifier charge (numeric)",
+  Line_Total: "Line total (includes add-ons)",
+  Gross_Sales: "Gross sales amount (includes add-ons)",
   Discount_Amount: "Discount amount",
-  Net_Sales: "Net sales amount",
+  Net_Sales: "Net sales amount (after discounts, includes add-ons)",
   Unit_COGS: "Unit product cost",
   Total_COGS: "Total product cost",
   Gross_Profit: "Gross profit amount",
@@ -308,6 +310,16 @@ async function inspect() {
         profile.mapping[key] || "",
       ),
     );
+    // Ask about amount semantics only for mapped add-on or line-total columns.
+    $("lineTotalBasis").value = "";
+    $("modifierBasis").value = "line";
+    const updateAmountOptions = () => {
+      $("lineTotalOptions").hidden = !$("map_Line_Total").value;
+      $("modifierOptions").hidden = !$("map_Modifier_Amount").value;
+    };
+    $("map_Line_Total").onchange = updateAmountOptions;
+    $("map_Modifier_Amount").onchange = updateAmountOptions;
+    updateAmountOptions();
     $("preview").innerHTML =
       "<table><thead><tr>" +
       profile.columns.map((c) => `<th>${esc(c)}</th>`).join("") +
@@ -349,6 +361,8 @@ async function build() {
       currency,
       dateOrder: $("dateOrder").value,
       decimal: $("decimal").value,
+      lineTotalBasis: $("lineTotalBasis").value,
+      modifierBasis: $("modifierBasis").value,
     });
     meta = result;
     data = result.rows;

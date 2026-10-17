@@ -122,6 +122,26 @@ export default function App() {
             className="mappingGrid"
             style={{ marginTop: 20 }}
           ></div>
+          {/* Amount semantics prevent add-ons or discounts from being counted twice. */}
+          <div id="lineTotalOptions" hidden>
+            <label>Does the line total include discounts?
+              <select id="lineTotalBasis" defaultValue="">
+                <option value="">Choose how this total was calculated</option>
+                <option value="gross">Before discounts — subtract discounts separately</option>
+                <option value="net">After discounts — use as net sales</option>
+              </select>
+            </label>
+            <p>Use a total that includes add-ons but excludes tax and tips. Do not map an order total repeated on every item row.</p>
+          </div>
+          <div id="modifierOptions" hidden>
+            <label>Modifier charge applies to
+              <select id="modifierBasis" defaultValue="line">
+                <option value="line">The whole sales line</option>
+                <option value="unit">Each unit — multiply by quantity</option>
+              </select>
+            </label>
+            <p>Map a numeric charge, not an ingredient name. Blank charges count as zero. When a sales total is mapped, it takes priority and modifiers are not added again.</p>
+          </div>
           {/* Show source rows for checking the mapping before normalization. */}
           <details style={{ marginTop: 18 }}>
             <summary>Preview source rows</summary>

@@ -106,6 +106,8 @@ class Handler(BaseHTTPRequestHandler):
                     payload.get("currency", "USD"),
                     payload.get("dateOrder", "month"),
                     payload.get("decimal", "dot"),
+                    line_total_basis=payload.get("lineTotalBasis"),
+                    modifier_basis=payload.get("modifierBasis", "line"),
                 )
                 result["filename"] = name
                 # Register rows for later questions; a cache limit must not prevent ordinary dashboard use.

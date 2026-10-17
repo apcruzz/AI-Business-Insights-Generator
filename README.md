@@ -166,3 +166,9 @@ Run `npm test` on Mac after creating `.venv`, or run `python -m tests.validate_s
 - Ollama pricing, including local use: https://ollama.com/pricing
 
 The app code is provided under the included MIT license. Python packages and downloaded models retain their own licenses.
+
+### Add-ons and line totals
+
+Map numeric add-on charges to **Add-on / modifier charge** and select whether they apply per line or per unit. Without an existing sales total, gross sales is `quantity × unit price + modifier charge` (multiply the modifier by quantity first for per-unit charges). Discounts are then subtracted. Blank modifier cells count as zero; ingredient names are not prices. If multiple modifier columns exist, combine their charges into one numeric column before upload.
+
+Map a completed **Line total** and confirm whether it is before or after discounts. Existing gross/net/line totals take priority over quantity, base price, and modifiers; charges are never added again. Totals must include add-ons, exclude tax/tips, and not repeat an order total on each item row. Conflicting mapped totals are rejected. Cost data should include add-on costs when calculating gross profit.

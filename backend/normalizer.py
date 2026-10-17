@@ -11,6 +11,7 @@ import pandas as pd
 from dateutil import parser as date_parser
 
 from backend.fields import FIELDS
+from backend.revenue import resolve_revenue
 
 
 def suggest_mapping(columns):
@@ -54,7 +55,7 @@ def parse_date_value(value, dayfirst):
         return None
 
 
-def normalize(frame, mapping, business, currency="USD", date_order="month", decimal="dot"):
+def normalize(frame, mapping, business, currency="USD", date_order="month", decimal="dot", line_total_basis=None, modifier_basis="line"):
     """Validate mapped source columns and build the normalized sales dataset."""
     if not isinstance(mapping, dict):
         raise ValueError("Confirm the column mapping first.")
@@ -68,11 +69,15 @@ def normalize(frame, mapping, business, currency="USD", date_order="month", deci
         raise ValueError("Enter a three-letter currency code, for example USD.")
     result = pd.DataFrame(index=frame.index)
     warnings = []
-    numeric_fields = {"Quantity", "Unit_Price", "Gross_Sales", "Discount_Amount", "Net_Sales", "Unit_COGS", "Total_COGS", "Gross_Profit", "Hour"}
+    numeric_fields = {"Quantity", "Unit_Price", "Gross_Sales", "Discount_Amount", "Net_Sales", "Unit_COGS", "Total_COGS", "Gross_Profit", "Hour", "Modifier_Amount", "Line_Total"}
     # Copy mapped columns into normalized names, converting numeric fields first.
     for key, column in mapped.items():
         if key in numeric_fields:
-            result.loc[:, key] = numeric(frame[column], key, decimal)
+            source = frame[column]
+            # Empty add-on cells mean no charge; nonempty text still fails numeric validation.
+            if key == "Modifier_Amount":
+                source = source.fillna(0).replace(r"^\s*$", "0", regex=True)
+            result.loc[:, key] = numeric(source, key, decimal)
         elif key != "Date":
             result.loc[:, key] = frame[column].fillna("").astype(str).str.strip()
     if "Date" in mapped:
@@ -113,19 +118,8 @@ def normalize(frame, mapping, business, currency="USD", date_order="month", deci
         if hours.isna().any() or ((hours < 0) | (hours > 23) | (hours % 1 != 0)).any():
             raise ValueError("Hour values must be whole numbers from 0 to 23, and Time values must use 24-hour notation.")
         result.loc[:, "Hour"] = hours.astype(int)
-    # Derive gross revenue only when both unit price and quantity are supplied.
-    if "Gross_Sales" not in result and {"Unit_Price", "Quantity"} <= set(result):
-        result.loc[:, "Gross_Sales"] = (result["Quantity"] * result["Unit_Price"]).round(2)
-    if "Net_Sales" not in result:
-        # Net sales is required; derive it only when the source provides enough data.
-        if "Gross_Sales" not in result:
-            raise ValueError("Map net sales, gross sales, or both quantity and unit price.")
-        result.loc[:, "Net_Sales"] = (result["Gross_Sales"] - result.get("Discount_Amount", 0)).round(2)
-        if "Discount_Amount" not in result:
-            warnings.append("No discounts column was provided: net sales is treated as gross sales. Returns and tax treatment depend on your source.")
-    # Cross-check supplied financial amounts rather than silently accepting contradictory totals.
-    if {"Gross_Sales", "Discount_Amount"} <= set(result) and ((result["Gross_Sales"]-result["Discount_Amount"]-result["Net_Sales"]).abs() > .011).any():
-        raise ValueError("Gross sales minus discounts does not match net sales. Confirm that discounts are line amounts, and revenue excludes tax and tips.")
+    # Resolve explicit totals first; otherwise calculate base revenue plus add-ons.
+    resolve_revenue(result, warnings, line_total_basis, modifier_basis)
     if "Total_COGS" not in result and {"Unit_COGS", "Quantity"} <= set(result):
         result.loc[:, "Total_COGS"] = (result["Unit_COGS"] * result["Quantity"]).round(2)
     if "Total_COGS" in result:

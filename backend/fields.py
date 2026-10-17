@@ -10,6 +10,8 @@ FIELDS = {
     "Category": ["category", "productcategory", "department"],
     "Quantity": ["quantity", "qty", "unitssold"],
     "Unit_Price": ["unitprice", "price", "sellingprice"],
+    "Modifier_Amount": ["modifieramount", "modifiertotal", "modifierprice", "modifiercharge", "addonamount", "addontotal", "addonprice", "addoncharge", "extrasamount"],
+    "Line_Total": ["linetotal", "lineamount", "itemtotal", "extendedprice"],
     "Gross_Sales": ["grosssales", "grossrevenue"],
     "Discount_Amount": ["discountamount", "discounts", "discountvalue"],
     "Net_Sales": ["netsales", "netrevenue", "salesrevenue", "revenue"],
