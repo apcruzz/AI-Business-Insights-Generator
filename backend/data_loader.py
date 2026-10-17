@@ -1,3 +1,4 @@
+# Called by /api/profile and /api/analyze; returns a DataFrame, filename, and worksheet names.
 """Read uploaded/sample CSV and spreadsheet files into pandas."""
 from __future__ import annotations
 
@@ -20,6 +21,7 @@ def frame_from_payload(payload):
             raise ValueError("Unknown sample dataset.")
         source = allowed[payload["sample"]]
         raw, name = source.read_bytes(), source.name
+    # Decode the browser upload into bytes in memory; malformed base64 becomes a user-facing error.
     else:
         try:
             raw = base64.b64decode(payload.get("file", ""), validate=True)
@@ -49,6 +51,7 @@ def frame_from_payload(payload):
             raise ValueError("Save the CSV with UTF-8 encoding and try again.")
     else:
         raise ValueError("Upload a CSV, XLSX, or XLS file.")
+    # Remove empty rows and validate table size and unique headers before mapping.
     frame = frame.dropna(how="all").reset_index(drop=True)
     frame.columns = [str(c).strip() for c in frame.columns]
     if not len(frame) or len(frame) > 100000 or len(frame.columns) > 200:

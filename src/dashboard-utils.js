@@ -1,3 +1,4 @@
+// Shared DOM, formatting, grouping, and statistics helpers used by dashboard.js.
 // Finds one element on the page by its id.
 export const $ = (id) => document.getElementById(id);
 
@@ -31,6 +32,7 @@ export const pct = (value) => (Number.isFinite(value) ? value.toFixed(1) + "%" :
 // Rounds a number to two decimal places for calculations and AI facts.
 export const round2 = (value) => Math.round((Number(value) || 0) * 100) / 100;
 
+// Weekday labels follow JavaScript Date.getUTCDay(): Sunday is index zero.
 export const dayNames = [
   "Sunday",
   "Monday",

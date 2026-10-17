@@ -1,6 +1,9 @@
+      /* Base dashboard styles; App.jsx loads setup.css afterward for setup and layout overrides. */
+      /* Include borders and padding within declared element sizes. */
       * {
         box-sizing: border-box;
       }
+      /* Set the base page colors, font, and spacing. */
       body {
         margin: 0;
         background: #f3f5f8;
@@ -9,6 +12,7 @@
           16px/1.5 system-ui,
           sans-serif;
       }
+      /* Arrange the title and dataset summary in the page header. */
       header {
         background: #142334;
         color: white;
@@ -34,6 +38,7 @@
         font-size: 19px;
         margin: 0 0 6px;
       }
+      /* Lay out shared filter controls. */
       .filters {
         display: flex;
         align-items: end;
@@ -62,6 +67,7 @@
       button:hover {
         background: #e9edf2;
       }
+      /* Arrange summary metrics in a responsive card grid. */
       .cards {
         display: grid;
         grid-template-columns: repeat(5, 1fr);
@@ -91,6 +97,7 @@
       .card:first-child {
         border-top: 4px solid #be123c;
       }
+      /* Pair detailed chart panels and provide common chart sizing. */
       .grid {
         display: grid;
         grid-template-columns: 1.6fr 1fr;
@@ -110,6 +117,7 @@
         height: auto;
         display: block;
       }
+      /* Style detailed product and staff tables, including numeric alignment. */
       table {
         width: 100%;
         border-collapse: collapse;
@@ -129,6 +137,7 @@
       th.num {
         text-align: right;
       }
+      /* Draw horizontal ranking bars using a track and proportional fill. */
       .barrow {
         margin: 17px 0;
       }
@@ -157,6 +166,7 @@
         padding: 16px 20px;
         font-size: 14px;
       }
+      /* Identify chart series with colored legend markers. */
       .legend {
         font-size: 14px;
         color: #627185;
@@ -173,6 +183,7 @@
         background: #376e8f;
         margin-left: 16px;
       }
+      /* Style closing notes, scroll containers, and empty states. */
       footer {
         font-size: 13px;
         color: #66758a;
@@ -186,6 +197,7 @@
         text-align: center;
         color: #627185;
       }
+      /* Apply these overrides only at the viewport size specified below; later matching rules take precedence. */
       @media (max-width: 1000px) {
         .cards {
           grid-template-columns: repeat(3, 1fr);
@@ -194,6 +206,7 @@
           grid-template-columns: 1fr;
         }
       }
+      /* Apply these overrides only at the viewport size specified below; later matching rules take precedence. */
       @media (max-width: 600px) {
         .cards {
           grid-template-columns: repeat(2, 1fr);
@@ -225,6 +238,7 @@
           grid-column: span 2;
         }
       }
+      /* Style page navigation and highlight the active page. */
       .topnav {
         background: #062f3a;
         padding: 12px 24px;
@@ -241,6 +255,7 @@
         background: #008d79;
         border-color: #7be0ca;
       }
+      /* Apply overview-specific layout when dashboard.js toggles the body class. */
       body.overviewMode {
         background: #263236;
       }
@@ -281,6 +296,7 @@
       body.overviewMode .value {
         font-size: 25px;
       }
+      /* Position chart panels within the overview grid. */
       .overviewGrid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -304,6 +320,7 @@
       body.overviewMode header {
         background: #062f3a;
       }
+      /* Apply these overrides only at the viewport size specified below; later matching rules take precedence. */
       @media (max-width: 1150px) {
         body.overviewMode .cards {
           grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -312,6 +329,7 @@
           grid-template-columns: repeat(2, minmax(0, 1fr));
         }
       }
+      /* Apply these overrides only at the viewport size specified below; later matching rules take precedence. */
       @media (max-width: 750px) {
         body.overviewMode main {
           display: block;
@@ -332,6 +350,7 @@
         }
       }
       /* Compact desktop overview */
+      /* Apply these overrides only at the viewport size specified below; later matching rules take precedence. */
       @media (min-width: 1000px) and (min-height: 650px) {
         body.overviewMode {
           height: 100dvh;
@@ -569,6 +588,7 @@
       header .topnav button {
         white-space: nowrap;
       }
+      /* Apply these overrides only at the viewport size specified below; later matching rules take precedence. */
       @media (min-width: 1000px) and (min-height: 650px) {
         body.overviewMode header {
           height: 64px;
@@ -589,6 +609,7 @@
           height: calc(100dvh - 64px);
         }
       }
+      /* Apply these overrides only at the viewport size specified below; later matching rules take precedence. */
       @media (max-width: 750px) {
         header {
           gap: 10px;
@@ -680,6 +701,7 @@
       .insightsPanel #insightAnswer:empty {
         display: none;
       }
+      /* Apply these overrides only at the viewport size specified below; later matching rules take precedence. */
       @media (min-width: 1000px) and (min-height: 650px) {
         body.overviewMode .overviewGrid {
           grid-template-rows: minmax(0, 1fr) minmax(0, 0.8fr);
@@ -728,12 +750,14 @@
           flex-basis: 80px;
         }
       }
+      /* Apply these overrides only at the viewport size specified below; later matching rules take precedence. */
       @media (max-width: 750px) {
         .insightCards {
           grid-template-columns: 1fr;
         }
       }
 
+      /* Apply these overrides only at the viewport size specified below; later matching rules take precedence. */
       @media (min-width: 1000px) and (min-height: 650px) {
         body.overviewMode .overviewGrid {
           grid-template-rows: minmax(0, 1fr);
@@ -772,6 +796,7 @@
       .overviewBottom .insightsPanel {
         margin: 0;
       }
+      /* Apply these overrides only at the viewport size specified below; later matching rules take precedence. */
       @media (min-width: 1000px) and (min-height: 650px) {
         body.overviewMode .overviewBottom {
           margin: 0;
@@ -799,12 +824,14 @@
           overflow: auto;
         }
       }
+      /* Apply these overrides only at the viewport size specified below; later matching rules take precedence. */
       @media (max-width: 999px) {
         .overviewBottom {
           grid-template-columns: 1fr;
         }
       }
 
+      /* Apply these overrides only at the viewport size specified below; later matching rules take precedence. */
       @media (min-width: 1000px) and (min-height: 650px) {
         body.overviewMode .overviewGrid {
           flex: 1 1 0;

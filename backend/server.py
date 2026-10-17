@@ -1,3 +1,4 @@
+# Connects browser requests to file loading, normalization, dataset caching, and local AI analysis.
 """Local HTTP server for the dashboard browser UI."""
 from __future__ import annotations
 
@@ -12,7 +13,10 @@ from backend.config import DIST, ROOT, UPLOAD_LIMIT_BYTES
 from backend.data_loader import frame_from_payload
 from backend.normalizer import normalize, suggest_mapping
 from backend.ollama_client import explain, local_models
+from backend.analyst_datasets import DATASETS
+from backend.analyst_agent import analyze_question
 
+# One process-wide request token is fetched by dashboard.js before it posts data.
 TOKEN = secrets.token_urlsafe(32)
 
 
@@ -104,12 +108,21 @@ class Handler(BaseHTTPRequestHandler):
                     payload.get("decimal", "dot"),
                 )
                 result["filename"] = name
+                # Register rows for later questions; a cache limit must not prevent ordinary dashboard use.
+                try:
+                    result["datasetId"] = DATASETS.put(frame, result, payload.get("mapping", {}))
+                except ValueError as error:
+                    result["analystNote"] = str(error)
                 self.send_json(result)
+            # Pass the question, dataset ID, filters, and conversation ID to the SQL analyst.
+            elif self.path == "/api/analyst":
+                self.send_json(analyze_question(payload))
             elif self.path == "/api/explain":
                 # Optional local AI explanation through Ollama.
                 self.send_json(explain(payload))
             else:
                 self.send_json({"error": "Not found"}, 404)
+        # Return expected validation details, but hide unexpected internal exceptions from the browser.
         except Exception as error:
             message = (
                 str(error)
@@ -130,6 +143,7 @@ def main():
     parser.add_argument("--port", type=int, default=8765)
     parser.add_argument("--no-browser", action="store_true")
     args = parser.parse_args()
+    # Bind only to loopback; separate request threads allow the UI to respond during model work.
     server = ThreadingHTTPServer(("127.0.0.1", args.port), Handler)
     print(
         f"Free Business Dashboard: http://127.0.0.1:{args.port}\n"

@@ -1,3 +1,5 @@
+/* Upload, mapping, chart chooser, and insight styles; later rules refine earlier layouts through the CSS cascade. */
+/* Provide shared theme colors used by setup controls. */
 :root {
   color-scheme: light;
 }
@@ -11,6 +13,7 @@ header #datasetName {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* Keep upload and mapping forms readable inside a centered panel. */
 .setup {
   max-width: 1100px;
   margin: 30px auto;
@@ -25,6 +28,7 @@ header #datasetName {
 .setup p {
   color: #526377;
 }
+/* Lay out business, file, worksheet, and formatting controls. */
 .setupGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -54,6 +58,7 @@ header #datasetName {
   color: white;
   border: 0;
 }
+/* Cover the viewport with the chart-selection modal backdrop. */
 .chartChooser {
   position: fixed;
   inset: 0;
@@ -78,6 +83,7 @@ header #datasetName {
   margin: 0 0 5px;
   font-size: 24px;
 }
+/* Display chart options with checkbox, title, availability, and help text. */
 .chartChoices {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -131,6 +137,7 @@ header #datasetName {
   border-top: 1px solid #e0e7ed;
   margin: 24px 0;
 }
+/* Arrange source-column mapping dropdowns and validation guidance. */
 .mappingGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -157,6 +164,7 @@ header #datasetName {
   font-size: 14px;
   color: #0c7665;
 }
+/* Contain the uploaded row preview without stretching the page. */
 #preview {
   overflow: auto;
   max-height: 180px;
@@ -173,6 +181,7 @@ header #datasetName {
 .filters details p {
   margin: 6px 0;
 }
+/* Align answer mode selection with the local-model refresh button. */
 .modelRow {
   display: flex;
   align-items: center;
@@ -198,12 +207,14 @@ header #datasetName {
   color: #657686;
   padding: 16px 0;
 }
+/* Allow wide tables and answer text to scroll inside their containers. */
 .scroll {
   overflow: auto;
 }
 .insightsPanel #insightAnswer {
   white-space: pre-wrap;
 }
+/* Visually distinguish disabled controls and retain visible keyboard focus. */
 button:disabled {
   opacity: 0.6;
   cursor: wait;
@@ -223,6 +234,7 @@ body:not(.overviewMode) .setup {
 #detailPage .legend {
   margin: 5px 0;
 }
+/* Wrap product color legends and category contribution labels. */
 .legendBox {
   display: flex;
   flex-wrap: wrap;
@@ -248,9 +260,11 @@ body:not(.overviewMode) .setup {
   gap: 7px;
   margin: 6px 0;
 }
+/* Position the insights section beneath the overview charts. */
 .overviewBottom {
   grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
 }
+/* Size the three chosen overview charts and adapt chart-specific content. */
 .overviewChartSlot {
   min-width: 0;
 }
@@ -314,6 +328,7 @@ body.overviewMode .overviewChartContent .track {
 body.overviewMode .overviewChartContent .chartNote {
   margin: auto 0;
 }
+/* Apply these overrides only at the viewport size specified below; later matching rules take precedence. */
 @media (min-width: 1000px) and (min-height: 650px) {
   body.overviewMode .overviewBottom {
     min-height: 320px;
@@ -349,6 +364,7 @@ body.overviewMode .overviewChartContent .chartNote {
     height: 29px;
   }
 }
+/* Apply these overrides only at the viewport size specified below; later matching rules take precedence. */
 @media (max-width: 850px) {
   .setup {
     margin: 16px;
@@ -368,6 +384,7 @@ body.overviewMode .overviewChartContent .chartNote {
     display: none;
   }
 }
+/* Apply these overrides only at the viewport size specified below; later matching rules take precedence. */
 @media (max-width: 550px) {
   .setupGrid,
   .mappingGrid {
@@ -380,6 +397,7 @@ body.overviewMode .overviewChartContent .chartNote {
     flex-wrap: wrap;
   }
 }
+/* Apply these overrides only at the viewport size specified below; later matching rules take precedence. */
 @media (min-width: 1000px) and (max-height: 649px) {
   body.overviewMode {
     overflow: auto;
@@ -396,6 +414,7 @@ body.overviewMode .overviewChartContent .chartNote {
   }
 }
 
+/* Apply these overrides only at the viewport size specified below; later matching rules take precedence. */
 @media (min-width: 1000px) and (min-height: 650px) {
   body.overviewMode #ovCategory {
     grid-template-rows: minmax(0, 1fr);
@@ -421,6 +440,7 @@ body.overviewMode .overviewChartContent .chartNote {
 .overviewBottom .insightsPanel {
   margin: 16px 0 0;
 }
+/* Refine insight typography and question controls. */
 .insightsPanel {
   border-color: #d8e4e7;
   background: #fbfdfd;
@@ -450,6 +470,7 @@ body.overviewMode .overviewChartContent .chartNote {
   color: white;
   min-width: 78px;
 }
+/* Wrap suggested question buttons and provide hover feedback. */
 .suggestions {
   flex-wrap: wrap;
   gap: 5px;
@@ -477,6 +498,7 @@ body.overviewMode .overviewChartContent .chartNote {
 .insightsPanel #insightAnswer:empty {
   display: none;
 }
+/* Style compact computed insight cards beside the conversation. */
 .insightCards {
   gap: 12px;
 }
@@ -489,6 +511,7 @@ body.overviewMode .overviewChartContent .chartNote {
 .insightCards small {
   color: #27535c;
 }
+/* Align the insights title and model selector. */
 .insightHeader {
   display: flex;
   align-items: flex-start;
@@ -506,6 +529,7 @@ body.overviewMode .overviewChartContent .chartNote {
   justify-content: flex-end;
   margin: 0;
 }
+/* Separate the question/conversation column from summary cards. */
 .insightBody {
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
@@ -543,6 +567,7 @@ body.overviewMode .overviewChartContent .chartNote {
 .insightCards article {
   min-height: 0;
 }
+/* Apply these overrides only at the viewport size specified below; later matching rules take precedence. */
 @media (min-width: 1000px) and (min-height: 650px) {
   body.overviewMode #overview {
     gap: 6px;
@@ -621,6 +646,7 @@ body.overviewMode .overviewChartContent .chartNote {
     padding: 10px 12px !important;
   }
 }
+/* Apply these overrides only at the viewport size specified below; later matching rules take precedence. */
 @media (max-width: 850px) {
   .chartChooser {
     align-items: stretch;
@@ -649,3 +675,9 @@ body.overviewMode .overviewChartContent .chartNote {
     max-height: 180px;
   }
 }
+
+#analystEvidence { margin-top: 12px; max-height: 240px; overflow: auto; font-size: 13px; }
+#analystEvidence summary { cursor: pointer; font-weight: 600; }
+#analystEvidence section { margin-top: 12px; }
+#analystEvidence table { min-width: 100%; }
+#analystEvidence pre { white-space: pre-wrap; overflow-wrap: anywhere; }

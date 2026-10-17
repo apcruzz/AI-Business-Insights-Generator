@@ -5,7 +5,7 @@
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
-    "test": ".venv/bin/python -m tests.validate_samples"
+    "test": ".venv/bin/python -m tests.validate_samples && .venv/bin/python -m unittest discover -s tests -p 'test_*.py'"
   },
   "dependencies": {
     "react": "^19.0.0",

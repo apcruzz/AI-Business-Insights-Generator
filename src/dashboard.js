@@ -1,3 +1,4 @@
+// Frontend controller: upload -> map columns -> normalize via API -> filter/render -> ask questions.
 import {
   $,
   bottomBy,
@@ -17,6 +18,7 @@ import {
   weekKey,
 } from "./dashboard-utils.js";
 
+// Keep state and handlers inside the initializer called by App after mounting.
 export function initDashboard() {
 
 // Shared app state. `data` holds normalized rows returned by the Python server.
@@ -27,11 +29,13 @@ let data = [],
   profile = null,
   token = "",
   busy = false,
+  conversationId = null,
+  conversationTurns = [],
   revision = 0,
   overviewChartIds = [];
 
 // Preferred local model for this project. Other downloaded local models still work.
-const preferredLocalModel = "llama3.2:3b";
+const preferredLocalModel = "llama3:latest";
 
 // Fields the dashboard understands. The mapping UI connects source columns to these names.
 const fields = {
@@ -70,6 +74,7 @@ const axisMoney = (n) =>
     maximumFractionDigits: 0,
     notation: "compact",
   }).format(n);
+// Reusable chart palette; colorFor maps source labels to these colors.
 const colors = [
   "#008d79",
   "#e8ad2c",
@@ -664,6 +669,7 @@ function metrics(rows, overview = false) {
     )
 	    .join("");
 }
+// Sum selected revenue for each weekday in Monday-to-Sunday display order.
 function weekdayChart(rows, c) {
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   return c.Date
@@ -682,6 +688,7 @@ function weekdayChart(rows, c) {
       )
     : note("Map a date column to compare weekdays.");
 }
+// Render the five highest-revenue product groups as relative horizontal bars.
 function topProductsChart(products, c) {
   if (!c.product) return note("Map a product column to rank products.");
   const top = products.slice(0, 5),
@@ -695,6 +702,7 @@ function topProductsChart(products, c) {
       .join("") || note("No matching sales.")
   );
 }
+// Rank positive-revenue products by total gross profit divided by total revenue.
 function profitabilityChart(products, c) {
   return c.Gross_Profit
     ? products
@@ -712,11 +720,13 @@ function profitabilityChart(products, c) {
         .join("") || note("No positive sales for a margin comparison.")
     : note("Map product costs or gross profit to show profitability.");
 }
+// Group selected rows by employee and sort by handled net sales.
 function staffGroups(rows) {
   return group(rows, "Employee_Name").sort(
     (a, b) => sum(b[1], "Net_Sales") - sum(a[1], "Net_Sales"),
   );
 }
+// Build detailed employee rows, displaying unavailable financial metrics as dashes.
 function staffTable(rows, c) {
   return (
     staffGroups(rows)
@@ -728,6 +738,7 @@ function staffTable(rows, c) {
       .join("") || '<tr><td colspan="6">No matching sales.</td></tr>'
   );
 }
+// Show a compact ranking of the five employees with the highest handled revenue.
 function staffChart(rows, c) {
   if (!c.employee) return note("Map an employee column to compare staff sales.");
   const top = staffGroups(rows).slice(0, 5),
@@ -741,6 +752,7 @@ function staffChart(rows, c) {
       .join("") || note("No matching sales.")
   );
 }
+// Compare sales per recorded date for each uploaded weather label; no weather lookup occurs.
 function weatherChart(rows, c) {
   return c.weather && c.Date
     ? chart(
@@ -754,6 +766,7 @@ function weatherChart(rows, c) {
         )
     : note("Map date and weather columns to compare sales by weather.");
 }
+// Dispatch a selected chart ID to the same chart builders used in the detail view.
 function overviewChartHtml(id, rows, products, c) {
   if (id === "trend") return trend(rows);
   if (id === "category") return categoryPie(rows);
@@ -817,7 +830,9 @@ function render() {
   $("weather").innerHTML = weatherChart(rows, c);
   applyChartVisibility();
   renderInsights(rows);
-  $("insightAnswer").textContent = "";
+  resetConversation();
+  $("analystEvidence").hidden = true;
+  $("analystEvidence").replaceChildren();
 }
 function uniqueOrders(rows) {
   // Returns null when order IDs are missing or failed validation.
@@ -859,7 +874,8 @@ function compareHalves(rows, key) {
     .sort((a, b) => b.change - a.change);
 }
 function facts(rows = selected) {
-  // Build the fact package used by both calculated answers and Ollama.
+  // Build facts for calculated answers/cards; the legacy /api/explain accepts this shape.
+  // The active /api/analyst path instead queries uploaded rows in the backend.
   const c = meta.capabilities,
     n = sum(rows, "Net_Sales"),
     g = sum(rows, "Gross_Profit"),
@@ -919,6 +935,7 @@ function facts(rows = selected) {
         };
       })
       .sort((a, b) => b.netSales - a.netSales),
+    // Build chronological daily aggregates; use a separate copy for revenue rankings.
     dayFacts = c.Date
       ? group(rows, "Date")
           .map(([date, r]) => ({
@@ -931,6 +948,7 @@ function facts(rows = selected) {
           .sort((a, b) => a.date.localeCompare(b.date))
       : [],
     sortedDaysBySales = [...dayFacts].sort((a, b) => b.netSales - a.netSales),
+    // Aggregate dates into Monday-based weeks and year-months so different years stay separate.
     weekFacts = c.Date
       ? group(
           rows.map((r) => ({ ...r, Week: weekKey(r.Date) })),
@@ -950,6 +968,7 @@ function facts(rows = selected) {
           }))
           .sort((a, b) => b.netSales - a.netSales)
       : [],
+    // Compare weekdays and time-of-day buckets with optional units and validated order counts.
     weekdayFacts = c.Date
       ? group(
           rows.map((r) => ({
@@ -991,6 +1010,7 @@ function facts(rows = selected) {
           }))
           .sort((a, b) => b.netSales - a.netSales)
       : [],
+    // Separate rows with positive discounts for later discount-versus-no-discount summaries.
     discountedRows = c.Discount_Amount
       ? rows.filter((r) => Number(r.Discount_Amount) > 0)
       : [],
@@ -1151,11 +1171,13 @@ function facts(rows = selected) {
           .filter((item) => item.unitsPerOrder !== null)
           .sort((a, b) => b.unitsPerOrder - a.unitsPerOrder)
       : [],
+    // Measure variation across recorded days; absent dates are not inserted as zero sales.
     dailySalesValues = dayFacts.map((day) => day.netSales),
     dailySalesStdDev = standardDeviation(dailySalesValues),
     dailySalesAverage =
       dayFacts.length > 0 ? sum(dayFacts, "netSales") / dayFacts.length : null,
     uniqueHours = c.Hour ? [...new Set(rows.map((r) => r.Hour))].sort((a, b) => a - b) : [],
+    // Count date/hour combinations with sales, not actual scheduled operating hours.
     recordedOperatingHours =
       c.Date && c.Hour
         ? new Set(rows.map((r) => `${r.Date}|${r.Hour}`)).size
@@ -1183,6 +1205,7 @@ function facts(rows = selected) {
     endMonthRows = c.Date
       ? rows.filter((r) => Number(r.Date.slice(8, 10)) >= 21)
       : [],
+    // Average revenue over recorded dates within each uploaded weather label.
     weatherFacts =
       "Weather" in (rows[0] || {}) && c.Date
         ? group(rows, "Weather")
@@ -1196,6 +1219,7 @@ function facts(rows = selected) {
             }))
             .sort((a, b) => b.averageDailyNetSales - a.averageDailyNetSales)
         : [],
+    // Compare earlier and later recorded dates; these differences are descriptive, not forecasts.
     productGrowth = compareHalves(rows, "Product_Name"),
     categoryGrowth = compareHalves(rows, "Category"),
     firstHalfSales =
@@ -1247,6 +1271,7 @@ function facts(rows = selected) {
         ? Math.round((n / new Set(rows.map((r) => r.Order_Key)).size) * 100) /
           100
         : null,
+    // Summarize validated orders; do not treat each line item as a separate order.
     orderStats: c.orders
       ? {
           averageOrderValue: averageOrderSales,
@@ -1291,12 +1316,14 @@ function facts(rows = selected) {
     categoryPairs: categoryPairFacts.slice(0, 8),
     productsInLargeOrders: productsInLargeOrders.slice(0, 8),
     productQuantityPerOrder: productQuantityPerOrder.slice(0, 8),
+    // Attach the current selection so facts can be interpreted within the correct scope.
     filters: Object.fromEntries(
       ["from", "to", "category", "product", "weekday", "period"].map((id) => [
         id,
         $(id).value,
       ]),
     ),
+    // Expose bounded rankings for the built-in question matcher and optional fact-summary endpoint.
     topProducts: productFacts.slice(0, 10),
     bottomProductsByRevenue: [...productFacts]
       .filter((p) => p.netSales > 0)
@@ -1442,6 +1469,7 @@ function facts(rows = selected) {
     weather: weatherFacts.slice(0, 8),
     topEmployees: employeeFacts.slice(0, 8),
     topEmployeesByOrders: topBy(employeeFacts, "orders").slice(0, 8),
+    // Report coverage and suspicious values alongside totals rather than silently removing records.
     dataQuality: {
       zeroQuantityLines: c.Quantity
         ? rows.filter((row) => Number(row.Quantity) === 0).length
@@ -1623,6 +1651,7 @@ function calculatedAnswer(question) {
       "Furniture quotation, delivery, service, and warranty analysis",
       "quotation dates/statuses, delivery promises, assembly and installation fees/costs, warranty claims, and product service records",
     );
+  // These topics require additional business context that the current mapped rows do not contain.
   if (/target|goal|quota/.test(q))
     // Targets are business inputs, not something the sales file can infer.
     return "Sales targets are not included in this dataset. I can show current sales, but I need a target amount to say whether the business met it or how much more revenue is needed.";
@@ -1630,6 +1659,7 @@ function calculatedAnswer(question) {
     return trend
       ? `A simple trend check shows second-half sales were ${trend.secondVsFirstPercent >= 0 ? "up" : "down"} ${pct(Math.abs(trend.secondVsFirstPercent))} versus the first half. That is not a forecast; use it as a starting point and compare it with seasonality, promotions, and upcoming business changes.`
       : "There is not enough dated sales history in the current selection to estimate a next-month pattern.";
+  // Data-quality questions explain duplicate handling before ordinary metric matching.
   if (/duplicate/.test(q))
     return f.limitations.some((w) => /duplicate/i.test(w))
       ? f.limitations.find((w) => /duplicate/i.test(w))
@@ -1641,6 +1671,7 @@ function calculatedAnswer(question) {
   )
     // Data-quality questions are answered from warnings generated during normalization.
     return `Data notes: ${f.limitations.join(" ")} Some checks depend on mapped columns; targets, inventory, customer data, labor hours, sales channels, and operating expenses are not available unless your file includes them.`;
+  // Match common total and order questions against precomputed facts; branch order matters.
   if (/total net|net sales|total revenue/.test(q))
     return `Total selected net sales are ${money(f.netSales)}.`;
   if (/gross sales/.test(q))
@@ -1723,6 +1754,7 @@ function calculatedAnswer(question) {
     return f.matchingOrders && f.units !== null
       ? `Customers bought about ${(f.units / f.matchingOrders).toFixed(2)} units per matching order.`
       : "Units per order needs both quantity and valid order IDs.";
+  // Choose discount comparisons only when the needed amount columns exist.
   if (/discount/.test(q)) {
     // Discount questions share one branch because they use the same split data.
     if (!f.discountSummary)
@@ -1761,6 +1793,7 @@ function calculatedAnswer(question) {
     }
     return `${f.topPayments[0].name} accounts for the most revenue at ${money(f.topPayments[0].netSales)}.`;
   }
+  // Optional dimensions answer store and employee questions only when those fields were supplied.
   if (/location|store/.test(q)) {
     if (!f.topLocations.length)
       return "Store location is not mapped in this dataset.";
@@ -1941,6 +1974,7 @@ function calculatedAnswer(question) {
       return `${f.categoryGrowth[0].name} grew the most, up ${money(f.categoryGrowth[0].change)} versus the earlier half of the selected dates.`;
     return `${topCategory.name} leads selected category revenue at ${money(topCategory.netSales)}.${leastCategory ? " " + leastCategory.name + " is lowest at " + money(leastCategory.netSales) + "." : ""} Category totals can be affected by the number of products in each category.`;
   }
+  // Use recorded date coverage for time questions; missing dates do not establish closed days.
   if (/earliest|latest|date range|dates in the dataset/.test(q))
     return f.dateSummary
       ? `The selected dataset runs from ${f.dateSummary.earliestDate} to ${f.dateSummary.latestDate}.`
@@ -1990,6 +2024,7 @@ function calculatedAnswer(question) {
       "Detailed time-interval and business-hours analysis",
       "full timestamps, scheduled opening/closing hours, and ideally one row per transaction line with reliable order times",
     );
+  // Describe uploaded weather associations without claiming that weather caused sales changes.
   if (/weather|rainy|sunny/.test(q))
     return f.weather[0]
       ? `Weather comparison by average recorded daily sales: ${f.weather
@@ -2072,38 +2107,70 @@ function calculatedAnswer(question) {
       : `Average recorded daily net sales are ${money(f.averageDailyNetSales)} across ${f.daysCovered} recorded days. This is based only on days present in the file, not missing or closed days.`;
   return `I can answer from the mapped dashboard data. Selected net sales are ${money(f.netSales)}${f.grossMarginPercent !== null ? ", gross margin is " + pct(f.grossMarginPercent) : ""}, ${topProduct ? topProduct.name + " is the top product" : "product ranking is unavailable"}${leastRevenueProduct ? ", and " + leastRevenueProduct.name + " is lowest by revenue" : ""}. Try asking about least sold, business health, next steps, profit, categories, timing, or average daily sales.`;
 }
+// Render backend calculation tables and optional query text; escape all dataset values.
+function renderAnalystEvidence(response) {
+  const container = $("analystEvidence");
+  const evidence = response.evidence || [];
+  container.hidden = !evidence.length;
+  container.innerHTML = evidence.length ? `<details><summary>Supporting calculations · ${response.selectedRows.toLocaleString()} selected rows</summary>${evidence.map((item, i) =>
+    `<section><strong>Calculation ${i + 1}</strong><div class="scroll"><table><thead><tr>${item.columns.map(column => `<th>${esc(column)}</th>`).join("")}</tr></thead><tbody>${item.rows.map(row => `<tr>${row.map(value => `<td>${esc(value === null ? "Not available" : value)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>${item.truncated ? '<p>Showing the first 30 result rows; this is not the complete result.</p>' : ''}${!item.rows.length ? '<p>No rows matched this calculation.</p>' : ''}<details><summary>View calculation query</summary><pre>${esc(item.query)}</pre></details></section>`).join("")}</details>` : '';
+}
+// Forget the browser conversation token/transcript and clear evidence for the old selection.
+function resetConversation() {
+  conversationId = null;
+  conversationTurns = [];
+  $("insightAnswer").textContent = "";
+  $("analystEvidence").hidden = true;
+  $("analystEvidence").replaceChildren();
+}
+// Display recent exchanges as plain text and scroll to the latest response.
+function showConversation(pending = "") {
+  const panel = $("insightAnswer");
+  panel.textContent = [...conversationTurns, pending].filter(Boolean).join("\n\n");
+  panel.scrollTop = panel.scrollHeight;
+}
 async function ask(question) {
   // Ask either the deterministic answer engine or optional local Ollama.
   if (busy) return;
   busy = true;
   $("askButton").disabled = true;
+  // Remember the selection revision so a slow response cannot overwrite a newer dashboard.
   const current = revision,
     model = $("localModel").value;
-  $("insightAnswer").textContent = model
-    ? "Your local model is generating an answer…"
-    : "Calculating…";
+  $("analystEvidence").hidden = true;
+  $("analystEvidence").replaceChildren();
+  showConversation("You: " + question + "\n" + (model ? "Your local model is inspecting the data and running calculations…" : "Calculating…"));
   try {
     let answer;
     if (model) {
-      // Send Ollama both facts and the deterministic answer so it explains plainly.
-      const response = await api("/api/explain", {
-        model,
-        question,
-        facts: facts(),
-        calculatedAnswer: calculatedAnswer(question),
+      if (!meta.datasetId) throw Error(meta.analystNote || "Build the dashboard again to load the dataset for local AI analysis.");
+      // Send only the dataset reference, conversation token, question, and current filters; rows are cached on the server.
+      const response = await api("/api/analyst", {
+        model, question, datasetId: meta.datasetId, conversationId,
+        filters: Object.fromEntries(["from", "to", "category", "product", "weekday", "period"].map(id => [id, $(id).value])),
       });
+      if (revision === current) {
+        // If backend memory expired or scope changed, discard the old visible transcript too.
+        if (conversationId && conversationId !== response.conversationId) conversationTurns = [];
+        conversationId = response.conversationId;
+        renderAnalystEvidence(response);
+      }
       answer =
-        "Local AI · " +
+        "Local data analyst · " +
         response.model +
         "\n" +
         response.answer +
-        "\nCheck the displayed facts: AI explanations can make mistakes.";
+        (response.evidence?.length ? "\nCheck the supporting calculations below: AI interpretation can still make mistakes." : "");
     } else answer = "Calculated answer\n" + calculatedAnswer(question);
-    if (revision === current) $("insightAnswer").textContent = answer;
+    if (revision === current) {
+      // Keep the visible transcript aligned with the backend limit of four recent exchanges.
+      conversationTurns.push("You: " + question + "\n" + answer);
+      conversationTurns = conversationTurns.slice(-4);
+      showConversation();
+    }
   } catch (e) {
     if (revision === current)
-      $("insightAnswer").textContent =
-        e.message + " Choose Calculated answers to continue without a model.";
+      showConversation(e.message + " Choose Calculated answers to continue without a model.");
   } finally {
     busy = false;
     $("askButton").disabled = false;
@@ -2126,7 +2193,7 @@ async function refreshModels() {
     $("localModel").firstChild.textContent = "Calculated answers";
     $("insightMode").textContent = result.models.length
       ? recommended
-        ? "Calculated insights · Llama 3.2 local AI ready"
+        ? `Calculated insights · ${recommended} data analyst ready`
         : "Calculated insights · local AI available"
       : "Calculated insights · install Ollama for optional local AI";
   } finally {
@@ -2175,6 +2242,9 @@ $("chooseCharts").onclick = () => showChartChooser(false);
 $("selectRecommendedCharts").onclick = selectRecommendedCharts;
 $("loadSelectedCharts").onclick = loadSelectedCharts;
 $("refreshModels").onclick = refreshModels;
+// Starting over or switching model invalidates outstanding answers and clears local chat context.
+$("newConversation").onclick = () => { revision++; resetConversation(); };
+$("localModel").onchange = () => { revision++; resetConversation(); };
 $("insightForm").onsubmit = (e) => {
   // Keep the form on the same page and answer the typed question.
   e.preventDefault();

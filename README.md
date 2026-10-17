@@ -1,6 +1,6 @@
 # Free Business Dashboard
 
-A local version of your two-page dashboard with business setup, CSV/Excel uploads, column suggestions, automatic charts, calculated insights, and optional local AI explanations.
+A local version of your two-page dashboard with business setup, CSV/Excel uploads, column suggestions, automatic charts, calculated insights, and an optional local AI data analyst.
 
 There are no API keys, subscriptions, cloud model calls, or hosting bills in this app. It runs on your existing computer. You still supply the computer, electricity, and initial downloads. Uploaded files are processed in memory and are not saved by the server.
 
@@ -113,19 +113,19 @@ For more than 14 recorded dates, the trend uses weekly totals. For more than 40,
 
 Without a model, **Calculated answers** already handles product sales, gross margin, sales timing, and matching-order questions. These are deterministic calculations, not a language model.
 
-For broader explanations:
+For questions that require new calculations directly against the uploaded data:
 
 1. Install Ollama from https://ollama.com/download.
 2. Download the recommended local model:
 
 ```sh
-ollama pull llama3.2:3b
+ollama pull llama3
 ```
 
-This is an existing trained model; you do not need to train a new one. The Llama 3.2 3B download is about 2 GB; working memory needs are higher and speed depends on your hardware. A smaller Llama 3.2 model can be used if your computer struggles:
+This is an existing trained model; you do not need to train a new one. Llama 3 is preferred when installed. A smaller Llama 3.2 model can be used if your computer struggles:
 
 ```sh
-ollama pull llama3.2:1b
+ollama pull llama3.2:3b
 ```
 
 3. Start Ollama in **local-only** mode. Quit an already running Ollama app/service first, then run it in a separate terminal:
@@ -141,9 +141,13 @@ $env:OLLAMA_NO_CLOUD="1"
 ollama serve
 ```
 
-4. In your dashboard, click **Check local AI**. If `llama3.2:3b` is installed, the dashboard selects it automatically under **Answer mode**. You can still choose a different downloaded local model.
+4. In your dashboard, click **Check local AI**. If `llama3:latest` is installed, the dashboard selects it automatically under **Answer mode**, with Llama 3.2 as a fallback. You can still choose a different downloaded local model.
 
-The app connects only to `127.0.0.1:11434`, excludes cloud-linked model entries, and does not sign in or download models automatically. It sends your question and a small summary of filtered totals/rankings to the local model, not the entire workbook. Calculations and chart values remain controlled by code. Model answers are explanations and can still make mistakes. No generated code is executed. No fine-tuning/training is performed.
+The app connects only to `127.0.0.1:11434`, excludes cloud-linked model entries, and does not sign in or download models automatically. After column confirmation, it retains the uploaded CSV/selected Excel worksheet as a bounded in-memory analysis dataset. When you ask a question, the selected local model receives its schema and sample values, requests read-only calculations against **all filtered rows**, inspects the returned results, and explains them. Extra source columns remain available for analysis even if they are not dashboard fields.
+
+Expand **Supporting calculations** to inspect the actual results and, optionally, the query. The model is required to query before giving a numerical answer; invalid queries can be corrected. The application checks explicitly named extra columns and rejects new digit-based figures absent from query evidence. These checks improve traceability but do not prove that every question has been interpreted correctly. AI answers can still be wrong.
+
+The analyst uses restricted in-memory SQL rather than `allow_dangerous_code=True` or a Python REPL. It cannot write data, read other files, load extensions or issue network requests. No fine-tuning/training is performed. No LangChain dependencies or paid services are required. See [analyst architecture, limits and tests](docs/local-data-analyst.md).
 
 The model files are not bundled. Internet is needed for initial Python package/model downloads. After setup, data processing and local model inference can operate offline. This download does not provide a public hosted URL or multi-user service.
 
@@ -151,7 +155,7 @@ The model files are not bundled. Internet is needed for initial Python package/m
 
 The furniture, restaurant, and retail samples in `data/samples/` are fictional test data spanning June 1–August 29, 2026. `Cafe.csv` is the original provided café dataset and includes receipt-grouping warnings.
 
-Run `npm test` on Mac after creating `.venv`, or run `python -m tests.validate_samples` from an activated environment, to verify expected totals and key missing-data behavior. CSV/Excel ingestion, number/date parsing, model request wiring, adaptive chart generation, filtering, and page switching were checked. Actual language-model inference requires your installed Ollama model and was not run during packaging. Browser layout was not visually checked here; the desktop overview uses a compact layout, with scrolling retained on small screens for access to controls.
+Run `npm test` on Mac after creating `.venv`, or run `python -m tests.validate_samples` from an activated environment, to verify expected totals and key missing-data behavior. CSV/Excel ingestion, number/date parsing, model request wiring, adaptive chart generation, filtering, and page switching were checked. The analyst was additionally checked against local Llama 3 with synthetic monthly and extra-column questions. The desktop overview uses a compact layout, with scrolling retained on small screens for access to controls.
 
 ## Sources
 

@@ -1,3 +1,4 @@
+# Compatibility entry point: re-exports loading/normalizing helpers and starts server.main.
 """Backend public entry point.
 
 The implementation is split into focused modules, while this file preserves the
@@ -9,8 +10,10 @@ from backend.data_loader import frame_from_payload
 from backend.normalizer import normalize, suggest_mapping
 from backend.server import main
 
+# Keep the supported import names explicit for existing callers.
 __all__ = ["frame_from_payload", "main", "normalize", "suggest_mapping"]
 
 
+# Start serving only when executed directly, not when imported.
 if __name__ == "__main__":
     main()

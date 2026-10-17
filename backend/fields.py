@@ -1,5 +1,7 @@
+# Mapping vocabulary shared by column suggestions and normalization; keys match frontend field IDs.
 """Canonical dashboard fields and aliases used for source-column mapping."""
 
+# Each canonical field lists simplified source headers that can be mapped automatically.
 FIELDS = {
     "Date": ["date", "orderdate", "saledate", "transactiondate", "datetime", "timestamp"],
     "Time": ["time", "ordertime", "transactiontime"],

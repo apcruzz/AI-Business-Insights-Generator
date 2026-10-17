@@ -1,3 +1,4 @@
+# Local model transport: explain rewrites existing facts; chat supports the row-query analyst.
 """Plain-language Ollama integration for dashboard insight explanations."""
 from __future__ import annotations
 
@@ -7,6 +8,7 @@ import urllib.request
 
 from backend.config import OLLAMA_URL
 
+# Bypass system proxies for requests to the local Ollama service.
 LOCAL_HTTP = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
 
@@ -81,6 +83,7 @@ def business_summary(facts):
         f"Store locations by revenue: {item_list(facts.get('topLocations', []), currency)}.",
         f"Employees by handled revenue: {item_list(facts.get('topEmployees', []), currency)}.",
     ]
+    # Append optional summaries only when the frontend supplied the corresponding facts.
     trend = facts.get("trendComparison")
     if isinstance(trend, dict):
         lines.append(f"Trend: second-half sales were {trend.get('secondVsFirstPercent')}% versus the first half.")
@@ -101,6 +104,7 @@ def business_summary(facts):
     if facts.get("productPairs"):
         pairs = "; ".join(f"{pair.get('name')}: {pair.get('orders')} orders" for pair in facts["productPairs"][:3])
         lines.append(f"Common product combinations: {pairs}.")
+    # Describe date coverage and time rankings without treating absent days as zero sales.
     date_summary = facts.get("dateSummary")
     if isinstance(date_summary, dict):
         lines.append(
@@ -144,6 +148,7 @@ def business_summary(facts):
             for weather_row in facts["weather"][:3]
         )
         lines.append(f"Weather comparison: {weather}.")
+    # Add discount and product-change context, then preserve data-quality warnings.
     discount = facts.get("discountSummary")
     if isinstance(discount, dict):
         lines.append(
@@ -222,3 +227,23 @@ def explain(payload):
         # If the model talks like a programmer, fall back to the app's deterministic answer.
         answer = calculated_answer
     return {"answer": answer, "mode": "Local AI", "model": model}
+
+
+def chat(model, messages, *, format=None, timeout=60, num_predict=650):
+    """Shared local chat transport; callers validate the downloaded model first."""
+    # Build a non-streaming request so callers receive one complete model action.
+    body = {'model': model, 'messages': messages, 'stream': False,
+            'options': {'temperature': 0, 'num_predict': num_predict, 'num_ctx': 8192}}
+    # The analyst supplies a JSON schema here so model actions can be parsed and dispatched.
+    if format is not None:
+        body['format'] = format
+    if model.lower().startswith('qwen3'):
+        body['think'] = False
+    request = urllib.request.Request(OLLAMA_URL + '/api/chat', data=json.dumps(body, allow_nan=False).encode(),
+                                     headers={'Content-Type':'application/json'})
+    # Wait within the caller deadline and extract the assistant message from Ollama JSON.
+    with LOCAL_HTTP.open(request, timeout=timeout) as response:
+        answer = json.load(response).get('message', {}).get('content', '').strip()
+    if not answer:
+        raise ValueError('The local model returned no answer.')
+    return answer

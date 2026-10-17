@@ -1,15 +1,19 @@
+// Page structure and stable element IDs; dashboard.js fills these containers and handles events.
 import { useEffect } from "react";
 import { initDashboard } from "./dashboard.js";
 import "./styles.css";
+// Load setup.css after the base stylesheet so its layout overrides win.
 import "./setup.css";
 
 export default function App() {
+  // Run the DOM controller after React has mounted the elements it needs.
   useEffect(() => {
     initDashboard();
   }, []);
 
   return (
     <>
+      {/* Navigation and dataset labels are updated by showPage() and build(). */}
       <header>
         <div>
           <small>
@@ -33,6 +37,7 @@ export default function App() {
         </nav>
       </header>
 
+      {/* Upload setup: inspect sends the chosen file or sample to /api/profile. */}
       <section className="setup" id="setupPage">
         <h2>Build your business dashboard</h2>
         <p>
@@ -78,6 +83,7 @@ export default function App() {
           <span id="setupStatus" aria-live="polite"></span>
         </div>
 
+        {/* After inspection, display worksheet options and suggested source-to-dashboard column mappings. */}
         <div id="mappingPanel" hidden>
           <hr />
           <h2>Confirm your columns</h2>
@@ -110,11 +116,13 @@ export default function App() {
               </select>
             </label>
           </div>
+          {/* dashboard.js creates one mapping dropdown per canonical field in this container. */}
           <div
             id="mappingGrid"
             className="mappingGrid"
             style={{ marginTop: 20 }}
           ></div>
+          {/* Show source rows for checking the mapping before normalization. */}
           <details style={{ marginTop: 18 }}>
             <summary>Preview source rows</summary>
             <div id="preview"></div>
@@ -131,6 +139,7 @@ export default function App() {
         <div id="setupError" className="error" role="alert"></div>
       </section>
 
+      {/* Chart selection dialog: only charts supported by validated columns are offered. */}
       <section
         className="chartChooser"
         id="chartChooser"
@@ -158,15 +167,18 @@ export default function App() {
         </div>
       </section>
 
+      {/* Dashboard content stays hidden until an upload is normalized successfully. */}
       <main id="dashboardMain" hidden>
         <div id="overview">
           <div id="overviewCards" className="cards"></div>
+          {/* Three empty slots are filled with the charts selected in the chooser. */}
           <div className="overviewGrid">
             <section className="panel overviewChartSlot" id="overviewSlot0"></section>
             <section className="panel overviewChartSlot" id="overviewSlot1"></section>
             <section className="panel overviewChartSlot" id="overviewSlot2"></section>
           </div>
 
+          {/* Insights combine computed summary cards with calculated answers or local Ollama chat. */}
           <div className="overviewBottom">
             <section className="panel insightsPanel">
               <div className="insightHeader">
@@ -178,6 +190,7 @@ export default function App() {
                     </span>
                   </p>
                 </div>
+                {/* Downloaded Ollama models populate this selector; blank selects calculated answers. */}
                 <div className="modelRow">
                   <label htmlFor="localModel">Answer mode</label>
                   <select id="localModel" defaultValue="">
@@ -190,6 +203,7 @@ export default function App() {
               </div>
               <div className="insightBody">
                 <div className="insightAsk">
+                  {/* Submitting a question calls ask(); suggestion buttons reuse the same path. */}
                   <form id="insightForm">
                     <label htmlFor="insightQuestion">
                       Ask a question about this dashboard
@@ -228,7 +242,11 @@ export default function App() {
                       </button>
                     </div>
                   </form>
+                  {/* Chat transcript and supporting SQL results are filled safely by the controller. */}
+                  <button type="button" id="newConversation">New conversation</button>
+                  <small>Follow up on your last answer. Changing data or filters starts a new conversation.</small>
                   <p id="insightAnswer" aria-live="polite"></p>
+                  <div id="analystEvidence" hidden></div>
                 </div>
                 <div id="insightCards" className="insightCards"></div>
               </div>
@@ -236,6 +254,7 @@ export default function App() {
           </div>
         </div>
 
+        {/* These controls filter both browser calculations and backend analyst queries. */}
         <div className="filters">
           <strong style={{ fontSize: 14 }}>Filters</strong>
           <label>
@@ -294,6 +313,7 @@ export default function App() {
           </details>
         </div>
 
+        {/* Detailed panels show supported charts not selected for the overview. */}
         <div id="detailPage" hidden>
           <section className="panel" data-chart-panel="weekday">
             <h2>Sales by day of week</h2>
@@ -320,6 +340,7 @@ export default function App() {
           </div>
 
           <div className="grid" data-chart-group>
+            {/* Product rows display revenue, quantity, and optional profit metrics. */}
             <section className="panel" data-chart-panel="products">
               <h2>Product performance</h2>
               <p className="sub">
@@ -357,6 +378,7 @@ export default function App() {
               <p className="sub">Products ranked by gross margin, after discounts</p>
               <div id="profitability"></div>
             </section>
+            {/* Weather comparisons use uploaded values only, with coverage limitations explained below. */}
             <section className="panel" data-chart-panel="weather">
               <h2>Weather versus sales</h2>
               <p className="sub">
@@ -371,6 +393,7 @@ export default function App() {
             </section>
           </div>
 
+          {/* Employee totals summarize handled sales rather than measuring staff productivity. */}
           <section
             className="panel"
             data-chart-panel="staff"
@@ -402,6 +425,7 @@ export default function App() {
           </section>
         </div>
 
+        {/* Display validation warnings and coverage limitations supplied by the backend. */}
         <div className="note" id="dataNotes"></div>
         <footer>
           Local data processing. Gross profit excludes operating expenses.

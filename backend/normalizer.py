@@ -1,3 +1,4 @@
+# Converts uploaded column names/types to the common row format used by charts and the analyst.
 """Validate mapped sales columns and normalize them for the dashboard."""
 from __future__ import annotations
 
@@ -57,6 +58,7 @@ def normalize(frame, mapping, business, currency="USD", date_order="month", deci
     """Validate mapped source columns and build the normalized sales dataset."""
     if not isinstance(mapping, dict):
         raise ValueError("Confirm the column mapping first.")
+    # Ignore blank/unrecognized mappings and reject missing or reused source columns.
     mapped = {k: v for k, v in mapping.items() if k in FIELDS and v}
     if any(v not in frame.columns for v in mapped.values()):
         raise ValueError("A mapped column is missing from this worksheet.")
@@ -111,6 +113,7 @@ def normalize(frame, mapping, business, currency="USD", date_order="month", deci
         if hours.isna().any() or ((hours < 0) | (hours > 23) | (hours % 1 != 0)).any():
             raise ValueError("Hour values must be whole numbers from 0 to 23, and Time values must use 24-hour notation.")
         result.loc[:, "Hour"] = hours.astype(int)
+    # Derive gross revenue only when both unit price and quantity are supplied.
     if "Gross_Sales" not in result and {"Unit_Price", "Quantity"} <= set(result):
         result.loc[:, "Gross_Sales"] = (result["Quantity"] * result["Unit_Price"]).round(2)
     if "Net_Sales" not in result:
@@ -120,6 +123,7 @@ def normalize(frame, mapping, business, currency="USD", date_order="month", deci
         result.loc[:, "Net_Sales"] = (result["Gross_Sales"] - result.get("Discount_Amount", 0)).round(2)
         if "Discount_Amount" not in result:
             warnings.append("No discounts column was provided: net sales is treated as gross sales. Returns and tax treatment depend on your source.")
+    # Cross-check supplied financial amounts rather than silently accepting contradictory totals.
     if {"Gross_Sales", "Discount_Amount"} <= set(result) and ((result["Gross_Sales"]-result["Discount_Amount"]-result["Net_Sales"]).abs() > .011).any():
         raise ValueError("Gross sales minus discounts does not match net sales. Confirm that discounts are line amounts, and revenue excludes tax and tips.")
     if "Total_COGS" not in result and {"Unit_COGS", "Quantity"} <= set(result):
@@ -130,10 +134,12 @@ def normalize(frame, mapping, business, currency="USD", date_order="month", deci
         if "Gross_Profit" in result and ((result["Gross_Profit"]-profit).abs() > .011).any():
             raise ValueError("Mapped gross profit does not match net sales minus product costs.")
         result.loc[:, "Gross_Profit"] = profit
+    # Fill display labels for missing dimensions; capability flags still identify absent source data.
     for field, default in {"Product_Name":"All sales", "Category":"Uncategorized", "Employee_Name":"Not provided", "Weather":"Not provided"}.items():
         if field not in result:
             result.loc[:, field] = default
         result.loc[:, field] = result[field].replace("", default)
+    # Clean uploaded weather labels locally; this does not fetch weather from a service.
     if "Weather" in mapped:
         result.loc[:, "Weather"] = result["Weather"].str.replace(r"\s+\d.*$", "", regex=True)
     orders_valid = "Transaction_ID" in result and not result["Transaction_ID"].eq("").any()
@@ -146,6 +152,7 @@ def normalize(frame, mapping, business, currency="USD", date_order="month", deci
                 orders_valid = False
         if not orders_valid:
             warnings.append("Some order IDs span different dates, times, or payment methods. Order count and average order value are disabled until grouping is verified.")
+    # Keep source records intact while reporting duplicates, returns, and missing costs.
     if frame.duplicated().any():
         warnings.append(f"{int(frame.duplicated().sum())} exact duplicate source rows were found. They are retained; verify whether they represent distinct sales.")
     if (result["Net_Sales"] < 0).any():
@@ -153,6 +160,7 @@ def normalize(frame, mapping, business, currency="USD", date_order="month", deci
     if "Gross_Profit" not in result:
         warnings.append("Cost and gross profit were not supplied: profit and margin metrics are unavailable.")
     warnings.append("Totals describe recorded data. Verify coverage before inferring demand, staffing needs, or causes. Gross profit excludes operating expenses.")
+    # Tell the frontend which metrics and charts the validated columns can support.
     capabilities = {key: key in result for key in ("Date", "Hour", "Quantity", "Gross_Profit", "Gross_Sales", "Discount_Amount")}
     capabilities.update({"orders": orders_valid, "product": "Product_Name" in mapped, "category": "Category" in mapped, "employee": "Employee_Name" in mapped, "weather": "Weather" in mapped})
     # The browser receives records plus capability flags so it can hide unsupported views.
