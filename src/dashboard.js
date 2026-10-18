@@ -28,6 +28,7 @@ export function initDashboard() {
 // Shared app state. `data` holds normalized rows returned by the Python server.
 let data = [],
   meta = {},
+  analyzedData = null,
   selected = [],
   uploadPayload = {},
   profile = null,
@@ -162,12 +163,11 @@ function applyBusinessTheme(name) {
   if (topChip) topChip.textContent = p.item.startsWith("Service") ? "Top service" : p.item === "Dish" ? "Top dish" : "Top product";
 }
 function applyChartVisibility() {
-  // Detailed Dashboard shows the available charts not chosen for Business Overview.
-  const available = new Set(chartOptions().map((option) => option.id)),
-    overview = new Set(overviewChartIds);
+  // Every supported chart remains in Detailed Dashboard; Overview is a curated subset.
+  const available = new Set(chartOptions().map((option) => option.id));
   document.querySelectorAll("[data-chart-panel]").forEach((panel) => {
     const id = panel.dataset.chartPanel;
-    panel.hidden = !available.has(id) || overview.has(id);
+    panel.hidden = !available.has(id);
   });
   document.querySelectorAll("[data-chart-group]").forEach((group) => {
     group.hidden = ![...group.querySelectorAll("[data-chart-panel]")].some(
@@ -184,7 +184,7 @@ function showChartChooser(resetSelection = false) {
   if (resetSelection || !overviewChartIds.length)
     overviewChartIds = optionIds.slice(0, 3);
   $("chartChooserSummary").textContent = options.length
-    ? `Choose up to 3 charts for Business Overview. The rest will appear in Detailed Dashboard.`
+    ? `Choose up to 3 charts for Business Overview. Detailed Dashboard will include every supported chart.`
     : "No optional charts are available from the mapped columns.";
   const plan = chartPlan(meta.business, meta.capabilities);
   $("chartRecommendationNotes").innerHTML = `<p>Recommended for ${esc(businessProfile(meta.business).label)} from the available data.</p>` + plan.missing.map(id => `<p><strong>${esc(chartTitle(id, meta.business))}</strong> needs ${esc(CHARTS[id].requires)}. A supported alternative is selected when available.</p>`).join("");
@@ -214,7 +214,7 @@ function updateChartChoiceState() {
   $("loadSelectedCharts").disabled = inputs.length > 0 && checked.length === 0;
   if (inputs.length) {
     $("chartChooserSummary").textContent =
-      `${checked.length}/${max} overview charts selected. Remaining available charts will appear in Detailed Dashboard.`;
+      `${checked.length}/${max} overview charts selected. Detailed Dashboard will include every supported chart.`;
   }
 }
 function loadSelectedCharts() {
@@ -242,6 +242,9 @@ function selectRecommendedCharts() {
 async function inspect() {
   // Read the chosen sample/upload and ask the server for column suggestions.
   $("setupError").textContent = "";
+  analyzedData = null;
+  $("kpiPanel").hidden = true;
+  $("buildButton").hidden = false;
   $("setupStatus").textContent = "Reading columns…";
   $("inspectButton").disabled = true;
   try {
@@ -329,18 +332,18 @@ async function inspect() {
     $("inspectButton").disabled = false;
   }
 }
-async function build() {
-  // Send the confirmed mapping to the server and receive normalized records.
+async function confirmColumns() {
+  // Validate the confirmed mapping and learn which KPIs this data can support.
   $("setupError").textContent = "";
   $("buildButton").disabled = true;
-  $("setupStatus").textContent = "Validating and calculating…";
+  $("setupStatus").textContent = "Checking mapped columns…";
   try {
     const mapping = Object.fromEntries(
       Object.keys(fields).map((key) => [key, $("map_" + key).value]),
     );
     const currency = $("currency").value.trim().toUpperCase();
     new Intl.NumberFormat("en-US", { style: "currency", currency });
-    const result = await api("/api/analyze", {
+    analyzedData = await api("/api/analyze", {
       ...uploadPayload,
       sheet: $("sheet").value,
       mapping,
@@ -351,44 +354,101 @@ async function build() {
       lineTotalBasis: $("lineTotalBasis").value,
       modifierBasis: $("modifierBasis").value,
     });
-    meta = result;
-    data = result.rows;
-    for (const id of ["category", "product"])
-      sourceOptions(
-        $(id),
-        [
-          ...new Set(
-            data.map((r) => r[id === "category" ? "Category" : "Product_Name"]),
-          ),
-        ].sort(),
-      );
-    $("category").firstChild.textContent = "All categories";
-    $("product").firstChild.textContent = "All products";
-    for (const id of ["from", "to"]) {
-      // Disable filters that cannot work with the mapped columns.
-      $(id).disabled = !meta.capabilities.Date;
-      $(id).min = meta.dateMin || "";
-      $(id).max = meta.dateMax || "";
-    }
-    $("weekday").disabled = !meta.capabilities.Date;
-    $("period").disabled = !meta.capabilities.Hour;
-    $("category").disabled = !meta.capabilities.category;
-    $("product").disabled = !meta.capabilities.product;
-    applyBusinessTheme(meta.business);
-    $("datasetName").textContent = meta.filename;
-    $("sidebarNotes").innerHTML = meta.warnings
-      .map((w) => `<p>${esc(w)}</p>`)
-      .join("");
-    $("dataNotes").textContent = meta.warnings.join(" ");
-    setDefaultFilterValues();
-    showPage("overview");
-    showChartChooser(true);
-    $("setupStatus").textContent = "Choose charts to load.";
+    renderKpiOptions(analyzedData);
+    $("kpiPanel").hidden = false;
+    $("buildButton").hidden = true;
+    $("setupStatus").textContent = "Columns confirmed. Choose your KPIs.";
   } catch (e) {
     $("setupError").textContent = e.message;
   } finally {
     $("buildButton").disabled = false;
   }
+}
+function renderKpiOptions(result) {
+  const c = result.capabilities;
+  const options = [
+    ["netSales", "Net sales", "Revenue after discounts"],
+    ...(c.Gross_Profit
+      ? [
+          ["grossProfit", "Gross profit", "Net sales minus product costs"],
+          ["grossMargin", "Gross margin", "Gross profit as a share of net sales"],
+        ]
+      : []),
+    ...(c.Gross_Sales ? [["grossSales", "Gross sales", "Revenue before discounts"]] : []),
+    ...(c.Quantity ? [["units", "Units sold", "Total quantity sold"]] : []),
+    ...(c.Discount_Amount
+      ? [["discounts", "Discounts given", "Total recorded discounts"]]
+      : []),
+    ...(c.Gross_Sales && c.Discount_Amount
+      ? [["discountRate", "Discount rate", "Discounts as a share of gross sales"]]
+      : []),
+    ["salesLines", "Sales lines", "Number of mapped rows in the selection"],
+    ...(c.orders
+      ? [
+          ["orders", "Matching orders", "Distinct order or receipt IDs"],
+          ["averageOrderValue", "Average order value", "Net sales per order"],
+          ...(c.Quantity
+            ? [["unitsPerOrder", "Average units per order", "Quantity divided by distinct orders"]]
+            : []),
+        ]
+      : []),
+    ...(c.Date
+      ? [
+          ["dailySales", "Average sales per day", "Net sales per recorded date"],
+          ["salesChange", "Sales change", "Net sales change between the first and second halves of the selected dates"],
+        ]
+      : []),
+    ...(c.Hour
+      ? [["hourlySales", "Sales by hour", "Net sales grouped by hour of day"]]
+      : []),
+    ...(c.weather
+      ? [["weatherSales", "Sales by weather", "Net sales grouped by recorded weather"]]
+      : []),
+  ];
+  $("kpiOptions").innerHTML = options
+    .map(
+      ([id, title, description]) =>
+        `<label class="kpiOption"><input type="checkbox" name="kpi" value="${id}"><span><strong>${title}</strong><small>${description}</small></span></label>`,
+    )
+    .join("");
+  $("kpiPanel").querySelector("p").textContent =
+    `Choose the measures that matter to your ${$("business").value.toLowerCase()}. Options depend on the columns you confirmed; leave everything unchecked for the default KPI cards.`;
+}
+function buildDashboard() {
+  if (!analyzedData) return;
+  meta = analyzedData;
+  data = meta.rows;
+  for (const id of ["category", "product"])
+    sourceOptions(
+      $(id),
+      [
+        ...new Set(
+          data.map((r) => r[id === "category" ? "Category" : "Product_Name"]),
+        ),
+      ].sort(),
+    );
+  $("category").firstChild.textContent = "All categories";
+  $("product").firstChild.textContent = "All products";
+  for (const id of ["from", "to"]) {
+    // Disable filters that cannot work with the mapped columns.
+    $(id).disabled = !meta.capabilities.Date;
+    $(id).min = meta.dateMin || "";
+    $(id).max = meta.dateMax || "";
+  }
+  $("weekday").disabled = !meta.capabilities.Date;
+  $("period").disabled = !meta.capabilities.Hour;
+  $("category").disabled = !meta.capabilities.category;
+  $("product").disabled = !meta.capabilities.product;
+  applyBusinessTheme(meta.business);
+  $("datasetName").textContent = meta.filename;
+  $("sidebarNotes").innerHTML = meta.warnings
+    .map((w) => `<p>${esc(w)}</p>`)
+    .join("");
+  $("dataNotes").textContent = meta.warnings.join(" ");
+  setDefaultFilterValues();
+  showPage("overview");
+  showChartChooser(true);
+  $("setupStatus").textContent = "Choose charts to load.";
 }
 function setDefaultFilterValues() {
   // Return all filters to the full dataset range.
@@ -605,8 +665,7 @@ function metrics(rows, overview = false) {
     gross = sum(rows, "Gross_Sales"),
     discount = sum(rows, "Discount_Amount"),
     c = meta.capabilities;
-  return (
-    overview
+  const defaults = overview
       ? [
           ["Net sales", money(n), "Selected recorded revenue"],
           [
@@ -662,8 +721,83 @@ function metrics(rows, overview = false) {
               : "—",
             "Discounts ÷ gross sales",
           ],
-        ]
-  )
+        ];
+  const picked = [...document.querySelectorAll('input[name="kpi"]:checked')].map(
+    (input) => input.value,
+  );
+  const orders = c.orders ? new Set(rows.map((r) => r.Order_Key)).size : 0;
+  const custom = {
+    netSales: ["Net sales", money(n), "Selected recorded revenue"],
+    grossProfit: ["Gross profit", money(g), "Net sales minus product costs"],
+    grossMargin: [
+      "Gross margin",
+      n > 0 ? pct((g / n) * 100) : "—",
+      "Gross profit as a share of net sales",
+    ],
+    grossSales: ["Gross sales", money(gross), "Revenue before discounts"],
+    units: ["Units sold", sum(rows, "Quantity").toLocaleString(), "Total selected quantity"],
+    discounts: ["Discounts given", money(discount), "Total recorded discounts"],
+    discountRate: [
+      "Discount rate",
+      gross > 0 ? pct((discount / gross) * 100) : "—",
+      "Discounts as a share of gross sales",
+    ],
+    orders: ["Matching orders", orders.toLocaleString(), "Distinct matching order IDs"],
+    averageOrderValue: [
+      "Average order value",
+      orders ? money(n / orders) : "—",
+      "Net sales per matching order",
+    ],
+    unitsPerOrder: [
+      "Average units per order",
+      orders ? (sum(rows, "Quantity") / orders).toFixed(1) : "—",
+      "Quantity divided by distinct matching orders",
+    ],
+    salesLines: ["Sales lines", rows.length.toLocaleString(), "Mapped rows in the current selection"],
+    dailySales: [
+      "Average sales per day",
+      (() => {
+        const days = new Set(rows.map((r) => r.Date)).size;
+        return days ? money(n / days) : "—";
+      })(),
+      "Net sales per recorded date",
+    ],
+    salesChange: (() => {
+      const dates = [...new Set(rows.map((r) => r.Date))].sort();
+      if (dates.length < 2)
+        return ["Sales change", "—", "At least two recorded dates are needed"];
+      const split = dates[Math.floor(dates.length / 2)],
+        first = sum(rows.filter((r) => r.Date < split), "Net_Sales"),
+        second = sum(rows.filter((r) => r.Date >= split), "Net_Sales");
+      return first > 0
+        ? [
+            "Sales change",
+            pct(((second - first) / first) * 100),
+            `${money(second)} in the second half vs ${money(first)} in the first half`,
+          ]
+        : ["Sales change", "—", "No positive sales in the first half to compare"];
+    })(),
+    hourlySales: [
+      "Peak sales hour",
+      (() => {
+        const peak = group(rows, "Hour").sort((a, b) => sum(b[1], "Net_Sales") - sum(a[1], "Net_Sales"))[0];
+        return peak ? `${peak[0]}:00` : "—";
+      })(),
+      "Hour with the highest net sales",
+    ],
+    weatherSales: [
+      "Top weather by sales",
+      (() => {
+        const peak = group(rows, "Weather").sort((a, b) => sum(b[1], "Net_Sales") - sum(a[1], "Net_Sales"))[0];
+        return peak ? peak[0] : "—";
+      })(),
+      "Recorded weather condition with highest net sales",
+    ],
+  };
+  const cards = overview && picked.length
+    ? picked.map((key) => custom[key]).filter(Boolean)
+    : defaults;
+  return cards
     .map(
       (m) =>
         `<article class="card"><div class="label">${esc(m[0])}</div><div class="value">${esc(m[1])}</div><div class="hint">${esc(m[2])}</div></article>`,
@@ -816,7 +950,7 @@ function render() {
   );
   renderOverviewCharts(rows, products, c);
   // Render remaining charts through the same dispatcher as Overview.
-  $("detailCharts").innerHTML = chartOptions().filter(option => !overviewChartIds.includes(option.id)).map(option =>
+  $("detailCharts").innerHTML = chartOptions().map(option =>
     `<section class="panel" data-chart-panel="${esc(option.id)}"><h2>${esc(option.title)}</h2><p class="sub">${esc(CHARTS[option.id].kind)}</p><div class="businessDetailChart">${overviewChartHtml(option.id, rows, products, c)}</div></section>`).join("") || '<p class="chartNote">All supported charts are shown in Business Overview.</p>';
   // Retain the detailed source summaries alongside the new business charts.
   $("detailTables").innerHTML = (c.product ? `<details class="panel"><summary>${esc(businessProfile(meta.business).item)} totals</summary><div class="scroll"><table><thead><tr><th>Item</th><th>Units</th><th>Net sales</th><th>Gross profit</th><th>Margin</th></tr></thead><tbody>${products.map(([name, items]) => {
@@ -2204,7 +2338,8 @@ async function refreshModels() {
 }
 // Connect page buttons, dropdowns, and question chips to the functions above.
 $("inspectButton").onclick = inspect;
-$("buildButton").onclick = build;
+$("buildButton").onclick = confirmColumns;
+$("dashboardButton").onclick = buildDashboard;
 $("sheet").onchange = () => {
   uploadPayload.sheet = $("sheet").value;
   inspect();
@@ -2215,16 +2350,22 @@ $("upload").onchange = () => {
   $("sampleDescription").hidden = true;
   profile = null;
   uploadPayload = {};
+  analyzedData = null;
   $("mappingPanel").hidden = true;
+  $("kpiPanel").hidden = true;
+  $("buildButton").hidden = false;
   $("sheet").replaceChildren();
 };
 $("sample").onchange = () => {
-  // Samples also preselect the closest business type for better wording.
+  // Samples also preselect the closest business type and show their description.
   profile = null;
   uploadPayload = {};
+  analyzedData = null;
   $("upload").value = "";
   $("sheet").replaceChildren();
   $("mappingPanel").hidden = true;
+  $("kpiPanel").hidden = true;
+  $("buildButton").hidden = false;
   const sample = SAMPLE_DATASETS.find(item => item.filename === $("sample").value);
   if (sample) $("business").value = sample.business;
   $("sampleDescription").hidden = !sample;
