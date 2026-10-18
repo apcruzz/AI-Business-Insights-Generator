@@ -8,6 +8,8 @@ export const BUSINESSES = {
   'Tech store': profile('Tech / electronics store', 'Your tech store performance', 'Device / accessory', '#245fa5', '#edf5ff', ['categoryBar','products','profitability'], ['trend','channel','orderValue','weekday']),
   'Furniture shop': profile('Furniture store', 'Your furniture showroom', 'Furniture item', '#5d7050', '#f2f5ee', ['categoryBar','productProfit','delivery'], ['products','trend','profitability','orderValue','staff']),
   Bakery: profile('Bakery', 'Fresh insights from your bakery', 'Baked product', '#a36325', '#fff7e8', ['unitsHour','waste','trend'], ['products','category','profitability','hour','weekday']),
+  'Grocery store': profile('Grocery store', 'Your grocery store at a glance', 'Grocery item', '#36734b', '#f0f7ed', ['categoryBar','products','profitability'], ['trend','waste','hour','orderValue','weekday','staff']),
+  'Ice cream shop': profile('Ice cream shop', 'A scoop of your shop performance', 'Flavor / treat', '#a83f72', '#fff1f7', ['products','hour','weather'], ['trend','category','profitability','weekday','waste','staff']),
   'Online shop': profile('Online shop', 'Your online shop performance', 'Product', '#276b75', '#eef9fa', ['channel','products','orderValue'], ['trend','category','profitability','weekday']),
   'Salon / barbershop': profile('Salon / barbershop', 'Your salon at a glance', 'Service', '#a24670', '#fff0f5', ['service','bookings','utilization'], ['trend','staff','category','weekday','profitability']),
   'Repair / service shop': profile('Repair / service shop', 'Your service desk at a glance', 'Service type', '#44647a', '#f0f5f8', ['service','turnaround','jobStatus'], ['trend','staff','category','profitability','weekday']),
@@ -48,6 +50,10 @@ export const BUSINESS_FIELDS = {
 };
 export function chartTitle(id, business) {
   const p = businessProfile(business);
+  if (id === 'products' && business === 'Grocery store') return 'Best-selling groceries';
+  if (id === 'products' && business === 'Ice cream shop') return 'Best-selling flavors and treats';
+  if (id === 'categoryBar' && business === 'Grocery store') return 'Revenue by grocery category';
+  if (id === 'profitability' && business === 'Grocery store') return 'Grocery product gross margin';
   if (id === 'products') return business === 'Tech store' ? 'Best-selling devices and accessories' : `Best-selling ${p.item === 'Dish' ? 'dishes' : p.item === 'Service' ? 'services' : 'products'}`;
   if (id === 'profitability' && business === 'Restaurant') return 'Dish profitability';
   if (id === 'categoryBar' && business === 'Furniture shop') return 'Revenue by furniture category';

@@ -16,6 +16,8 @@ REQUIRED = {
     'Tech store': ['category','product','Quantity','Gross_Profit'],
     'Furniture shop': ['category','product','Gross_Profit','delivery'],
     'Bakery': ['Hour','Quantity','product','waste','Date'],
+    'Grocery store': ['category','product','Quantity','Gross_Profit'],
+    'Ice cream shop': ['product','Quantity','Hour','Date','weather'],
     'Online shop': ['channel','product','Quantity','orders'],
     'Salon / barbershop': ['product','bookings','utilization'],
     'Repair / service shop': ['product','turnaround','jobStatus'],
@@ -52,6 +54,13 @@ class BusinessSampleTests(unittest.TestCase):
         online=pd.read_csv(ROOT/'data/samples/Online_Shop_Demo.csv')
         self.assertGreaterEqual(online.Sales_Channel.nunique(),3)
         self.assertGreater(online.groupby('Transaction_ID').Net_Sales.sum().nunique(),10)
+        grocery=pd.read_csv(ROOT/'data/samples/Grocery_Demo.csv')
+        self.assertGreaterEqual(grocery.Category.nunique(),5)
+        self.assertTrue(grocery.groupby('Transaction_ID').size().between(2,5).all())
+        ice_cream=pd.read_csv(ROOT/'data/samples/Ice_Cream_Demo.csv')
+        self.assertEqual(set(ice_cream.Weather),{'Sunny','Cloudy','Rainy'})
+        self.assertTrue(ice_cream.groupby('Date').Weather.nunique().eq(1).all())
+        self.assertTrue(ice_cream.Hour.between(11,20).all())
         salon=pd.read_csv(ROOT/'data/samples/Salon_Demo.csv')
         self.assertTrue({'Completed','Cancelled','No-show'} <= set(salon.Appointment_Status))
         for (_, day), rows in salon.groupby(['Employee_Name','Date']):

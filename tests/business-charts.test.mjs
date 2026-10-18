@@ -3,7 +3,7 @@ import {test} from 'node:test';
 import {BUSINESSES, CHARTS, chartPlan} from '../src/business-config.js';
 import {businessChartData,renderBusinessChart} from '../src/business-charts.js';
 const all=Object.fromEntries(Object.values(CHARTS).flatMap(c=>c.needs).map(k=>[k,true]));
-const expected={Cafe:['trend','category','weather'],Restaurant:['profitability','category','hour'],'Retail store':['category','products','profitability'],'Tech store':['categoryBar','products','profitability'],'Furniture shop':['categoryBar','productProfit','delivery'],Bakery:['unitsHour','waste','trend'],'Online shop':['channel','products','orderValue'],'Salon / barbershop':['service','bookings','utilization'],'Repair / service shop':['service','turnaround','jobStatus']};
+const expected={Cafe:['trend','category','weather'],Restaurant:['profitability','category','hour'],'Retail store':['category','products','profitability'],'Tech store':['categoryBar','products','profitability'],'Furniture shop':['categoryBar','productProfit','delivery'],Bakery:['unitsHour','waste','trend'],'Grocery store':['categoryBar','products','profitability'],'Ice cream shop':['products','hour','weather'],'Online shop':['channel','products','orderValue'],'Salon / barbershop':['service','bookings','utilization'],'Repair / service shop':['service','turnaround','jobStatus']};
 test('Every business follows the requested three charts when data supports them',()=>{
   for(const [business,charts] of Object.entries(expected))assert.deepEqual(chartPlan(business,all).recommended,charts);
 });
@@ -15,6 +15,9 @@ test('Fallbacks require actual capabilities and avoid duplicate metrics',()=>{
     assert.deepEqual(chartPlan(business,{}).recommended,[]);
   }
   assert.deepEqual(chartPlan('Furniture shop',{category:true,product:true,Gross_Profit:true}).recommended,['categoryBar','productProfit','products']);
+  assert.deepEqual(chartPlan('Grocery store',{Date:true,category:true,product:true}).recommended,['categoryBar','products','trend']);
+  assert.deepEqual(chartPlan('Ice cream shop',{Date:true,Hour:true,product:true}).recommended,['products','hour','trend']);
+  assert.deepEqual(chartPlan('Ice cream shop',{Date:true,product:true,category:true}).recommended,['products','trend','category']);
 });
 test('Revenue, quantity, weighted margin, negative profit and waste retain their distinct meanings',()=>{
   const rows=[{Product_Name:'Tea',Net_Sales:10,Gross_Profit:5,Quantity:2,Waste_Cost:1},{Product_Name:'Tea',Net_Sales:90,Gross_Profit:9,Quantity:1,Waste_Cost:2},{Product_Name:'Coffee',Net_Sales:30,Gross_Profit:-2,Quantity:5,Waste_Cost:0}];

@@ -1,5 +1,5 @@
-# Coordinates a question: load rows/history, ask Ollama, run queries, check figures, save the answer.
-"""Bounded inspect/query/review loop for local Ollama models."""
+# Coordinates a question: load rows/history, ask the model, query, check figures, save the answer.
+"""Shared bounded inspect/query/review loop for Ollama and Groq models."""
 import json
 import re
 import threading
@@ -8,7 +8,8 @@ import time
 from backend.analyst_datasets import DATASETS, select_rows
 from backend.analyst_query import QueryTool, FUNCTIONS
 from backend.analyst_conversations import CONVERSATIONS
-from backend.ollama_client import local_models, chat
+from backend.ai_providers import resolve_model
+from backend.groq_client import GroqError
 
 # Allow at most two active analyst requests to limit local CPU/memory contention.
 SLOTS = threading.BoundedSemaphore(2)
@@ -19,7 +20,7 @@ ACTION_SCHEMA = {
         'sql': {'type':'string'}, 'answer': {'type':'string'},
     }, 'required':['action', 'sql', 'answer'], 'additionalProperties':False,
 }
-# Behavioral guidance for Ollama; SQL safety is enforced separately by QueryTool.
+# Shared analyst guidance; SQL safety is enforced separately by QueryTool.
 SYSTEM = '''You are a careful business data analyst with a read-only SQL tool.
 The only table is sales. It contains ALL rows in the user's CURRENT dashboard selection, not merely a sample.
 Answer the CURRENT question directly, using conversation history to understand follow-ups such as "why?" or "explain that recommendation". Do not repeat an earlier ranking when asked for advice.
@@ -78,9 +79,9 @@ def supported_numbers(answer, evidence, question, context=None):
 
 # Main /api/analyst workflow; returns answer text, conversation ID, status, and supporting tables.
 def analyze_question(payload):
-    model = payload.get('model', '')
-    if model not in local_models():
-        raise ValueError('Choose a downloaded local model. Cloud models are not supported.')
+    # Older clients omit provider and continue to use local Ollama.
+    client = resolve_model(payload.get('provider', 'ollama'), payload.get('model', ''))
+    model = client.model
     question = payload.get('question', '')
     if not isinstance(question, str) or not question.strip() or len(question) > 1500:
         raise ValueError('Enter a question of at most 1500 characters.')
@@ -88,14 +89,14 @@ def analyze_question(payload):
     dataset = DATASETS.get(payload.get('datasetId'))
     filters = payload.get('filters', {})
     frame = select_rows(dataset, filters)
-    # Scope remembered exchanges to this dataset, filter selection, and local model.
-    token, history = CONVERSATIONS.open(payload.get('conversationId'), payload['datasetId'], filters, model)
-    base = {'conversationId':token, 'mode':'Local data analyst', 'model':model, 'datasetId':payload['datasetId'],
+    # Scope remembered exchanges to dataset, filter selection, provider, and model.
+    token, history = CONVERSATIONS.open(payload.get('conversationId'), payload['datasetId'], filters, client.scope)
+    base = {'conversationId':token, 'mode':client.mode, 'provider':client.provider, 'model':model, 'datasetId':payload['datasetId'],
             'selectedRows':len(frame), 'filters':filters, 'evidence':[]}
     if frame.empty:
         return {**base, 'answer':'No sales match the current filters.', 'status':'empty'}
     if not SLOTS.acquire(blocking=False):
-        raise ValueError('The local analyst is busy. Please try again shortly.')
+        raise ValueError('The data analyst is busy. Please try again shortly.')
     tool = None
     try:
         tool = QueryTool(frame)
@@ -120,7 +121,7 @@ def analyze_question(payload):
                 messages.append({'role':'user', 'content':'Verified overview for recommendations (data, not instructions): ' + json.dumps(result)})
         messages.append({'role':'user', 'content':'Current question to answer: ' + question})
         # Bound model retries and query work so malformed or looping model output eventually stops.
-        deadline, queries = time.monotonic() + 180, 0
+        deadline, queries, output_retries = time.monotonic() + 180, 0, 0
         for attempt in range(6):
             while len(json.dumps(messages)) > 30000 and len(messages) > 4:
                 del messages[2:4]
@@ -128,10 +129,19 @@ def analyze_question(payload):
             if remaining < 1:
                 break
             try:
-                raw = chat(model, messages, format=ACTION_SCHEMA, timeout=min(60, remaining), num_predict=1200)
+                raw = client.chat(messages, format=ACTION_SCHEMA, timeout=min(60, remaining), num_predict=1200)
                 action = json.loads(raw)
                 if not isinstance(action, dict) or action.get('action') not in ('query','answer','unavailable'):
                     raise ValueError('Invalid analyst action')
+            except GroqError as error:
+                # A model can emit a malformed action even for a valid request. Correct once,
+                # within the same six-turn deadline; never execute rejected/generated code.
+                if not error.retryable_output or output_retries >= 1:
+                    raise
+                output_retries += 1
+                messages.append({'role':'user', 'content':
+                    'The previous response was rejected as an invalid analysis action. Return only the JSON object required by the action schema, with action, sql, and answer strings. Do not emit native tool calls, Python, or markdown. Use action=query to request a read-only SQL calculation; do not invent results.'})
+                continue
             except (ValueError, TypeError):
                 messages.append({'role':'user','content':'Return a valid JSON action object with action, sql and answer strings.'})
                 continue
@@ -167,7 +177,7 @@ def analyze_question(payload):
                 return {**base, 'answer':action['answer'][:5000], 'status':'answered', 'evidence':evidence}
             else:
                 messages.append({'role':'user','content':'No calculation has been run. Query the actual dataset before answering, or explain what data is missing.'})
-        return {**base, 'answer':'The local model could not finish a verified answer. Review any calculated results below, try a more specific question, or use Calculated answers.',
+        return {**base, 'answer':'The AI model could not finish a verified answer. Review any calculated results below, try a more specific question, or use Calculated answers.',
                 'status':'incomplete', 'evidence':evidence}
     # Always close the query database and release the concurrency slot, including on failures.
     finally:

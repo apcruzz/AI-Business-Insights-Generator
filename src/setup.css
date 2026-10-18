@@ -682,6 +682,16 @@ body.overviewMode .overviewChartContent .chartNote {
 #analystEvidence table { min-width: 100%; }
 #analystEvidence pre { white-space: pre-wrap; overflow-wrap: anywhere; }
 
+/* Keep the selected AI's data-sharing information visible beside conversation controls. */
+.insightsPanel .aiDataNotice {
+  margin: 8px 0;
+  padding: 8px 10px;
+  border-left: 3px solid var(--business-accent, #008473);
+  background: var(--business-tint, #edf8f5);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 /* Business identity comes from the selected profile, while layout stays familiar. */
 :root { --business-accent: #008473; --business-tint: #edf8f5; }
 body { background: var(--business-tint); }

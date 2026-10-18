@@ -103,7 +103,7 @@ class AnalystTests(unittest.TestCase):
             self.assertEqual(select_rows(self.cache.get(key),{})['Net_Sales'].sum(),130)
 
     def run_agent(self, actions, filters=None):
-        with patch('backend.analyst_agent.DATASETS',self.cache), patch('backend.analyst_agent.local_models',return_value=['llama3']), patch('backend.analyst_agent.chat',side_effect=[json.dumps(a) for a in actions]) as chat:
+        with patch('backend.analyst_agent.DATASETS',self.cache), patch('backend.ai_providers.ollama_client.local_models',return_value=['llama3']), patch('backend.ai_providers.ollama_client.chat',side_effect=[json.dumps(a) for a in actions]) as chat:
             result = analyze_question({'model':'llama3','datasetId':self.key,'question':'Which month had the highest sales revenue?','filters':filters or {}})
             return result, chat
 
@@ -134,7 +134,7 @@ class AnalystTests(unittest.TestCase):
             {'action':'answer','sql':'','answer':'Tea generated USD 90. Test promoting Tea; review costs before discounting.'},
             {'action':'answer','sql':'','answer':'Promote Tea because its USD 90 revenue shows existing demand. Test the promotion and measure profit; costs are missing.'},
         ]
-        with patch('backend.analyst_agent.DATASETS',self.cache), patch('backend.analyst_agent.local_models',return_value=['llama3']), patch('backend.analyst_agent.chat',side_effect=[json.dumps(a) for a in actions]) as model:
+        with patch('backend.analyst_agent.DATASETS',self.cache), patch('backend.ai_providers.ollama_client.local_models',return_value=['llama3']), patch('backend.ai_providers.ollama_client.chat',side_effect=[json.dumps(a) for a in actions]) as model:
             first = analyze_question({'model':'llama3','datasetId':self.key,'question':'How can we grow the business?'})
             self.assertEqual(first['status'], 'answered')
             self.assertIn('Test promoting Tea',first['answer'])
@@ -167,7 +167,7 @@ class AnalystTests(unittest.TestCase):
         self.assertEqual(result['status'],'unavailable')
         result,_ = self.run_agent([], {'product':'missing'})
         self.assertEqual(result['status'],'empty')
-        with patch('backend.analyst_agent.DATASETS',self.cache), patch('backend.analyst_agent.local_models',return_value=['llama3']), patch('backend.analyst_agent.chat',side_effect=TimeoutError):
+        with patch('backend.analyst_agent.DATASETS',self.cache), patch('backend.ai_providers.ollama_client.local_models',return_value=['llama3']), patch('backend.ai_providers.ollama_client.chat',side_effect=TimeoutError):
             result=analyze_question({'model':'llama3','datasetId':self.key,'question':'Sales?'})
             self.assertEqual(result['status'],'incomplete')
             self.assertEqual(result['evidence'],[])

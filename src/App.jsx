@@ -201,7 +201,7 @@ export default function App() {
             <section className="panel overviewChartSlot" id="overviewSlot2"></section>
           </div>
 
-          {/* Insights combine computed summary cards with calculated answers or local Ollama chat. */}
+          {/* Insights combine computed cards with calculated answers, Ollama, or Groq chat. */}
           <div className="overviewBottom">
             <section className="panel insightsPanel">
               <div className="insightHeader">
@@ -209,21 +209,24 @@ export default function App() {
                   <h2>Business insights</h2>
                   <p className="sub">
                     <span id="insightMode">
-                      Calculated insights · local AI optional
+                      Calculated insights · AI optional
                     </span>
                   </p>
                 </div>
-                {/* Downloaded Ollama models populate this selector; blank selects calculated answers. */}
+                {/* Backend discovery lists local and cloud models; blank selects calculated answers. */}
                 <div className="modelRow">
                   <label htmlFor="localModel">Answer mode</label>
-                  <select id="localModel" defaultValue="">
+                  <select id="localModel" defaultValue="" aria-describedby="aiDataNotice">
                     <option value="">Calculated answers</option>
                   </select>
                   <button id="refreshModels" type="button">
-                    Check local AI
+                    Refresh AI options
                   </button>
                 </div>
               </div>
+              <p id="aiDataNotice" className="sub aiDataNotice" aria-live="polite">
+                Choose an answer mode to see how your data is used.
+              </p>
               <div className="insightBody">
                 <div className="insightAsk">
                   {/* Submitting a question calls ask(); suggestion buttons reuse the same path. */}

@@ -41,7 +41,7 @@ class DatasetCache:
         # Estimate DataFrame memory and reject a single upload larger than the cache budget.
         size = int(frame.memory_usage(index=True, deep=True).sum())
         if size > self.max_bytes:
-            raise ValueError('This dataset is too large for local AI memory. Calculated answers still work.')
+            raise ValueError('This dataset is too large for AI analysis memory. Calculated answers still work.')
         metadata = {key: result[key] for key in ('filename', 'business', 'currency', 'capabilities', 'warnings')}
         entry = Dataset(frame, metadata, extras, size, time.monotonic())
         key = secrets.token_urlsafe(24)
@@ -65,7 +65,7 @@ class DatasetCache:
             self._expire()
             entry = self._items.get(key) if isinstance(key, str) else None
             if entry is None:
-                raise ValueError('The local AI dataset expired or the server restarted. Build the dashboard again to reload it.')
+                raise ValueError('The AI dataset expired or the server restarted. Build the dashboard again to reload it.')
             self._items.move_to_end(key)
             return entry
 

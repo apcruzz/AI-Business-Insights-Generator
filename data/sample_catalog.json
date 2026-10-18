@@ -7,5 +7,7 @@
   {"filename":"Bakery_Demo.csv","business":"Bakery","label":"Bakery","description":"Hourly bread and pastry sales, daily trends and product waste costs."},
   {"filename":"Online_Shop_Demo.csv","business":"Online shop","label":"Online shop","description":"Website, marketplace and social orders with varied basket values."},
   {"filename":"Salon_Demo.csv","business":"Salon / barbershop","label":"Salon / barbershop","description":"Services, appointments, cancellations and daily staff capacity."},
-  {"filename":"Repair_Shop_Demo.csv","business":"Repair / service shop","label":"Repair / service shop","description":"Repair services, completed-job turnaround and open job statuses."}
+  {"filename":"Repair_Shop_Demo.csv","business":"Repair / service shop","label":"Repair / service shop","description":"Repair services, completed-job turnaround and open job statuses."},
+  {"filename":"Grocery_Demo.csv","business":"Grocery store","label":"Grocery store","description":"Produce, dairy, pantry and household groceries with basket quantities, costs and product margins."},
+  {"filename":"Ice_Cream_Demo.csv","business":"Ice cream shop","label":"Ice cream shop","description":"Scoops, sorbet, sundaes and shakes with afternoon/evening sales and fictional daily weather."}
 ]

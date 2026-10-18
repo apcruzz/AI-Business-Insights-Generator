@@ -1,4 +1,4 @@
-"""Regenerate the nine fictional demos: python scripts/generate_business_samples.py.
+"""Regenerate the eleven fictional demos: python scripts/generate_business_samples.py.
 
 Uses only the standard library and fixed random seeds. These are illustrative
 patterns, not claims about real shops. Original sample files are left untouched.
@@ -21,6 +21,8 @@ PRODUCTS = {
     'Furniture shop': [('Oak dining table','Dining',650,360),('Dining chair','Dining',115,56),('Compact sofa','Living room',890,520),('Accent chair','Living room',280,145),('Storage bed','Bedroom',720,390),('Bedside table','Bedroom',95,44),('Standing desk','Office',420,230),('Office chair','Office',210,105)],
     'Bakery': [('Sourdough loaf','Bread',6.5,2.1),('Baguette','Bread',3.5,1.1),('Butter croissant','Pastries',3.8,1.3),('Cinnamon roll','Pastries',4.5,1.45),('Chocolate cookie','Cookies',2.5,.65),('Lemon slice','Cakes',5,1.7)],
     'Online shop': [('Canvas tote','Bags',18,5),('Travel backpack','Bags',65,28),('Steel bottle','Drinkware',24,9),('Travel mug','Drinkware',19,7),('Desk organizer','Home',32,12),('Notebook set','Stationery',14,4),('Planner','Stationery',22,7)],
+    'Grocery store': [('Bananas (bunch)','Produce',2.8,1.7),('Apples (bag)','Produce',4.5,2.9),('Tomatoes 500 g','Produce',3.2,1.95),('Fresh milk 1 L','Dairy',3.6,2.65),('Eggs (dozen)','Dairy',4.8,3.5),('Rice 5 kg','Pantry',12.5,9.25),('Breakfast cereal','Pantry',5.9,3.8),('Wholemeal loaf','Bakery',3.5,2.05),('Frozen peas 500 g','Frozen foods',2.9,1.8),('Dish soap 500 mL','Household',3.9,2.15)],
+    'Ice cream shop': [('Vanilla scoop','Ice cream',3.5,.95),('Chocolate scoop','Ice cream',3.75,1.1),('Strawberry scoop','Ice cream',3.75,1.15),('Salted caramel scoop','Ice cream',4,1.2),('Cookies and cream scoop','Ice cream',4,1.3),('Mango sorbet scoop','Sorbet',4,1.1),('Chocolate sundae','Sundaes',6.5,2.1),('Strawberry milkshake','Shakes',6,1.9)],
 }
 
 
@@ -48,9 +50,12 @@ def retail_sample(business, seed):
         weather = rng.choices(['Sunny','Cloudy','Rainy'], [5,3,2])[0]
         base = 5 if business == 'Furniture shop' else 8 if business in ('Retail store','Tech store') else 14
         orders = base + rng.randint(0,5) + (4 if day.weekday() >= 5 else 0) + offset // 24
+        if business == 'Grocery store': orders += 4
         for _ in range(orders):
             sequence += 1
             hour = rng.choice([7,8,8,9,10,12,13,15,16]) if business in ('Cafe','Bakery') else rng.choice([11,12,12,13,14,17,18,18,19,20]) if business == 'Restaurant' else rng.randint(10,18)
+            if business == 'Grocery store': hour = rng.choice([8,9,10,12,15,17,17,18,18,19,20])
+            if business == 'Ice cream shop': hour = rng.choice([11,12,13,14,14,15,15,16,16,17,18,19,20])
             stamp = datetime.combine(day,time(hour,rng.randrange(60)))
             order = f'DEMO-{seed}-{sequence:05}'
             employee = rng.choice(['Alex Demo','Jamie Demo','Riley Demo'])
@@ -60,11 +65,14 @@ def retail_sample(business, seed):
             late = rng.random() < (.3 if offset < 31 else .16)
             delivered = due + timedelta(days=rng.randint(1,3) if late else -rng.randrange(2))
             # Several products can share an order or delivery; their totals remain line-level.
-            for line, product in enumerate(rng.sample(products,rng.choices([1,2,3],[5,4,1])[0]),1):
+            # Grocery baskets contain several packaged items; quantity counts packs/servings,
+            # not weight. Keep earlier businesses' random sequences unchanged.
+            line_count = rng.choices([2,3,4,5],[2,4,3,1])[0] if business == 'Grocery store' else rng.choices([1,2,3],[5,4,1])[0]
+            for line, product in enumerate(rng.sample(products,line_count),1):
                 quantity = rng.choices([1,2,3,4],[7,3,1,1])[0]
                 row = sales_line(order,stamp,product,quantity,employee,rng,line)
                 row['Payment_Method'] = payment
-                if business == 'Cafe': row['Weather'] = weather
+                if business in ('Cafe', 'Ice cream shop'): row['Weather'] = weather
                 if business == 'Online shop': row['Sales_Channel'] = channel
                 if business == 'Furniture shop':
                     row.update(Delivery_ID=f'D-{sequence:05}',Delivery_Status='Late' if late else 'On time',

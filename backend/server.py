@@ -12,7 +12,9 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from backend.config import DIST, ROOT, UPLOAD_LIMIT_BYTES
 from backend.data_loader import frame_from_payload
 from backend.normalizer import normalize, suggest_mapping
-from backend.ollama_client import explain, local_models
+from backend.ollama_client import explain
+from backend.ai_providers import available_models
+from backend.groq_client import GroqError
 from backend.analyst_datasets import DATASETS
 from backend.analyst_agent import analyze_question
 
@@ -39,10 +41,7 @@ class Handler(BaseHTTPRequestHandler):
         if self.path == "/api/session":
             self.send_json({"token": TOKEN})
         elif self.path == "/api/models":
-            try:
-                self.send_json({"models": local_models()})
-            except Exception:
-                self.send_json({"models": [], "message": "Ollama is not running. Calculated insights still work."})
+            self.send_json(available_models())
         elif self.path.split("?")[0] == "/" or self.path.split("?")[0] == "/index.html":
             # In production, serve the Vite build. Before building, fall back to the source index.
             source = DIST / "index.html" if (DIST / "index.html").exists() else ROOT / "index.html"
@@ -124,12 +123,15 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(explain(payload))
             else:
                 self.send_json({"error": "Not found"}, 404)
+        # Provider failures are explicit: never silently switch a cloud question to local AI.
+        except GroqError as error:
+            self.send_json({"error": str(error)}, error.status)
         # Return expected validation details, but hide unexpected internal exceptions from the browser.
         except Exception as error:
             message = (
                 str(error)
                 if isinstance(error, ValueError)
-                else "The file or local model could not be read. Check the file format, selected worksheet, and local model setup."
+                else "The file or AI model could not be read. Check the file format, selected worksheet, and AI setup."
             )
             self.send_json({"error": message}, 400)
 
@@ -149,7 +151,7 @@ def main():
     server = ThreadingHTTPServer(("127.0.0.1", args.port), Handler)
     print(
         f"Free Business Dashboard: http://127.0.0.1:{args.port}\n"
-        "No paid APIs. Uploads stay in memory on this computer. Press Ctrl+C to stop.",
+        "Uploads are processed in memory. Optional Groq chat sends data context to Groq. Press Ctrl+C to stop.",
         flush=True,
     )
     if not args.no_browser:

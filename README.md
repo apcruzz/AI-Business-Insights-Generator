@@ -1,14 +1,14 @@
 # Free Business Dashboard
 
-A local version of your two-page dashboard with business setup, CSV/Excel uploads, column suggestions, automatic charts, calculated insights, and an optional local AI data analyst.
+A local two-page dashboard with business setup, CSV/Excel uploads, column suggestions, automatic charts, calculated insights, and optional AI data analysts through Ollama or GroqCloud GPT-OSS 120B.
 
-There are no API keys, subscriptions, cloud model calls, or hosting bills in this app. It runs on your existing computer. You still supply the computer, electricity, and initial downloads. Uploaded files are processed in memory and are not saved by the server.
+The dashboard and Ollama run on your computer without API keys or subscriptions. Uploaded files are processed in memory and are not saved by the server. Groq is a separate, optional cloud choice requiring a Groq API key and internet access. Selecting it sends questions, recent conversation, dataset metadata, column samples, and query results to Groq. Groq's free plan has usage limits; your account's plan determines any charges.
 
 ## Project structure
 
 ```text
 free_business_dashboard/
-├── backend/              # Python API, file analysis, and Ollama integration
+├── backend/              # Python API, file analysis, and AI integrations
 │   ├── app.py            # Backward-compatible backend entry point
 │   ├── config.py         # Shared paths and local service settings
 │   ├── data_loader.py    # CSV/Excel/sample loading
@@ -16,6 +16,9 @@ free_business_dashboard/
 │   ├── business_data.py # Validate optional delivery, booking, waste and job fields
 │   ├── normalizer.py     # Mapping validation and sales-data normalization
 │   ├── ollama_client.py  # Local AI prompt and Ollama API calls
+│   ├── groq_client.py    # Server-only Groq API transport and error handling
+│   ├── ai_providers.py   # Model discovery and explicit provider selection
+│   ├── analyst_agent.py  # Shared question/query/evidence/conversation loop
 │   └── server.py         # Local HTTP routes used by the browser
 ├── src/                  # React/Vite frontend
 │   ├── App.jsx           # React shell for the dashboard
@@ -96,13 +99,15 @@ npm run build
 
 ## Use your data
 
-1. Choose Café, Restaurant / food truck, Retail / clothing, Tech / electronics, Furniture, Bakery, Online shop, Salon / barbershop, Repair / service shop, or Other business.
+1. Choose Café, Restaurant / food truck, Retail / clothing, Tech / electronics, Furniture, Bakery, Grocery store, Ice cream shop, Online shop, Salon / barbershop, Repair / service shop, or Other business.
 2. Upload a CSV, XLSX, or XLS file, or choose an included sample.
 3. Click **Inspect columns**. For a workbook, choose the worksheet containing the sales table.
 4. Check the suggested mappings, date order, decimal separator, and currency. The first row must contain unique column headings. No merged heading rows or subtotal rows.
 5. Click **Build dashboard**. Use the top navigation to switch between Business Overview and Detailed Dashboard.
 
 The selected business sets the recommended charts, dashboard heading, terminology, and accent colors. Recommendations follow each business’s preferred three charts and fill missing slots with supported alternatives. **Why these charts?** explains missing data; you can override the choices. If fewer than three meaningful charts are supported, only those are recommended. This version is designed for sales/order data. Payroll logs, inventory-only files, and unrelated business records require additional data models.
+
+Grocery stores use a green theme and recommend **revenue by grocery category** (bar chart), **best-selling groceries** (horizontal bars), and **grocery product gross margin** (horizontal bars). These show department contribution, item demand, and margins; missing costs prioritize a sales trend instead. Ice cream shops use a berry-pink theme and recommend **best-selling flavors and treats** (horizontal bars), **sales by hour** (stacked columns), and **weather versus sales** (bar chart using uploaded weather only). Missing weather prioritizes a sales trend; missing hours can use category sales. Best sellers use quantities when available and explicitly use revenue otherwise.
 
 **Required:** net sales/revenue, gross sales, or both quantity and unit price. When deriving net sales from gross sales without discounts, the app explicitly treats discounts as zero and reports that assumption.
 
@@ -144,9 +149,9 @@ $env:OLLAMA_NO_CLOUD="1"
 ollama serve
 ```
 
-4. In your dashboard, click **Check local AI**. If `llama3:latest` is installed, the dashboard selects it automatically under **Answer mode**, with Llama 3.2 as a fallback. You can still choose a different downloaded local model.
+4. In your dashboard, click **Refresh AI options**. On initial discovery, `llama3:latest` is preferred under **Answer mode**, with Llama 3.2 as a fallback. You can still choose a different downloaded local model. Refreshing preserves your explicit choice, including Calculated answers.
 
-The app connects only to `127.0.0.1:11434`, excludes cloud-linked model entries, and does not sign in or download models automatically. After column confirmation, it retains the uploaded CSV/selected Excel worksheet as a bounded in-memory analysis dataset. When you ask a question, the selected local model receives its schema and sample values, requests read-only calculations against **all filtered rows**, inspects the returned results, and explains them. Extra source columns remain available for analysis even if they are not dashboard fields.
+The Ollama option connects only to `127.0.0.1:11434`, excludes cloud-linked Ollama model entries, and does not sign in or download models automatically. After column confirmation, the backend retains the uploaded CSV/selected Excel worksheet as a bounded in-memory analysis dataset. When you ask a question, the selected model receives its schema and sample values, requests read-only calculations against **all filtered rows**, inspects the returned results, and explains them. Extra source columns remain available for analysis even if they are not dashboard fields.
 
 Expand **Supporting calculations** to inspect the actual results and, optionally, the query. The model is required to query before giving a numerical answer; invalid queries can be corrected. The application checks explicitly named extra columns and rejects new digit-based figures absent from query evidence. These checks improve traceability but do not prove that every question has been interpreted correctly. AI answers can still be wrong.
 
@@ -154,9 +159,50 @@ The analyst uses restricted in-memory SQL rather than `allow_dangerous_code=True
 
 The model files are not bundled. Internet is needed for initial Python package/model downloads. After setup, data processing and local model inference can operate offline. This download does not provide a public hosted URL or multi-user service.
 
+## Optional GroqCloud GPT-OSS 120B
+
+1. Create a key in the [Groq API key console](https://console.groq.com/keys). Keep it on the backend; do not put it in frontend code, a `VITE_` variable, Git, or the chat input.
+2. Stop the running Python dashboard. From the project directory, set the key and restart in the **same terminal**:
+
+```sh
+# macOS / Linux — replace the placeholder with your own key locally.
+export GROQ_API_KEY="your-groq-api-key"
+npm run build
+.venv/bin/python app.py
+```
+
+```powershell
+# Windows PowerShell, with your Python environment activated.
+$env:GROQ_API_KEY="your-groq-api-key"
+npm run build
+python app.py
+```
+
+The app reads the process environment; it does not automatically load `.env` files. No new Python dependencies or local model downloads are required for Groq.
+
+3. Reload the dashboard and upload your CSV/Excel file again, or choose a sample. Confirm the columns and load the dashboard. Restarting the backend clears previously uploaded datasets.
+4. Under **Business insights**, click **Refresh AI options**, then choose **GPT-OSS 120B · Groq (cloud)** in **Answer mode**. It stays disabled until the backend has a key. Discovery checks configuration, not whether your key is valid; authentication is checked when you ask a question. Groq is never automatically selected, and works even if Ollama is stopped.
+5. Ask questions such as “Compare monthly revenue changes and explain which products contributed,” “Which Milk Type brings in the most revenue?” or “How can we grow the business based on this data?” Follow up with “Why?” or “Break that down by category.” Expand **Supporting calculations** to review the numbers.
+
+Groq uses `openai/gpt-oss-120b` and the same bounded analysis tools as Ollama. It can run multiple calculations, correct rejected queries, compare trends, and explain business recommendations. The complete selected dataset is queryable locally; the raw file is not uploaded wholesale. Column samples and returned query values can still include sensitive data, and those values are sent to Groq when selected. Only the selected Excel worksheet and current dashboard filters are included. Uploading a file alone makes no Groq call. Weather comes only from uploaded columns; no web search or external data tools are enabled.
+
+The [Groq free plan](https://console.groq.com/docs/rate-limits) is rate-limited, and a complex question may need several model requests. The app reports quota, authentication, connectivity, and response-limit errors without silently switching providers or retrying quota errors. Start a new conversation, simplify the question, wait for the quota to reset, or choose another answer mode when needed. The app does not manage your Groq billing plan or guarantee unlimited free use. See [Groq structured outputs](https://console.groq.com/docs/structured-outputs) and the [API reference](https://console.groq.com/docs/api-reference).
+
+If Groq rejects a request, the app distinguishes invalid credentials (`401`) from denied access (`403`). A gateway rejection can happen before API authentication and does not prove the key is wrong. The HTTP client identifies itself as `FreeBusinessDashboard/1.0`; Python's default urllib identity was observed to receive a gateway `403`/`1010` response. Restart the Python backend after updating this code. Explicit organization/project model blocks report which permissions need changing; see [Groq model permissions](https://console.groq.com/docs/model-permissions).
+
+For request-format errors (`400`), run this from the project directory in the **same terminal where you set the key** (stop the backend with Control+C first if it is running):
+
+```sh
+.venv/bin/python -m scripts.check_groq
+```
+
+This runs the real query-and-answer loop on three fictional rows without uploading your business files. The expected result is hour 10 with USD 50 in revenue. On a rejected request, it displays a bounded diagnostic with API keys redacted, including the setting Groq rejected when supplied. The check consumes normal Groq API requests; it does not print the key or write data to disk. After the check, start the backend again with `.venv/bin/python app.py`.
+
+A successful connection check confirms the key and basic analysis flow, not every uploaded-data question. Retry the original question in a new dashboard conversation after restarting the backend. HTTP 400 messages now distinguish explicit model-output failures, context-size limits, and rejected request settings when Groq identifies them. Only `json_validate_failed` and `tool_use_failed` receive one corrective retry, within the existing six-turn limit. Rejected output is never executed or presented as evidence. Other errors stop immediately; unknown causes remain explicitly unclassified.
+
 ## Samples and validation
 
-Choose a business demo under **Or try a sample**. The matching business is selected automatically. Click **Inspect columns → Build dashboard → Load dashboard** to see its three preferred charts. All nine new demos are fictional, use USD, and include the required columns; no outside weather or business data is fetched. Sales and bookings are generated from August–September 2026; some deliveries and completed jobs extend into October.
+Choose a business demo under **Or try a sample**. The matching business is selected automatically. Click **Inspect columns → Build dashboard → Load dashboard** to see its three preferred charts. All eleven demos are fictional, use USD, and include the required columns; no outside weather or business data is fetched. Sales and bookings are generated from August–September 2026; some deliveries and completed jobs extend into October.
 
 | Business | Demo CSV | Included chart data |
 | --- | --- | --- |
@@ -166,6 +212,8 @@ Choose a business demo under **Or try a sample**. The matching business is selec
 | Tech / electronics | [Tech_Demo.csv](data/samples/Tech_Demo.csv) | Device/accessory categories, quantities, margins |
 | Furniture | [Furniture_Demo.csv](data/samples/Furniture_Demo.csv) | Category revenue, product profit, on-time/late deliveries |
 | Bakery | [Bakery_Demo.csv](data/samples/Bakery_Demo.csv) | Hourly units, product waste, daily sales |
+| Grocery store | [Grocery_Demo.csv](data/samples/Grocery_Demo.csv) | Grocery categories, multi-item baskets, quantities, product margins |
+| Ice cream shop | [Ice_Cream_Demo.csv](data/samples/Ice_Cream_Demo.csv) | Flavors and treats, hourly sales, fictional daily weather |
 | Online shop | [Online_Shop_Demo.csv](data/samples/Online_Shop_Demo.csv) | Sales channels, products, multi-line order values |
 | Salon / barbershop | [Salon_Demo.csv](data/samples/Salon_Demo.csv) | Services, bookings, cancellations, daily staff capacity |
 | Repair / service shop | [Repair_Shop_Demo.csv](data/samples/Repair_Shop_Demo.csv) | Services, elapsed job times, open/completed job statuses |

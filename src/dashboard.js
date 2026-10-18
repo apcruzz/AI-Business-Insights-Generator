@@ -1,6 +1,7 @@
 import {SAMPLE_DATASETS} from "./sample-datasets.js";
 import {BUSINESS_FIELDS, CHARTS, businessProfile, chartPlan, chartTitle} from "./business-config.js";
 import {renderBusinessChart} from "./business-charts.js";
+import {answerOptions, chooseAnswerMode, answerModeNotice} from "./ai-options.js";
 // Frontend controller: upload -> map columns -> normalize via API -> filter/render -> ask questions.
 import {
   $,
@@ -35,10 +36,10 @@ let data = [],
   conversationId = null,
   conversationTurns = [],
   revision = 0,
-  overviewChartIds = [];
-
-// Preferred local model for this project. Other downloaded local models still work.
-const preferredLocalModel = "llama3:latest";
+  overviewChartIds = [],
+  aiOptions = answerOptions({}),
+  modelsLoaded = false,
+  groqConfigured = false;
 
 // Fields the dashboard understands. The mapping UI connects source columns to these names.
 const fields = {
@@ -2124,23 +2125,24 @@ function showConversation(pending = "") {
   panel.scrollTop = panel.scrollHeight;
 }
 async function ask(question) {
-  // Ask either the deterministic answer engine or optional local Ollama.
+  // Ask the deterministic engine or the explicitly selected AI provider.
   if (busy) return;
   busy = true;
   $("askButton").disabled = true;
   // Remember the selection revision so a slow response cannot overwrite a newer dashboard.
   const current = revision,
-    model = $("localModel").value;
+    option = aiOptions.find(item => item.value === $("localModel").value),
+    model = option?.model;
   $("analystEvidence").hidden = true;
   $("analystEvidence").replaceChildren();
-  showConversation("You: " + question + "\n" + (model ? "Your local model is inspecting the data and running calculations…" : "Calculating…"));
+  showConversation("You: " + question + "\n" + (model ? `${option.provider === "groq" ? "Groq" : "Your local model"} is inspecting the data and running calculations…` : "Calculating…"));
   try {
     let answer;
     if (model) {
-      if (!meta.datasetId) throw Error(meta.analystNote || "Build the dashboard again to load the dataset for local AI analysis.");
+      if (!meta.datasetId) throw Error(meta.analystNote || "Build the dashboard again to load the dataset for AI analysis.");
       // Send only the dataset reference, conversation token, question, and current filters; rows are cached on the server.
       const response = await api("/api/analyst", {
-        model, question, datasetId: meta.datasetId, conversationId,
+        provider: option.provider, model, question, datasetId: meta.datasetId, conversationId,
         filters: Object.fromEntries(["from", "to", "category", "product", "weekday", "period"].map(id => [id, $(id).value])),
       });
       if (revision === current) {
@@ -2150,7 +2152,7 @@ async function ask(question) {
         renderAnalystEvidence(response);
       }
       answer =
-        "Local data analyst · " +
+        response.mode + " · " +
         response.model +
         "\n" +
         response.answer +
@@ -2170,26 +2172,32 @@ async function ask(question) {
     $("askButton").disabled = false;
   }
 }
+function updateAnswerModeNotice() {
+  const option = aiOptions.find(item => item.value === $("localModel").value);
+  $("aiDataNotice").textContent = answerModeNotice(option, groqConfigured);
+  $("insightMode").textContent = "Calculated insights · " + (option?.model ? option.label : "AI optional");
+}
 async function refreshModels() {
-  // Check whether Ollama is running and list downloaded local models.
+  // Discover local models and backend Groq configuration without sending data to cloud AI.
   $("refreshModels").disabled = true;
   try {
-    const result = await (await fetch("/api/models")).json(),
-      current = $("localModel").value,
-      recommended =
-        result.models.find((model) => model === preferredLocalModel) ||
-        result.models.find(
-          (model) => model === "llama3.2" || model === "llama3.2:latest",
-        ) ||
-        result.models.find((model) => model.startsWith("llama3.2:")) ||
-        "";
-    sourceOptions($("localModel"), result.models, current || recommended);
-    $("localModel").firstChild.textContent = "Calculated answers";
-    $("insightMode").textContent = result.models.length
-      ? recommended
-        ? `Calculated insights · ${recommended} data analyst ready`
-        : "Calculated insights · local AI available"
-      : "Calculated insights · install Ollama for optional local AI";
+    const response = await fetch("/api/models");
+    if (!response.ok) throw Error("AI discovery failed");
+    const result = await response.json(), current = $("localModel").value;
+    aiOptions = answerOptions(result);
+    groqConfigured = Boolean(result.groqConfigured);
+    const value = chooseAnswerMode(aiOptions, current, !modelsLoaded);
+    modelsLoaded = true;
+    $("localModel").replaceChildren(...aiOptions.map(item => {
+      const element = new Option(item.label, item.value);
+      element.disabled = !item.available;
+      return element;
+    }));
+    $("localModel").value = value;
+    if (current !== value) { revision++; resetConversation(); }
+    updateAnswerModeNotice();
+  } catch {
+    $("insightMode").textContent = "Could not refresh AI options. Check that the backend is running.";
   } finally {
     $("refreshModels").disabled = false;
   }
@@ -2240,7 +2248,7 @@ $("loadSelectedCharts").onclick = loadSelectedCharts;
 $("refreshModels").onclick = refreshModels;
 // Starting over or switching model invalidates outstanding answers and clears local chat context.
 $("newConversation").onclick = () => { revision++; resetConversation(); };
-$("localModel").onchange = () => { revision++; resetConversation(); };
+$("localModel").onchange = () => { revision++; resetConversation(); updateAnswerModeNotice(); };
 $("insightForm").onsubmit = (e) => {
   // Keep the form on the same page and answer the typed question.
   e.preventDefault();
