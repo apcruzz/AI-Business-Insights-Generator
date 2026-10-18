@@ -151,12 +151,30 @@ export default function App() {
           </details>
           <div className="setupActions">
             <button className="primary" id="buildButton" type="button">
-              Build dashboard
+              Confirm columns
             </button>
             <button id="cancelSetup" type="button" hidden>
               Return to dashboard
             </button>
           </div>
+          <section id="kpiPanel" className="kpiPanel" hidden>
+            <hr />
+            <h2>Customize your Business Overview</h2>
+            <p>
+              Choose the KPI cards and overview charts you want to see. Choices
+              depend on your confirmed columns. Leave everything unchecked for
+              the default Business Overview. The Detailed Dashboard always
+              includes all of its sections.
+            </p>
+            <h3>KPI cards</h3>
+            <div id="kpiOptions" className="kpiOptions"></div>
+            <div className="setupActions">
+              <button className="primary" id="dashboardButton" type="button">
+                Build dashboard
+              </button>
+              <span id="kpiStatus" aria-live="polite"></span>
+            </div>
+          </section>
         </div>
         <div id="setupError" className="error" role="alert"></div>
       </section>
@@ -196,9 +214,18 @@ export default function App() {
           <div id="overviewCards" className="cards"></div>
           {/* Three empty slots are filled with the charts selected in the chooser. */}
           <div className="overviewGrid">
-            <section className="panel overviewChartSlot" id="overviewSlot0"></section>
-            <section className="panel overviewChartSlot" id="overviewSlot1"></section>
-            <section className="panel overviewChartSlot" id="overviewSlot2"></section>
+            <section className="panel overviewChartSlot" data-dashboard-module="salesTrend" id="overviewSlot0">
+              <h2>Net sales trend</h2>
+              <div id="ovTrend"></div>
+            </section>
+            <section className="panel overviewChartSlot" data-dashboard-module="categoryChart" id="overviewSlot1">
+              <h2>Sales by category</h2>
+              <div id="ovCategory"></div>
+            </section>
+            <section className="panel overviewChartSlot" data-dashboard-module="topProductsChart" id="overviewSlot2">
+              <h2>Top 5 products by net sales</h2>
+              <div id="ovTop"></div>
+            </section>
           </div>
 
           {/* Insights combine computed cards with calculated answers, Ollama, or Groq chat. */}
@@ -339,8 +366,8 @@ export default function App() {
           </details>
         </div>
 
-        {/* Detailed panels show supported charts not selected for the overview. */}
-        {/* Remaining supported charts use the same renderers as the overview. */}
+        {/* Detailed Dashboard includes every chart supported by the mapped data. */}
+        {/* The overview selection only controls its three featured chart slots. */}
         <div id="detailPage" hidden>
           <div className="cards" id="cards"></div>
           <div id="detailCharts" className="businessDetailGrid"></div>
