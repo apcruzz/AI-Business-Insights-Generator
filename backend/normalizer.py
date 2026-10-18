@@ -12,6 +12,7 @@ from dateutil import parser as date_parser
 
 from backend.fields import FIELDS
 from backend.revenue import resolve_revenue
+from backend.business_data import NUMERIC_FIELDS, enrich_business_data
 
 
 def suggest_mapping(columns):
@@ -70,6 +71,7 @@ def normalize(frame, mapping, business, currency="USD", date_order="month", deci
     result = pd.DataFrame(index=frame.index)
     warnings = []
     numeric_fields = {"Quantity", "Unit_Price", "Gross_Sales", "Discount_Amount", "Net_Sales", "Unit_COGS", "Total_COGS", "Gross_Profit", "Hour", "Modifier_Amount", "Line_Total"}
+    numeric_fields |= NUMERIC_FIELDS
     # Copy mapped columns into normalized names, converting numeric fields first.
     for key, column in mapped.items():
         if key in numeric_fields:
@@ -157,5 +159,6 @@ def normalize(frame, mapping, business, currency="USD", date_order="month", deci
     # Tell the frontend which metrics and charts the validated columns can support.
     capabilities = {key: key in result for key in ("Date", "Hour", "Quantity", "Gross_Profit", "Gross_Sales", "Discount_Amount")}
     capabilities.update({"orders": orders_valid, "product": "Product_Name" in mapped, "category": "Category" in mapped, "employee": "Employee_Name" in mapped, "weather": "Weather" in mapped})
+    capabilities.update(enrich_business_data(result, mapped, parse_date_value, date_order == "day", warnings))
     # The browser receives records plus capability flags so it can hide unsupported views.
     return {"rows": json.loads(result.to_json(orient="records")), "capabilities": capabilities, "warnings": warnings, "business": str(business)[:60], "currency": currency, "sourceRows": len(frame), "dateMin": result["Date"].min() if "Date" in result else None, "dateMax": result["Date"].max() if "Date" in result else None}

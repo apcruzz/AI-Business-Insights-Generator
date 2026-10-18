@@ -2,11 +2,13 @@
 """Canonical dashboard fields and aliases used for source-column mapping."""
 
 # Each canonical field lists simplified source headers that can be mapped automatically.
+from backend.business_data import BUSINESS_FIELDS
+
 FIELDS = {
     "Date": ["date", "orderdate", "saledate", "transactiondate", "datetime", "timestamp"],
     "Time": ["time", "ordertime", "transactiontime"],
     "Hour": ["hour", "hourofday"],
-    "Product_Name": ["productname", "product", "itemname", "item", "dish", "sku"],
+    "Product_Name": ["productname", "product", "itemname", "item", "dish", "sku", "service", "servicename", "servicetype", "repairtype"],
     "Category": ["category", "productcategory", "department"],
     "Quantity": ["quantity", "qty", "unitssold"],
     "Unit_Price": ["unitprice", "price", "sellingprice"],
@@ -19,8 +21,11 @@ FIELDS = {
     "Total_COGS": ["totalcogs", "cogs", "totalcost", "costofgoodssold"],
     "Gross_Profit": ["grossprofit"],
     "Transaction_ID": ["transactionid", "orderid", "receiptid", "invoicenumber", "invoiceid"],
-    "Employee_Name": ["employeename", "employee", "cashier", "salesperson", "server"],
+    "Employee_Name": ["employeename", "employee", "cashier", "salesperson", "server", "staff", "staffname", "stylist", "technician"],
     "Payment_Method": ["paymentmethod", "paymenttype"],
     "Weather": ["weather", "weathersignal"],
     "Store_Location": ["storelocation", "store", "location"],
 }
+
+# Optional delivery, booking, waste, channel, and repair-job dimensions.
+FIELDS.update(BUSINESS_FIELDS)

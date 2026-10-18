@@ -1,4 +1,6 @@
 // Page structure and stable element IDs; dashboard.js fills these containers and handles events.
+import { SAMPLE_DATASETS } from "./sample-datasets.js";
+import { BUSINESSES } from "./business-config.js";
 import { useEffect } from "react";
 import { initDashboard } from "./dashboard.js";
 import "./styles.css";
@@ -19,7 +21,7 @@ export default function App() {
           <small>
             <span id="businessName">BUSINESS INSIGHTS</span>
           </small>
-          <h1>Sales overview</h1>
+          <h1 id="dashboardTitle">Your business at a glance</h1>
         </div>
         <small>
           <span id="datasetName">Choose your business and dataset</span>
@@ -44,15 +46,14 @@ export default function App() {
           Choose your business, upload a data table, and confirm the columns.
           Files are processed on this computer.
         </p>
+        <p id="businessHint" className="businessHint"></p>
         <div className="setupGrid">
           <label>
             What business do you run?
             <select id="business" defaultValue="Restaurant">
-              <option value="Restaurant">Restaurant</option>
-              <option value="Furniture shop">Furniture shop</option>
-              <option value="Retail store">Retail store</option>
-              <option value="Cafe">Cafe</option>
-              <option value="Other business">Other business</option>
+              {Object.entries(BUSINESSES).map(([value, business]) => (
+                <option key={value} value={value}>{business.label}</option>
+              ))}
             </select>
           </label>
           <label>
@@ -63,19 +64,20 @@ export default function App() {
             Or try a sample
             <select id="sample" defaultValue="">
               <option value="">Choose a sample</option>
-              <option value="Restaurant_Synthetic.csv">
-                Restaurant (fictional)
-              </option>
-              <option value="Furniture_Shop_Synthetic.csv">
-                Furniture shop (fictional)
-              </option>
-              <option value="Retail_Store_Synthetic.csv">
-                Retail store (fictional)
-              </option>
-              <option value="Cafe.csv">Original cafe dataset</option>
+              <optgroup label="Business demos · fictional data">
+                {SAMPLE_DATASETS.filter(sample => !sample.legacy).map(sample => (
+                  <option key={sample.filename} value={sample.filename}>{sample.label}</option>
+                ))}
+              </optgroup>
+              <optgroup label="Earlier samples">
+                {SAMPLE_DATASETS.filter(sample => sample.legacy).map(sample => (
+                  <option key={sample.filename} value={sample.filename}>{sample.label}</option>
+                ))}
+              </optgroup>
             </select>
           </label>
         </div>
+        <p id="sampleDescription" className="sampleDescription" aria-live="polite" hidden></p>
         <div className="setupActions">
           <button className="primary" id="inspectButton" type="button">
             Inspect columns
@@ -175,10 +177,11 @@ export default function App() {
               Pick up to 3 charts for Business Overview
             </p>
           </div>
+          <details className="recommendationExplanation"><summary>Why these charts?</summary><div id="chartRecommendationNotes"></div></details>
           <div id="chartChoices" className="chartChoices"></div>
           <div className="chartChooserActions">
             <button id="selectRecommendedCharts" type="button">
-              Recommended 3
+              Use recommendations
             </button>
             <button className="primary" id="loadSelectedCharts" type="button">
               Load dashboard
@@ -292,7 +295,7 @@ export default function App() {
             </select>
           </label>
           <label>
-            Product
+            <span id="productFilterLabel">Product</span>
             <select id="product" defaultValue="">
               <option value="">All products</option>
             </select>
@@ -334,118 +337,13 @@ export default function App() {
         </div>
 
         {/* Detailed panels show supported charts not selected for the overview. */}
+        {/* Remaining supported charts use the same renderers as the overview. */}
         <div id="detailPage" hidden>
-          <section className="panel" data-chart-panel="weekday">
-            <h2>Sales by day of week</h2>
-            <div id="ovDays"></div>
-          </section>
           <div className="cards" id="cards"></div>
-          <div className="grid" data-chart-group>
-            <section className="panel" data-chart-panel="trend">
-              <h2>Daily performance</h2>
-              <p className="sub">
-                Revenue and gross profit across the selected period
-              </p>
-              <div className="legend">
-                <span></span>Net sales<span className="profit"></span>Gross
-                profit
-              </div>
-              <div className="chart" id="daily"></div>
-            </section>
-            <section className="panel" data-chart-panel="category">
-              <h2>Sales by category</h2>
-              <p className="sub">Share of selected net sales</p>
-              <div id="categories"></div>
-            </section>
-          </div>
-
-          <div className="grid" data-chart-group>
-            {/* Product rows display revenue, quantity, and optional profit metrics. */}
-            <section className="panel" data-chart-panel="products">
-              <h2>Product performance</h2>
-              <p className="sub">
-                Ranked by net sales · margin uses net sales after discounts
-              </p>
-              <div className="scroll">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Product</th>
-                      <th className="num">Units</th>
-                      <th className="num">Net sales</th>
-                      <th className="num">Gross profit</th>
-                      <th className="num">Margin</th>
-                    </tr>
-                  </thead>
-                  <tbody id="products"></tbody>
-                </table>
-              </div>
-            </section>
-            <section className="panel" data-chart-panel="hour">
-              <h2>Sales by hour</h2>
-              <p className="sub">
-                Net sales by hour, split by product · hover or tap a segment for
-                details
-              </p>
-              <div className="chart" id="hours"></div>
-              <p className="hint" id="peak"></p>
-            </section>
-          </div>
-
-          <div className="grid" data-chart-group>
-            <section className="panel" data-chart-panel="profitability">
-              <h2>Product profitability leaderboard</h2>
-              <p className="sub">Products ranked by gross margin, after discounts</p>
-              <div id="profitability"></div>
-            </section>
-            {/* Weather comparisons use uploaded values only, with coverage limitations explained below. */}
-            <section className="panel" data-chart-panel="weather">
-              <h2>Weather versus sales</h2>
-              <p className="sub">
-                Net sales by weather condition and product category
-              </p>
-              <div id="weather"></div>
-              <p className="hint">
-                Sales per recorded day helps account for unequal day counts.
-                Partial days and other factors can affect this comparison; it
-                does not establish a weather effect.
-              </p>
-            </section>
-          </div>
-
-          {/* Employee totals summarize handled sales rather than measuring staff productivity. */}
-          <section
-            className="panel"
-            data-chart-panel="staff"
-            style={{ marginTop: 20 }}
-          >
-            <h2>Staff sales comparison</h2>
-            <p className="sub">
-              Sales handled by each employee in the current selection
-            </p>
-            <div className="scroll">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Employee</th>
-                    <th className="num">Gross sales</th>
-                    <th className="num">Discounts</th>
-                    <th className="num">Net sales</th>
-                    <th className="num">Gross profit</th>
-                    <th className="num">Margin</th>
-                  </tr>
-                </thead>
-                <tbody id="staff"></tbody>
-              </table>
-            </div>
-            <p className="hint">
-              Shift hours and customer assignments are unavailable, so these
-              totals should not be treated as employee productivity ratings.
-            </p>
-          </section>
+          <div id="detailCharts" className="businessDetailGrid"></div>
+          <div id="detailTables" className="businessDetailGrid"></div>
         </div>
 
-        {/* Display validation warnings and coverage limitations supplied by the backend. */}
         <div className="note" id="dataNotes"></div>
         <footer>
           Local data processing. Gross profit excludes operating expenses.

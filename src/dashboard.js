@@ -1,3 +1,6 @@
+import {SAMPLE_DATASETS} from "./sample-datasets.js";
+import {BUSINESS_FIELDS, CHARTS, businessProfile, chartPlan, chartTitle} from "./business-config.js";
+import {renderBusinessChart} from "./business-charts.js";
 // Frontend controller: upload -> map columns -> normalize via API -> filter/render -> ask questions.
 import {
   $,
@@ -42,7 +45,7 @@ const fields = {
   Date: "Date",
   Time: "Time (24-hour)",
   Hour: "Hour (0–23)",
-  Product_Name: "Product / dish / item",
+  Product_Name: "Product / dish / item / service",
   Category: "Category",
   Quantity: "Quantity sold",
   Unit_Price: "Unit selling price",
@@ -59,6 +62,7 @@ const fields = {
   Payment_Method: "Payment method",
   Weather: "Weather",
   Store_Location: "Store location",
+  ...BUSINESS_FIELDS,
 };
 
 // Formats money using the currency chosen during setup.
@@ -92,7 +96,8 @@ const colors = [
 // Gives each category or product a stable color while the dashboard is open.
 function colorFor(name, field = "Category") {
   const names = [...new Set(data.map((r) => r[field]))].sort();
-  return colors[Math.max(0, names.indexOf(name)) % colors.length];
+  const palette = [businessProfile(meta.business).color, ...colors.slice(1)];
+  return palette[Math.max(0, names.indexOf(name)) % palette.length];
 }
 
 // Builds a small message that can sit where a chart would normally appear.
@@ -123,6 +128,7 @@ function showSetup() {
 function showPage(page) {
   // The overview page uses the compact dashboard layout; detail keeps full charts.
   if (!data.length) return showSetup();
+  applyBusinessTheme(meta.business);
   const overview = page === "overview";
   $("setupPage").hidden = true;
   $("dashboardMain").hidden = false;
@@ -132,59 +138,27 @@ function showPage(page) {
   $("overviewNav").setAttribute("aria-current", overview ? "page" : "false");
   $("detailNav").setAttribute("aria-current", overview ? "false" : "page");
 }
+// Rank business preferences first, then choose distinct, supported fallback metrics.
 function chartOptions() {
-  // Build the chart menu from the columns that survived backend validation.
-  const c = meta.capabilities || {};
-  return [
-    {
-      id: "trend",
-      title: "Net sales trend",
-      detail: "Uses the mapped date and net sales columns.",
-      available: c.Date,
-    },
-    {
-      id: "category",
-      title: "Sales by category",
-      detail: "Uses the mapped category and net sales columns.",
-      available: c.category,
-    },
-    {
-      id: "products",
-      title: "Top products",
-      detail: "Uses the mapped product and net sales columns.",
-      available: c.product,
-    },
-    {
-      id: "weekday",
-      title: "Sales by day of week",
-      detail: "Uses the mapped date column.",
-      available: c.Date,
-    },
-    {
-      id: "hour",
-      title: "Sales by hour",
-      detail: "Uses mapped hour or time data.",
-      available: c.Hour,
-    },
-    {
-      id: "profitability",
-      title: "Product profitability",
-      detail: "Uses product and gross profit or cost data.",
-      available: c.product && c.Gross_Profit,
-    },
-    {
-      id: "weather",
-      title: "Weather versus sales",
-      detail: "Uses mapped date and weather columns.",
-      available: c.Date && c.weather,
-    },
-    {
-      id: "staff",
-      title: "Staff sales comparison",
-      detail: "Uses the mapped employee column.",
-      available: c.employee,
-    },
-  ].filter((option) => option.available);
+  const plan = chartPlan(meta.business, meta.capabilities);
+  const ordered = [...new Set([...plan.recommended, ...plan.available])];
+  return ordered.map(id => ({id, title:chartTitle(id, meta.business),
+    detail:CHARTS[id].kind + " · " + CHARTS[id].requires,
+    recommended:plan.recommended.includes(id)}));
+}
+function applyBusinessTheme(name) {
+  const p = businessProfile(name);
+  document.documentElement.style.setProperty("--business-accent", p.color);
+  document.documentElement.style.setProperty("--business-tint", p.tint);
+  document.body.dataset.business = name;
+  $("dashboardTitle").textContent = p.title;
+  $("businessName").textContent = p.label.toUpperCase();
+  $("businessHint").textContent = p.label + " · recommendations adapt to your uploaded columns";
+  $("insightQuestion").placeholder = `Example: How can we improve ${p.item.toLowerCase()} sales?`;
+  $("productFilterLabel").textContent = p.item;
+  if ($("product").firstChild) $("product").firstChild.textContent = p.item.startsWith("Service") ? "All services" : p.item === "Dish" ? "All dishes" : "All products";
+  const topChip = document.querySelector('[data-question="Which product leads sales?"]');
+  if (topChip) topChip.textContent = p.item.startsWith("Service") ? "Top service" : p.item === "Dish" ? "Top dish" : "Top product";
 }
 function applyChartVisibility() {
   // Detailed Dashboard shows the available charts not chosen for Business Overview.
@@ -211,11 +185,13 @@ function showChartChooser(resetSelection = false) {
   $("chartChooserSummary").textContent = options.length
     ? `Choose up to 3 charts for Business Overview. The rest will appear in Detailed Dashboard.`
     : "No optional charts are available from the mapped columns.";
+  const plan = chartPlan(meta.business, meta.capabilities);
+  $("chartRecommendationNotes").innerHTML = `<p>Recommended for ${esc(businessProfile(meta.business).label)} from the available data.</p>` + plan.missing.map(id => `<p><strong>${esc(chartTitle(id, meta.business))}</strong> needs ${esc(CHARTS[id].requires)}. A supported alternative is selected when available.</p>`).join("");
   $("chartChoices").innerHTML = options.length
     ? options
         .map(
           (option) =>
-            `<label class="chartChoice"><input type="checkbox" name="chartChoice" value="${esc(option.id)}" ${overviewChartIds.includes(option.id) ? "checked" : ""}><span><strong>${esc(option.title)}</strong><small>${esc(option.detail)}</small></span></label>`,
+            `<label class="chartChoice"><input type="checkbox" name="chartChoice" value="${esc(option.id)}" ${overviewChartIds.includes(option.id) ? "checked" : ""}><span><strong>${esc(option.title)}${option.recommended ? ' <em class="recommendedBadge">Recommended</em>' : ""}</strong><small>${esc(option.detail)}</small></span></label>`,
         )
         .join("")
     : `<p class="chartChoiceEmpty">Summary cards and Business insights will still load.</p>`;
@@ -310,6 +286,16 @@ async function inspect() {
         profile.mapping[key] || "",
       ),
     );
+    // Keep operational fields in a separate collapsible group; expose detected fields automatically.
+    const operational = document.createElement("details");
+    operational.className = "operationalMapping";
+    const summary = document.createElement("summary");
+    summary.textContent = "Optional delivery, booking, waste, channel and job columns";
+    operational.append(summary);
+    const grid = document.createElement("div"); grid.className = "mappingGrid";
+    Object.keys(BUSINESS_FIELDS).forEach(key => grid.append($("map_" + key).parentElement));
+    operational.append(grid); $("mappingGrid").append(operational);
+    operational.open = Object.keys(BUSINESS_FIELDS).some(key => profile.mapping[key]);
     // Ask about amount semantics only for mapped add-on or line-total columns.
     $("lineTotalBasis").value = "";
     $("modifierBasis").value = "line";
@@ -387,7 +373,7 @@ async function build() {
     $("period").disabled = !meta.capabilities.Hour;
     $("category").disabled = !meta.capabilities.category;
     $("product").disabled = !meta.capabilities.product;
-    $("businessName").textContent = meta.business.toUpperCase();
+    applyBusinessTheme(meta.business);
     $("datasetName").textContent = meta.filename;
     $("sidebarNotes").innerHTML = meta.warnings
       .map((w) => `<p>${esc(w)}</p>`)
@@ -458,7 +444,7 @@ function chart(items, dual = false) {
     for (let k = 1; k <= (dual ? 2 : 1); k++) {
       const y = Y(x[k]),
         h = Math.abs(zero - y);
-      svg += `<rect x="${cx - bw / 2 + (k - 1) * w}" y="${Math.min(y, zero)}" width="${w}" height="${h}" fill="${k === 1 ? "#008d79" : "#438dcc"}" rx="2"><title>${esc(x[0])}: ${k === 1 ? "Net sales" : "Gross profit"} ${esc(money(x[k]))}</title></rect>`;
+      svg += `<rect x="${cx - bw / 2 + (k - 1) * w}" y="${Math.min(y, zero)}" width="${w}" height="${h}" fill="${k === 1 ? businessProfile(meta.business).color : "#438dcc"}" rx="2"><title>${esc(x[0])}: ${k === 1 ? "Net sales" : "Gross profit"} ${esc(money(x[k]))}</title></rect>`;
     }
     if (items.length <= 12 || i % Math.ceil(items.length / 10) === 0)
       svg += `<text x="${cx}" y="245" text-anchor="middle" font-size="12" fill="#657686">${esc(x[0])}</text>`;
@@ -782,6 +768,8 @@ function weatherChart(rows, c) {
 }
 // Dispatch a selected chart ID to the same chart builders used in the detail view.
 function overviewChartHtml(id, rows, products, c) {
+  const specialized = renderBusinessChart(id, rows, meta, businessProfile(meta.business).color, money);
+  if (specialized !== null) return specialized;
   if (id === "trend") return trend(rows);
   if (id === "category") return categoryPie(rows);
   if (id === "products") return topProductsChart(products, c);
@@ -826,22 +814,14 @@ function render() {
     (a, b) => sum(b[1], "Net_Sales") - sum(a[1], "Net_Sales"),
   );
   renderOverviewCharts(rows, products, c);
-  $("daily").innerHTML = trend(rows, c.Gross_Profit);
-  $("categories").innerHTML = categoryPie(rows);
-  $("hours").innerHTML = hourStack(rows);
-  $("peak").textContent = "";
-  $("ovDays").innerHTML = weekdayChart(rows, c);
-  $("products").innerHTML =
-    products
-      .map(([p, r]) => {
-        const n = sum(r, "Net_Sales"),
-          g = sum(r, "Gross_Profit");
-        return `<tr><td>${esc(p)}</td><td class="num">${c.Quantity ? sum(r, "Quantity") : "—"}</td><td class="num">${money(n)}</td><td class="num">${c.Gross_Profit ? money(g) : "—"}</td><td class="num">${c.Gross_Profit && n > 0 ? pct((g / n) * 100) : "—"}</td></tr>`;
-      })
-      .join("") || '<tr><td colspan="5">No matching sales.</td></tr>';
-  $("profitability").innerHTML = profitabilityChart(products, c);
-  $("staff").innerHTML = staffTable(rows, c);
-  $("weather").innerHTML = weatherChart(rows, c);
+  // Render remaining charts through the same dispatcher as Overview.
+  $("detailCharts").innerHTML = chartOptions().filter(option => !overviewChartIds.includes(option.id)).map(option =>
+    `<section class="panel" data-chart-panel="${esc(option.id)}"><h2>${esc(option.title)}</h2><p class="sub">${esc(CHARTS[option.id].kind)}</p><div class="businessDetailChart">${overviewChartHtml(option.id, rows, products, c)}</div></section>`).join("") || '<p class="chartNote">All supported charts are shown in Business Overview.</p>';
+  // Retain the detailed source summaries alongside the new business charts.
+  $("detailTables").innerHTML = (c.product ? `<details class="panel"><summary>${esc(businessProfile(meta.business).item)} totals</summary><div class="scroll"><table><thead><tr><th>Item</th><th>Units</th><th>Net sales</th><th>Gross profit</th><th>Margin</th></tr></thead><tbody>${products.map(([name, items]) => {
+    const sales = sum(items, "Net_Sales"), profit = sum(items, "Gross_Profit");
+    return `<tr><td>${esc(name)}</td><td>${c.Quantity ? sum(items, "Quantity") : "—"}</td><td>${esc(money(sales))}</td><td>${c.Gross_Profit ? esc(money(profit)) : "—"}</td><td>${c.Gross_Profit && sales > 0 ? pct(profit / sales * 100) : "—"}</td></tr>`;
+  }).join("")}</tbody></table></div></details>` : "") + (c.employee ? `<details class="panel"><summary>Staff sales totals</summary><div class="scroll"><table><thead><tr><th>Employee</th><th>Gross sales</th><th>Discounts</th><th>Net sales</th><th>Gross profit</th><th>Margin</th></tr></thead><tbody>${staffTable(rows, c)}</tbody></table></div></details>` : "");
   applyChartVisibility();
   renderInsights(rows);
   resetConversation();
@@ -1539,7 +1519,7 @@ function renderInsights(rows) {
     cards = [];
   cards.push([
     meta.capabilities.product
-      ? p.name + " leads product revenue"
+      ? p.name + " leads " + businessProfile(meta.business).item.toLowerCase() + " revenue"
       : "Selected revenue",
     money(p.netSales) +
       (f.netSales > 0
@@ -2224,6 +2204,7 @@ $("sheet").onchange = () => {
 $("upload").onchange = () => {
   // Switching upload/sample clears the previous mapping preview.
   $("sample").value = "";
+  $("sampleDescription").hidden = true;
   profile = null;
   uploadPayload = {};
   $("mappingPanel").hidden = true;
@@ -2236,14 +2217,15 @@ $("sample").onchange = () => {
   $("upload").value = "";
   $("sheet").replaceChildren();
   $("mappingPanel").hidden = true;
-  const b = {
-    "Restaurant_Synthetic.csv": "Restaurant",
-    "Furniture_Shop_Synthetic.csv": "Furniture shop",
-    "Retail_Store_Synthetic.csv": "Retail store",
-    "Cafe.csv": "Cafe",
-  };
-  if (b[$("sample").value]) $("business").value = b[$("sample").value];
+  const sample = SAMPLE_DATASETS.find(item => item.filename === $("sample").value);
+  if (sample) $("business").value = sample.business;
+  $("sampleDescription").hidden = !sample;
+  $("sampleDescription").textContent = sample
+    ? (sample.legacy ? "Earlier sample. " : "Fictional demo · ") + (sample.description || sample.label) + " Click Inspect columns, then Build dashboard."
+    : "";
+  applyBusinessTheme($("business").value);
 };
+$("business").onchange = () => applyBusinessTheme($("business").value);
 $("overviewNav").onclick = () => showPage("overview");
 $("detailNav").onclick = () => showPage("detail");
 $("setupNav").onclick = showSetup;
@@ -2273,5 +2255,6 @@ document.querySelectorAll("[data-question]").forEach(
     }),
 );
 showSetup();
+applyBusinessTheme($("business").value);
 refreshModels().catch(() => {});
 }

@@ -681,3 +681,39 @@ body.overviewMode .overviewChartContent .chartNote {
 #analystEvidence section { margin-top: 12px; }
 #analystEvidence table { min-width: 100%; }
 #analystEvidence pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* Business identity comes from the selected profile, while layout stays familiar. */
+:root { --business-accent: #008473; --business-tint: #edf8f5; }
+body { background: var(--business-tint); }
+header { border-top: 4px solid var(--business-accent); }
+header #businessName, .businessHint { color: var(--business-accent); }
+.topnav button[aria-current="page"], .setupActions button.primary,
+.chartChooserActions button.primary, #askButton {
+  background: var(--business-accent); color: white; border-color: var(--business-accent);
+}
+.card:first-child { border-top: 3px solid var(--business-accent); }
+.card:first-child .value { color: var(--business-accent); }
+.chartChoice:has(input:checked) { border-color: var(--business-accent); background: var(--business-tint); }
+.chartChoice input { accent-color: var(--business-accent); }
+.recommendedBadge { display: inline-block; color: var(--business-accent); font-size: 11px; font-style: normal; margin-left: 6px; }
+.recommendationExplanation { margin: 12px 0; font-size: 13px; color: #526377; }
+.recommendationExplanation summary, .operationalMapping summary { cursor: pointer; }
+.operationalMapping { grid-column: 1 / -1; padding: 14px; border: 1px solid #dce5eb; border-radius: 10px; }
+.operationalMapping .mappingGrid { margin-top: 16px; }
+.chartChooserPanel { max-height: 90vh; overflow: auto; }
+.businessDetailGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.businessDetailChart { max-height: 520px; overflow: auto; }
+.businessDetailChart svg, .overviewChartContent svg { width: 100%; height: auto; }
+.overviewChartContent { min-height: 0; overflow: auto; }
+@media (max-width: 850px) { .businessDetailGrid { grid-template-columns: 1fr; } }
+#detailTables { margin-top: 20px; }
+#detailTables summary { cursor: pointer; font-weight: 600; }
+.mapInfo { border-left-color: var(--business-accent); background: var(--business-tint); }
+/* Override the older overview palette as well as the setup page. */
+body.overviewMode { background: var(--business-tint); }
+header, body.overviewMode header { background: color-mix(in srgb, var(--business-accent) 25%, #10252d); }
+header #businessName { color: var(--business-tint); }
+body.overviewMode .card { border-top-color: var(--business-accent); }
+body.overviewMode .filters { background: color-mix(in srgb, var(--business-tint) 50%, white); }
+/* A short description makes the selected demo and next action clear. */
+.setup .sampleDescription { padding: 12px 14px; border-radius: 8px; background: var(--business-tint); color: #34485d; }

@@ -13,12 +13,15 @@ free_business_dashboard/
 │   ├── config.py         # Shared paths and local service settings
 │   ├── data_loader.py    # CSV/Excel/sample loading
 │   ├── fields.py         # Dashboard field names and column aliases
+│   ├── business_data.py # Validate optional delivery, booking, waste and job fields
 │   ├── normalizer.py     # Mapping validation and sales-data normalization
 │   ├── ollama_client.py  # Local AI prompt and Ollama API calls
 │   └── server.py         # Local HTTP routes used by the browser
 ├── src/                  # React/Vite frontend
 │   ├── App.jsx           # React shell for the dashboard
 │   ├── dashboard.js      # Dashboard behavior, charts, and business answers
+│   ├── business-config.js # Business profiles, chart requirements and fallback rankings
+│   ├── business-charts.js # Shared chart calculations and SVG renderers
 │   ├── dashboard-utils.js # Shared browser helper functions
 │   ├── main.jsx          # React mount point
 │   ├── setup.css         # Setup and mapping styles
@@ -93,13 +96,13 @@ npm run build
 
 ## Use your data
 
-1. Choose Restaurant, Furniture shop, Retail store, Café, or Other business.
-2. Upload a CSV, XLSX, or XLS file, or choose a included sample.
+1. Choose Café, Restaurant / food truck, Retail / clothing, Tech / electronics, Furniture, Bakery, Online shop, Salon / barbershop, Repair / service shop, or Other business.
+2. Upload a CSV, XLSX, or XLS file, or choose an included sample.
 3. Click **Inspect columns**. For a workbook, choose the worksheet containing the sales table.
 4. Check the suggested mappings, date order, decimal separator, and currency. The first row must contain unique column headings. No merged heading rows or subtotal rows.
 5. Click **Build dashboard**. Use the top navigation to switch between Business Overview and Detailed Dashboard.
 
-The business selection provides context for explanations; available columns determine which charts and metrics can be calculated. This version is designed for sales/order data. Payroll logs, inventory-only files, and unrelated business records require additional data models.
+The selected business sets the recommended charts, dashboard heading, terminology, and accent colors. Recommendations follow each business’s preferred three charts and fill missing slots with supported alternatives. **Why these charts?** explains missing data; you can override the choices. If fewer than three meaningful charts are supported, only those are recommended. This version is designed for sales/order data. Payroll logs, inventory-only files, and unrelated business records require additional data models.
 
 **Required:** net sales/revenue, gross sales, or both quantity and unit price. When deriving net sales from gross sales without discounts, the app explicitly treats discounts as zero and reports that assumption.
 
@@ -153,7 +156,25 @@ The model files are not bundled. Internet is needed for initial Python package/m
 
 ## Samples and validation
 
-The furniture, restaurant, and retail samples in `data/samples/` are fictional test data spanning June 1–August 29, 2026. `Cafe.csv` is the original provided café dataset and includes receipt-grouping warnings.
+Choose a business demo under **Or try a sample**. The matching business is selected automatically. Click **Inspect columns → Build dashboard → Load dashboard** to see its three preferred charts. All nine new demos are fictional, use USD, and include the required columns; no outside weather or business data is fetched. Sales and bookings are generated from August–September 2026; some deliveries and completed jobs extend into October.
+
+| Business | Demo CSV | Included chart data |
+| --- | --- | --- |
+| Café / coffee shop | [Cafe_Demo.csv](data/samples/Cafe_Demo.csv) | Dated sales, categories, fictional weather |
+| Restaurant / food truck | [Restaurant_Demo.csv](data/samples/Restaurant_Demo.csv) | Dish margins, categories, hourly sales |
+| Retail / clothing | [Retail_Demo.csv](data/samples/Retail_Demo.csv) | Clothing categories, quantities, margins |
+| Tech / electronics | [Tech_Demo.csv](data/samples/Tech_Demo.csv) | Device/accessory categories, quantities, margins |
+| Furniture | [Furniture_Demo.csv](data/samples/Furniture_Demo.csv) | Category revenue, product profit, on-time/late deliveries |
+| Bakery | [Bakery_Demo.csv](data/samples/Bakery_Demo.csv) | Hourly units, product waste, daily sales |
+| Online shop | [Online_Shop_Demo.csv](data/samples/Online_Shop_Demo.csv) | Sales channels, products, multi-line order values |
+| Salon / barbershop | [Salon_Demo.csv](data/samples/Salon_Demo.csv) | Services, bookings, cancellations, daily staff capacity |
+| Repair / service shop | [Repair_Shop_Demo.csv](data/samples/Repair_Shop_Demo.csv) | Services, elapsed job times, open/completed job statuses |
+
+Cancelled/no-show salon bookings and unfinished repair jobs have zero recorded sales. Appointment schedules fit within the supplied staff capacity; repeated delivery IDs belong to multiple lines of the same delivery. All figures are illustrative, not industry benchmarks.
+
+Regenerate these demos with `python scripts/generate_business_samples.py`. Fixed seeds keep results reproducible. Labels and business associations live in `data/sample_catalog.json` and are shared by the generator and frontend.
+
+The earlier furniture, restaurant, and retail samples are still available under **Earlier samples** and remain unchanged. They span June 1–August 29, 2026. `Cafe.csv` is the original provided café dataset and includes receipt-grouping warnings.
 
 Run `npm test` on Mac after creating `.venv`, or run `python -m tests.validate_samples` from an activated environment, to verify expected totals and key missing-data behavior. CSV/Excel ingestion, number/date parsing, model request wiring, adaptive chart generation, filtering, and page switching were checked. The analyst was additionally checked against local Llama 3 with synthetic monthly and extra-column questions. The desktop overview uses a compact layout, with scrolling retained on small screens for access to controls.
 
@@ -172,3 +193,23 @@ The app code is provided under the included MIT license. Python packages and dow
 Map numeric add-on charges to **Add-on / modifier charge** and select whether they apply per line or per unit. Without an existing sales total, gross sales is `quantity × unit price + modifier charge` (multiply the modifier by quantity first for per-unit charges). Discounts are then subtracted. Blank modifier cells count as zero; ingredient names are not prices. If multiple modifier columns exist, combine their charges into one numeric column before upload.
 
 Map a completed **Line total** and confirm whether it is before or after discounts. Existing gross/net/line totals take priority over quantity, base price, and modifiers; charges are never added again. Totals must include add-ons, exclude tax/tips, and not repeat an order total on each item row. Conflicting mapped totals are rejected. Cost data should include add-on costs when calculating gross profit.
+
+### Business-specific chart data
+
+All uploads still need a sales amount (or the components to calculate it). Optional operational columns can be mapped in the expandable section below the main mapping fields. Column names are suggested automatically; service names/types can map to Product / dish / item.
+
+| Chart | Additional mapped data | Counting rule |
+| --- | --- | --- |
+| Delivery performance | Delivery ID plus on-time/late status, or promised and actual delivery timestamps | Each delivery ID once; pending/unknown outcomes excluded |
+| Bakery hourly units | Product, quantity, hour/time | Sum quantity; returns use a net-total chart |
+| Waste cost | Product and waste cost | Sum per source row; do not repeat a daily waste total on every sale |
+| Channel revenue | Sales channel | Sum selected net sales per channel |
+| Order histogram | Validated order IDs | Sum selected lines per order; filters may show partial orders |
+| Booking heatmap | Appointment ID and start timestamp | Each appointment once; cancelled/no-show bookings excluded |
+| Staff utilization | Appointment ID/start/duration minutes, employee, available minutes per employee per day | Unique booked minutes divided by daily availability counted once per represented staff-day |
+| Job turnaround | Job ID, service type, opened/completed timestamps | Average elapsed hours per completed job, excluding invalid/reversed timestamps |
+| Job status | Job ID and status | Each job ID once |
+
+Repeated event IDs must have consistent details. Conflicts disable the corresponding chart and produce a data note. Staff utilization measures booked capacity within the represented data, not actual working time; days absent from the upload are not inferred. Operational dates use local timestamps without timezone offsets. Weather still comes exclusively from uploaded columns.
+
+The preferred charts and fallback order live in `src/business-config.js`; calculations and SVG rendering live in `src/business-charts.js`. Backend validation in `backend/business_data.py` controls availability. The same renderers serve both dashboard pages.

@@ -5,7 +5,7 @@
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
-    "test": ".venv/bin/python -m tests.validate_samples && .venv/bin/python -m unittest discover -s tests -p 'test_*.py'"
+    "test": ".venv/bin/python -m tests.validate_samples && .venv/bin/python -m unittest discover -s tests -p 'test_*.py' && node --test tests/business-charts.test.mjs"
   },
   "dependencies": {
     "react": "^19.0.0",
@@ -14,5 +14,6 @@
   "devDependencies": {
     "@vitejs/plugin-react": "^5.0.0",
     "vite": "^7.0.0"
-  }
+  },
+  "type": "module"
 }

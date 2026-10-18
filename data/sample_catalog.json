@@ -1,0 +1,11 @@
+[
+  {"filename":"Cafe_Demo.csv","business":"Cafe","label":"Café / coffee shop","description":"Coffee, pastries and snacks with daily sales and fictional weather."},
+  {"filename":"Restaurant_Demo.csv","business":"Restaurant","label":"Restaurant / food truck","description":"Dishes, drinks and sides with costs and lunch/evening sales."},
+  {"filename":"Retail_Demo.csv","business":"Retail store","label":"Retail / clothing store","description":"Clothing and accessories with quantities, discounts and product margins."},
+  {"filename":"Tech_Demo.csv","business":"Tech store","label":"Tech / electronics store","description":"Devices and accessories across several categories and margins."},
+  {"filename":"Furniture_Demo.csv","business":"Furniture shop","label":"Furniture store","description":"Furniture sales, product profits and on-time/late deliveries."},
+  {"filename":"Bakery_Demo.csv","business":"Bakery","label":"Bakery","description":"Hourly bread and pastry sales, daily trends and product waste costs."},
+  {"filename":"Online_Shop_Demo.csv","business":"Online shop","label":"Online shop","description":"Website, marketplace and social orders with varied basket values."},
+  {"filename":"Salon_Demo.csv","business":"Salon / barbershop","label":"Salon / barbershop","description":"Services, appointments, cancellations and daily staff capacity."},
+  {"filename":"Repair_Shop_Demo.csv","business":"Repair / service shop","label":"Repair / service shop","description":"Repair services, completed-job turnaround and open job statuses."}
+]
