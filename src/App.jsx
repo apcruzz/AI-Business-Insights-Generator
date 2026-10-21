@@ -159,56 +159,86 @@ export default function App() {
               Return to dashboard
             </button>
           </div>
-          <section id="kpiPanel" className="kpiPanel" hidden>
-            <hr />
-            <h2>Customize your Business Overview</h2>
-            <p>
-              Choose the KPI cards and overview charts you want to see. Choices
-              depend on your confirmed columns. Leave everything unchecked for
-              the default Business Overview. The Detailed Dashboard always
-              includes all of its sections.
-            </p>
-            <h3>KPI cards</h3>
-            <div id="kpiOptions" className="kpiOptions"></div>
-            <div className="setupActions">
-              <button className="primary" id="dashboardButton" type="button">
-                Build dashboard
-              </button>
-              <span id="kpiStatus" aria-live="polite"></span>
-            </div>
-          </section>
         </div>
         <div id="setupError" className="error" role="alert"></div>
       </section>
 
-      {/* Chart selection dialog: only charts supported by validated columns are offered. */}
-      <section
+      {/* One customization dialog: KPI cards first, then supported overview charts. */}
+      <dialog
         className="chartChooser"
         id="chartChooser"
-        role="dialog"
-        aria-modal="true"
         aria-labelledby="chartChooserTitle"
-        hidden
       >
         <div className="chartChooserPanel">
-          <div>
-            <h2 id="chartChooserTitle">Choose overview charts</h2>
-            <p id="chartChooserSummary" className="sub">
-              Pick up to 3 charts for Business Overview
-            </p>
+          <div className="chooserHeader">
+            <div>
+              <h2 id="chartChooserTitle">Customize your overview</h2>
+              <p className="sub">Put your most useful numbers and charts up front.</p>
+            </div>
+            <button id="closeChartChooser" className="iconButton" type="button" aria-label="Close customization">×</button>
           </div>
-          <details className="recommendationExplanation"><summary>Why these charts?</summary><div id="chartRecommendationNotes"></div></details>
-          <div id="chartChoices" className="chartChoices"></div>
+          <div className="chooserContent">
+            <section id="kpiPanel" className="chooserSection" aria-labelledby="kpiTitle">
+              <h3 id="kpiTitle"><span className="sectionNumber">01</span> KPI cards</h3>
+              <p id="kpiHelp" className="sub">Choose your key measures, or leave all unchecked to use the defaults.</p>
+              <div id="kpiOptions" className="kpiOptions"></div>
+            </section>
+            <section className="chooserSection" aria-labelledby="chartsTitle">
+              <div className="chooserSectionHeading">
+                <h3 id="chartsTitle"><span className="sectionNumber">02</span> Overview charts</h3>
+                <button id="selectRecommendedCharts" type="button">Recommended charts</button>
+              </div>
+              <p id="chartChooserSummary" className="sub" aria-live="polite">Pick up to 3 charts.</p>
+              <details className="recommendationExplanation"><summary>Why these charts?</summary><div id="chartRecommendationNotes"></div></details>
+              <div id="chartChoices" className="chartChoices"></div>
+            </section>
+          </div>
           <div className="chartChooserActions">
-            <button id="selectRecommendedCharts" type="button">
-              Use recommendations
-            </button>
+            <small>Detailed Dashboard keeps every supported chart.</small>
             <button className="primary" id="loadSelectedCharts" type="button">
               Load dashboard
             </button>
           </div>
         </div>
-      </section>
+      </dialog>
+
+      {/* Connection controls and setup help stay available without expanding the chat card. */}
+      <dialog id="aiSettings" className="aiSettingsDialog" aria-labelledby="aiSettingsTitle">
+        <div className="chooserHeader">
+          <div>
+            <h2 id="aiSettingsTitle">AI settings</h2>
+            <p className="sub">Choose how you connect and review how your data is used.</p>
+          </div>
+          <button id="closeAiSettings" className="iconButton" type="button" aria-label="Close AI settings">×</button>
+        </div>
+        <div className="aiSettingsContent">
+          <h3>Current answer mode</h3>
+          <p id="aiDataNotice" className="sub aiDataNotice" aria-live="polite">Choose an answer mode to see how your data is used.</p>
+          <button id="refreshModels" type="button">Refresh AI options</button>
+          <p className="sub modelStatus" id="insightMode" role="status">Calculated insights · AI optional</p>
+          <div className="browserOllamaPanel">
+            <h3>Local Ollama</h3>
+            <div className="browserOllamaActions">
+              <button id="connectBrowserOllama" type="button">Connect Local Ollama</button>
+              <button id="disconnectBrowserOllama" type="button" disabled>Disconnect</button>
+            </div>
+            <p id="browserOllamaStatus" role="status">Not connected. Connect only if you want AI inference on this computer.</p>
+            <details className="ollamaSetup">
+              <summary>Setup and troubleshooting</summary>
+              <p>Install <a href="https://ollama.com/download" target="_blank" rel="noreferrer">Ollama for Windows or macOS</a> and download a model:</p>
+              <pre>ollama pull llama3.2:3b</pre>
+              <p>Quit the running Ollama app first. Keep the server on 127.0.0.1:11434 and allow only this trusted website origin: <code data-ollama-origin></code>.</p>
+              <p>macOS Terminal (keep it open while using the dashboard):</p>
+              <pre>OLLAMA_HOST=127.0.0.1:11434 OLLAMA_NO_CLOUD=1 OLLAMA_ORIGINS=<span data-ollama-origin></span> ollama serve</pre>
+              <p>Windows PowerShell (keep it open while using the dashboard):</p>
+              <pre>{'$env:OLLAMA_HOST="127.0.0.1:11434"\n$env:OLLAMA_NO_CLOUD="1"\n$env:OLLAMA_ORIGINS="'}<span data-ollama-origin></span>{'"\nollama serve'}</pre>
+              <p>Click Connect, allow Chrome’s Local Network Access prompt, then select a model in Answer mode. If no models appear, download a local model and Reconnect. Cloud-linked models are excluded.</p>
+              <p>If access fails: check Ollama is running, quit an older instance before changing its settings, check the exact origin, and allow local-network access in Chrome’s site settings. A timeout can mean your model is still loading; wait or try a smaller model. Other browsers and managed devices may block HTTPS-to-loopback access.</p>
+              <p>AI inference runs on your computer. Uploads, SQL calculations, evidence verification and conversation storage still run on the dashboard server. Keep Ollama on loopback; no public tunnel, wildcard origin or extra desktop app is required. Disconnect stops this page’s requests; it does not stop Ollama or revoke the site’s permission.</p>
+            </details>
+          </div>
+        </div>
+      </dialog>
 
       {/* Dashboard content stays hidden until an upload is normalized successfully. */}
       <main id="dashboardMain" hidden>
@@ -232,99 +262,39 @@ export default function App() {
 
           {/* Insights combine computed cards with calculated answers, Ollama, or Groq chat. */}
           <div className="overviewBottom">
-            <section className="panel insightsPanel">
+            <section className="panel insightsPanel compactAssistant" aria-labelledby="assistantTitle">
               <div className="insightHeader">
                 <div>
-                  <h2>Business insights</h2>
-                  <p className="sub">
-                    <span id="insightMode">
-                      Calculated insights · AI optional
-                    </span>
-                  </p>
+                  <h2 id="assistantTitle">Business assistant</h2>
                 </div>
-                {/* Backend discovery lists local and cloud models; blank selects calculated answers. */}
-                <div className="modelRow">
-                  <label htmlFor="localModel">Answer mode</label>
-                  <select id="localModel" defaultValue="" aria-describedby="aiDataNotice">
-                    <option value="">Calculated answers</option>
-                  </select>
-                  <button id="refreshModels" type="button">
-                    Refresh AI options
-                  </button>
-                </div>
+                <button id="openAiSettings" className="quietButton" type="button" aria-haspopup="dialog">AI settings</button>
               </div>
-              <p id="aiDataNotice" className="sub aiDataNotice" aria-live="polite">
-                Choose an answer mode to see how your data is used.
-              </p>
-              <div className="browserOllamaPanel">
-                <div className="browserOllamaActions">
-                  <button id="connectBrowserOllama" type="button">Connect Local Ollama</button>
-                  <button id="disconnectBrowserOllama" type="button" disabled>Disconnect</button>
-                </div>
-                <p id="browserOllamaStatus" role="status">Not connected. Connect only if you want AI inference on this computer.</p>
-                <details className="ollamaSetup">
-                  <summary>Local Ollama setup and troubleshooting</summary>
-                  <p>Install <a href="https://ollama.com/download" target="_blank" rel="noreferrer">Ollama for Windows or macOS</a> and download a model:</p>
-                  <pre>ollama pull llama3.2:3b</pre>
-                  <p>Quit the running Ollama app first. Keep the server on 127.0.0.1:11434 and allow only this trusted website origin: <code data-ollama-origin></code>.</p>
-                  <p>macOS Terminal (keep it open while using the dashboard):</p>
-                  <pre>OLLAMA_HOST=127.0.0.1:11434 OLLAMA_NO_CLOUD=1 OLLAMA_ORIGINS=<span data-ollama-origin></span> ollama serve</pre>
-                  <p>Windows PowerShell (keep it open while using the dashboard):</p>
-                  <pre>{'$env:OLLAMA_HOST="127.0.0.1:11434"\n$env:OLLAMA_NO_CLOUD="1"\n$env:OLLAMA_ORIGINS="'}<span data-ollama-origin></span>{'"\nollama serve'}</pre>
-                  <p>Click Connect, allow Chrome’s Local Network Access prompt, then select a model in Answer mode. If no models appear, download a local model and Reconnect. Cloud-linked models are excluded.</p>
-                  <p>If access fails: check Ollama is running, quit an older instance before changing its settings, check the exact origin, and allow local-network access in Chrome’s site settings. A timeout can mean your model is still loading; wait or try a smaller model. Other browsers and managed devices may block HTTPS-to-loopback access.</p>
-                  <p>AI inference runs on your computer. Uploads, SQL calculations, evidence verification and conversation storage still run on the dashboard server. Keep Ollama on loopback; no public tunnel, wildcard origin or extra desktop app is required. Disconnect stops this page’s requests; it does not stop Ollama or revoke the site’s permission.</p>
-                </details>
+              <div className="modelRow">
+                <label htmlFor="localModel" className="srOnly">Answer mode</label>
+                <select id="localModel" defaultValue="" aria-describedby="aiModeSummary">
+                  <option value="">Calculated answers</option>
+                </select>
+                <span id="aiModeSummary" className="modeSummary" aria-live="polite">Uses dashboard data</span>
               </div>
-              <div className="insightBody">
-                <div className="insightAsk">
-                  {/* Submitting a question calls ask(); suggestion buttons reuse the same path. */}
-                  <form id="insightForm">
-                    <label htmlFor="insightQuestion">
-                      Ask a question about this dashboard
-                    </label>
-                    <div className="askRow">
-                      <input
-                        id="insightQuestion"
-                        placeholder="Example: Which product should we investigate?"
-                        required
-                      />
-                      <button id="askButton" type="submit">
-                        Ask
-                      </button>
-                    </div>
-                    <div className="suggestions">
-                      <button
-                        type="button"
-                        data-question="Which product leads sales?"
-                      >
-                        Top product
-                      </button>
-                      <button
-                        type="button"
-                        data-question="Which product sold the least?"
-                      >
-                        Least sold
-                      </button>
-                      <button
-                        type="button"
-                        data-question="Is the business successful?"
-                      >
-                        Business health
-                      </button>
-                      <button type="button" data-question="What should we do next?">
-                        Next step
-                      </button>
-                    </div>
-                  </form>
-                  {/* Chat transcript and supporting SQL results are filled safely by the controller. */}
-                  <button type="button" id="newConversation">New conversation</button>
-                  <small>Follow up on your last answer. Changing data or filters starts a new conversation.</small>
-                  <p id="insightAnswer" aria-live="polite"></p>
-                  <div id="analystEvidence" hidden></div>
-                </div>
-                <div id="insightCards" className="insightCards"></div>
+              <div className="conversationViewport" tabIndex="0" aria-label="Conversation and supporting calculations">
+                <p id="insightAnswer" aria-live="polite"></p>
+                <div id="analystEvidence" hidden></div>
               </div>
+              <form id="insightForm">
+                <label htmlFor="insightQuestion" className="srOnly">Ask a question about this dashboard</label>
+                <div className="askRow">
+                  <input id="insightQuestion" placeholder="Ask about your business…" required />
+                  <button id="askButton" type="submit">Ask</button>
+                </div>
+              </form>
+              <div className="conversationFooter">
+                <small>New data or filters reset the conversation.</small>
+                <button type="button" id="newConversation" className="quietButton">New conversation</button>
+              </div>
+            </section>
+            <section className="panel highlightsPanel" aria-labelledby="highlightsTitle">
+              <h2 id="highlightsTitle">At a glance</h2>
+              <div id="insightCards" className="insightCards"></div>
             </section>
           </div>
         </div>
@@ -379,7 +349,7 @@ export default function App() {
             Reset filters
           </button>
           <button id="chooseCharts" type="button">
-            Choose charts
+            Customize overview
           </button>
           <span className="hint" id="count" aria-live="polite"></span>
           <details>

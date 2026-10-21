@@ -40,6 +40,7 @@ let data = [],
   conversationTurns = [],
   revision = 0,
   overviewChartIds = [],
+  overviewKpiIds = [],
   aiOptions = answerOptions({}),
   modelsLoaded = false,
   groqConfigured = false,
@@ -168,8 +169,6 @@ function applyBusinessTheme(name) {
   $("insightQuestion").placeholder = `Example: How can we improve ${p.item.toLowerCase()} sales?`;
   $("productFilterLabel").textContent = p.item;
   if ($("product").firstChild) $("product").firstChild.textContent = p.item.startsWith("Service") ? "All services" : p.item === "Dish" ? "All dishes" : "All products";
-  const topChip = document.querySelector('[data-question="Which product leads sales?"]');
-  if (topChip) topChip.textContent = p.item.startsWith("Service") ? "Top service" : p.item === "Dish" ? "Top dish" : "Top product";
 }
 function applyChartVisibility() {
   // Every supported chart remains in Detailed Dashboard; Overview is a curated subset.
@@ -185,7 +184,7 @@ function applyChartVisibility() {
   });
 }
 function showChartChooser(resetSelection = false) {
-  // Ask which three available charts should be featured in Business Overview.
+  // Edit KPI cards and charts together; drafts apply only when the user loads them.
   if (!data.length) return;
   const options = chartOptions(),
     optionIds = options.map((option) => option.id);
@@ -208,9 +207,12 @@ function showChartChooser(resetSelection = false) {
   document
     .querySelectorAll('input[name="chartChoice"]')
     .forEach((input) => input.addEventListener("change", updateChartChoiceState));
+  document.querySelectorAll('input[name="kpi"]').forEach((input) => {
+    input.checked = overviewKpiIds.includes(input.value);
+  });
   updateChartChoiceState();
-  $("chartChooser").hidden = false;
-  $("loadSelectedCharts").focus();
+  $("chartChooser").showModal();
+  $("chartChooser").querySelector(".chooserContent").scrollTop = 0;
 }
 function updateChartChoiceState() {
   // Limit Business Overview to three featured charts.
@@ -236,7 +238,9 @@ function loadSelectedCharts() {
     : chartOptions()
         .slice(0, 3)
         .map((option) => option.id);
-  $("chartChooser").hidden = true;
+  overviewKpiIds = [...document.querySelectorAll('input[name="kpi"]:checked')]
+    .map((input) => input.value);
+  $("chartChooser").close();
   applyChartVisibility();
   render();
   $("setupStatus").textContent = "Dashboard ready.";
@@ -252,8 +256,6 @@ async function inspect() {
   // Read the chosen sample/upload and ask the server for column suggestions.
   $("setupError").textContent = "";
   analyzedData = null;
-  $("kpiPanel").hidden = true;
-  $("buildButton").hidden = false;
   $("setupStatus").textContent = "Reading columns…";
   $("inspectButton").disabled = true;
   try {
@@ -364,9 +366,7 @@ async function confirmColumns() {
       modifierBasis: $("modifierBasis").value,
     });
     renderKpiOptions(analyzedData);
-    $("kpiPanel").hidden = false;
-    $("buildButton").hidden = true;
-    $("setupStatus").textContent = "Columns confirmed. Choose your KPIs.";
+    buildDashboard();
   } catch (e) {
     $("setupError").textContent = e.message;
   } finally {
@@ -420,13 +420,15 @@ function renderKpiOptions(result) {
         `<label class="kpiOption"><input type="checkbox" name="kpi" value="${id}"><span><strong>${title}</strong><small>${description}</small></span></label>`,
     )
     .join("");
-  $("kpiPanel").querySelector("p").textContent =
-    `Choose the measures that matter to your ${$("business").value.toLowerCase()}. Options depend on the columns you confirmed; leave everything unchecked for the default KPI cards.`;
+  $("kpiHelp").textContent =
+    "Choose the measures that matter most, or leave all unchecked to use the defaults. Only measures supported by your columns are shown.";
 }
 function buildDashboard() {
   if (!analyzedData) return;
   meta = analyzedData;
   data = meta.rows;
+  overviewKpiIds = [];
+  overviewChartIds = chartOptions().slice(0, 3).map((option) => option.id);
   for (const id of ["category", "product"])
     sourceOptions(
       $(id),
@@ -456,8 +458,9 @@ function buildDashboard() {
   $("dataNotes").textContent = meta.warnings.join(" ");
   setDefaultFilterValues();
   showPage("overview");
+  render();
   showChartChooser(true);
-  $("setupStatus").textContent = "Choose charts to load.";
+  $("setupStatus").textContent = "Choose KPI cards and charts for your overview.";
 }
 function setDefaultFilterValues() {
   // Return all filters to the full dataset range.
@@ -731,9 +734,7 @@ function metrics(rows, overview = false) {
             "Discounts ÷ gross sales",
           ],
         ];
-  const picked = [...document.querySelectorAll('input[name="kpi"]:checked')].map(
-    (input) => input.value,
-  );
+  const picked = overviewKpiIds;
   const orders = c.orders ? new Set(rows.map((r) => r.Order_Key)).size : 0;
   const custom = {
     netSales: ["Net sales", money(n), "Selected recorded revenue"],
@@ -2266,7 +2267,9 @@ function resetConversation() {
 function showConversation(pending = "") {
   const panel = $("insightAnswer");
   panel.textContent = [...conversationTurns, pending].filter(Boolean).join("\n\n");
-  panel.scrollTop = panel.scrollHeight;
+  const viewport = panel.closest(".conversationViewport");
+  // Keep the latest answer visible while leaving its evidence just below it.
+  viewport.scrollTop = Math.max(0, panel.offsetHeight - viewport.clientHeight);
 }
 async function ask(question) {
   // Ask the deterministic engine or the explicitly selected AI provider.
@@ -2323,6 +2326,12 @@ async function ask(question) {
 function updateAnswerModeNotice() {
   const option = aiOptions.find(item => item.value === $("localModel").value);
   $("aiDataNotice").textContent = answerModeNotice(option, groqConfigured, hosted);
+  $("localModel").title = $("aiDataNotice").textContent;
+  $("aiModeSummary").textContent = option?.provider === "groq"
+    ? "Shares question & data context with Groq cloud"
+    : ["ollama", "browser_ollama"].includes(option?.provider)
+      ? "AI inference on your computer"
+      : "Uses dashboard data · No AI inference";
   $("insightMode").textContent = "Calculated insights · " + (option?.model ? option.label : "AI optional");
 }
 function applyAIOptions(current = $("localModel").value, initial = false) {
@@ -2395,10 +2404,9 @@ async function refreshModels() {
     $("refreshModels").disabled = false;
   }
 }
-// Connect page buttons, dropdowns, and question chips to the functions above.
+// Connect page buttons and dropdowns to the functions above.
 $("inspectButton").onclick = inspect;
 $("buildButton").onclick = confirmColumns;
-$("dashboardButton").onclick = buildDashboard;
 $("sheet").onchange = () => {
   uploadPayload.sheet = $("sheet").value;
   inspect();
@@ -2411,8 +2419,6 @@ $("upload").onchange = () => {
   uploadPayload = {};
   analyzedData = null;
   $("mappingPanel").hidden = true;
-  $("kpiPanel").hidden = true;
-  $("buildButton").hidden = false;
   $("sheet").replaceChildren();
 };
 $("sample").onchange = () => {
@@ -2423,13 +2429,11 @@ $("sample").onchange = () => {
   $("upload").value = "";
   $("sheet").replaceChildren();
   $("mappingPanel").hidden = true;
-  $("kpiPanel").hidden = true;
-  $("buildButton").hidden = false;
   const sample = SAMPLE_DATASETS.find(item => item.filename === $("sample").value);
   if (sample) $("business").value = sample.business;
   $("sampleDescription").hidden = !sample;
   $("sampleDescription").textContent = sample
-    ? (sample.legacy ? "Earlier sample. " : "Fictional demo · ") + (sample.description || sample.label) + " Click Inspect columns, then Build dashboard."
+    ? (sample.legacy ? "Earlier sample. " : "Fictional demo · ") + (sample.description || sample.label) + " Click Inspect columns, then Confirm columns."
     : "";
   applyBusinessTheme($("business").value);
 };
@@ -2443,8 +2447,12 @@ $("cancelSetup").onclick = () => showPage("overview");
 );
 $("reset").onclick = resetFilters;
 $("chooseCharts").onclick = () => showChartChooser(false);
+$("closeChartChooser").onclick = () => $("chartChooser").close();
+$("chartChooser").addEventListener("close", () => $("chooseCharts").focus());
 $("selectRecommendedCharts").onclick = selectRecommendedCharts;
 $("loadSelectedCharts").onclick = loadSelectedCharts;
+$("openAiSettings").onclick = () => $("aiSettings").showModal();
+$("closeAiSettings").onclick = () => $("aiSettings").close();
 $("refreshModels").onclick = refreshModels;
 // Starting over or switching model invalidates outstanding answers and clears local chat context.
 $("newConversation").onclick = () => { revision++; resetConversation(); };
@@ -2454,14 +2462,6 @@ $("insightForm").onsubmit = (e) => {
   e.preventDefault();
   ask($("insightQuestion").value);
 };
-document.querySelectorAll("[data-question]").forEach(
-  (b) =>
-    (b.onclick = () => {
-      // Clicking a suggested question copies it into the input and answers it.
-      $("insightQuestion").value = b.dataset.question;
-      ask(b.dataset.question);
-    }),
-);
 showSetup();
 applyBusinessTheme($("business").value);
 refreshModels().catch(() => {});
