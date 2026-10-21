@@ -146,11 +146,26 @@ export default function App() {
             </label>
             <p>Map a numeric charge, not an ingredient name. Blank charges count as zero. When a sales total is mapped, it takes priority and modifiers are not added again.</p>
           </div>
-          {/* Show source rows for checking the mapping before normalization. */}
-          <details style={{ marginTop: 18 }}>
-            <summary>Preview source rows</summary>
-            <div id="preview"></div>
-          </details>
+          {/* The controls stay together; either expanded panel spans the full form. */}
+          <div className="mappingTools">
+            <button id="toggleOptionalColumns" className="mappingTool optionalColumnsButton" type="button" aria-expanded="false" aria-controls="operationalMapping">
+              <span>Optional delivery, booking, waste, channel and job columns</span>
+              <span className="disclosureIcon" aria-hidden="true">+</span>
+            </button>
+            <button id="toggleSourcePreview" className="mappingTool sourcePreviewButton" type="button" aria-expanded="false" aria-controls="sourcePreviewPanel">
+              <span>Preview source rows</span>
+              <span className="disclosureIcon" aria-hidden="true">+</span>
+            </button>
+          </div>
+          <section id="operationalMapping" className="mappingToolsPanel" aria-labelledby="optionalColumnsTitle" hidden>
+            <h3 id="optionalColumnsTitle">Optional operational columns</h3>
+            <div id="operationalGrid" className="mappingGrid"></div>
+          </section>
+          <section id="sourcePreviewPanel" className="mappingToolsPanel" aria-labelledby="sourcePreviewTitle" hidden>
+            <h3 id="sourcePreviewTitle">Source preview</h3>
+            <p className="sub">First five rows, before mapping and calculations.</p>
+            <div id="preview" tabIndex="0" role="region" aria-label="Source row preview"></div>
+          </section>
           <div className="setupActions">
             <button className="primary" id="buildButton" type="button">
               Confirm columns
@@ -301,7 +316,10 @@ export default function App() {
 
         {/* These controls filter both browser calculations and backend analyst queries. */}
         <div className="filters">
-          <strong style={{ fontSize: 14 }}>Filters</strong>
+          <div className="filterHeading">
+            <strong>Filters</strong>
+            <span className="hint" id="count" aria-live="polite"></span>
+          </div>
           <label>
             From
             <input id="from" type="date" />
@@ -345,13 +363,10 @@ export default function App() {
               <option value="evening">Evening · 6-11 pm</option>
             </select>
           </label>
-          <button id="reset" type="button">
-            Reset filters
-          </button>
-          <button id="chooseCharts" type="button">
-            Customize overview
-          </button>
-          <span className="hint" id="count" aria-live="polite"></span>
+          <div className="filterActions">
+            <button id="reset" type="button">Reset filters</button>
+            <button id="chooseCharts" type="button" aria-haspopup="dialog">Customize overview</button>
+          </div>
           <details>
             <summary>Data notes</summary>
             <div id="sidebarNotes"></div>
@@ -361,9 +376,35 @@ export default function App() {
         {/* Detailed Dashboard includes every chart supported by the mapped data. */}
         {/* The overview selection only controls its three featured chart slots. */}
         <div id="detailPage" hidden>
+          <div className="detailHeading">
+            <div>
+              <h2>Detailed dashboard</h2>
+              <p className="sub">All supported charts, using your current filters.</p>
+            </div>
+            <a href="#datasetTablePanel" className="tableJump">View data table ↓</a>
+          </div>
           <div className="cards" id="cards"></div>
           <div id="detailCharts" className="businessDetailGrid"></div>
           <div id="detailTables" className="businessDetailGrid"></div>
+          <section id="datasetTablePanel" className="panel datasetTablePanel" aria-labelledby="datasetTableTitle">
+            <div className="datasetTableHeader">
+              <div>
+                <h2 id="datasetTableTitle">Dataset rows</h2>
+                <p className="sub">All mapped and calculated columns. Filters apply to every row.</p>
+              </div>
+              <span id="datasetRowCount" className="rowCount" aria-live="polite"></span>
+            </div>
+            <div className="datasetTableScroll" tabIndex="0" role="region" aria-label="Filtered dataset rows">
+              <table id="datasetTable"></table>
+            </div>
+            <nav className="datasetPagination" aria-label="Dataset table pages">
+              <small id="datasetPageStatus" aria-live="polite"></small>
+              <div>
+                <button id="previousDataPage" type="button">Previous</button>
+                <button id="nextDataPage" type="button">Next</button>
+              </div>
+            </nav>
+          </section>
         </div>
 
         <div className="note" id="dataNotes"></div>

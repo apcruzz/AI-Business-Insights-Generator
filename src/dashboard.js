@@ -41,6 +41,7 @@ let data = [],
   revision = 0,
   overviewChartIds = [],
   overviewKpiIds = [],
+  datasetTablePage = 0,
   aiOptions = answerOptions({}),
   modelsLoaded = false,
   groqConfigured = false,
@@ -135,6 +136,7 @@ function showSetup() {
   $("setupPage").hidden = false;
   $("dashboardMain").hidden = true;
   document.body.classList.remove("overviewMode");
+  document.body.classList.remove("detailMode");
   $("cancelSetup").hidden = !data.length;
 }
 function showPage(page) {
@@ -147,6 +149,7 @@ function showPage(page) {
   $("overview").hidden = !overview;
   $("detailPage").hidden = overview;
   document.body.classList.toggle("overviewMode", overview);
+  document.body.classList.toggle("detailMode", !overview);
   $("overviewNav").setAttribute("aria-current", overview ? "page" : "false");
   $("detailNav").setAttribute("aria-current", overview ? "false" : "page");
 }
@@ -294,23 +297,22 @@ async function inspect() {
           `<label>${esc(label)}<select id="map_${key}"></select></label>`,
       )
       .join("");
-    Object.keys(fields).forEach((key) =>
+    Object.keys(fields).forEach((key) => {
       sourceOptions(
         $("map_" + key),
         profile.columns,
         profile.mapping[key] || "",
-      ),
-    );
-    // Keep operational fields in a separate collapsible group; expose detected fields automatically.
-    const operational = document.createElement("details");
-    operational.className = "operationalMapping";
-    const summary = document.createElement("summary");
-    summary.textContent = "Optional delivery, booking, waste, channel and job columns";
-    operational.append(summary);
-    const grid = document.createElement("div"); grid.className = "mappingGrid";
-    Object.keys(BUSINESS_FIELDS).forEach(key => grid.append($("map_" + key).parentElement));
-    operational.append(grid); $("mappingGrid").append(operational);
-    operational.open = Object.keys(BUSINESS_FIELDS).some(key => profile.mapping[key]);
+      );
+      const input = $("map_" + key);
+      const updateMissing = () => input.classList.toggle("missingMapping", !input.value);
+      input.addEventListener("change", updateMissing);
+      updateMissing();
+    });
+    // Keep both tool buttons in one row; detected operational fields expand below them.
+    $("operationalGrid").replaceChildren();
+    Object.keys(BUSINESS_FIELDS).forEach(key => $("operationalGrid").append($("map_" + key).parentElement));
+    setMappingTool("toggleOptionalColumns", "operationalMapping", Object.keys(BUSINESS_FIELDS).some(key => profile.mapping[key]));
+    setMappingTool("toggleSourcePreview", "sourcePreviewPanel", false);
     // Ask about amount semantics only for mapped add-on or line-total columns.
     $("lineTotalBasis").value = "";
     $("modifierBasis").value = "line";
@@ -944,11 +946,29 @@ function renderOverviewCharts(rows, products, c) {
       : "";
   });
 }
+function renderDatasetTable() {
+  // Paginate the complete filtered dataset so large uploads do not create a huge DOM.
+  const pageSize = 50;
+  const pages = Math.max(1, Math.ceil(selected.length / pageSize));
+  datasetTablePage = Math.max(0, Math.min(datasetTablePage, pages - 1));
+  const start = datasetTablePage * pageSize;
+  const rows = selected.slice(start, start + pageSize);
+  const columns = Object.keys(data[0] || {}).filter(key => key !== "Order_Key");
+  $("datasetTable").innerHTML = `<caption class="srOnly">Filtered mapped dataset, page ${datasetTablePage + 1} of ${pages}</caption><thead><tr><th scope="col">Row</th>${columns.map(key => `<th scope="col">${esc(fields[key] || key.replaceAll("_", " "))}</th>`).join("")}</tr></thead><tbody>${rows.length ? rows.map((row, index) => `<tr><th scope="row">${start + index + 1}</th>${columns.map(key => `<td${typeof row[key] === "number" ? ' class="num"' : ""}>${esc(row[key] === null || row[key] === "" ? "—" : row[key])}</td>`).join("")}</tr>`).join("") : `<tr><td colspan="${columns.length + 1}" class="tableEmpty">No rows match these filters.</td></tr>`}</tbody>`;
+  $("datasetRowCount").textContent = `${selected.length.toLocaleString()} of ${data.length.toLocaleString()} rows`;
+  $("datasetPageStatus").textContent = selected.length
+    ? `Rows ${(start + 1).toLocaleString()}–${Math.min(start + pageSize, selected.length).toLocaleString()} · Page ${datasetTablePage + 1} of ${pages}`
+    : "No matching rows";
+  $("previousDataPage").disabled = datasetTablePage === 0;
+  $("nextDataPage").disabled = datasetTablePage >= pages - 1;
+  $("datasetTable").parentElement.scrollTop = 0;
+}
 function render() {
   // Recalculate every chart/table whenever filters or data change.
   if (!data.length) return;
   revision++;
   selected = filtered();
+  datasetTablePage = 0;
   const rows = selected,
     c = meta.capabilities;
   $("count").textContent =
@@ -961,13 +981,14 @@ function render() {
   renderOverviewCharts(rows, products, c);
   // Render remaining charts through the same dispatcher as Overview.
   $("detailCharts").innerHTML = chartOptions().map(option =>
-    `<section class="panel" data-chart-panel="${esc(option.id)}"><h2>${esc(option.title)}</h2><p class="sub">${esc(CHARTS[option.id].kind)}</p><div class="businessDetailChart">${overviewChartHtml(option.id, rows, products, c)}</div></section>`).join("") || '<p class="chartNote">All supported charts are shown in Business Overview.</p>';
+    `<section class="panel detailChartPanel" data-chart-panel="${esc(option.id)}"><div class="detailChartHeader"><h2>${esc(option.title)}</h2><p class="sub">${esc(CHARTS[option.id].kind)}</p></div><div class="businessDetailChart" data-detail-chart="${esc(option.id)}">${overviewChartHtml(option.id, rows, products, c)}</div></section>`).join("") || '<p class="chartNote">No optional charts are available from these columns.</p>';
   // Retain the detailed source summaries alongside the new business charts.
   $("detailTables").innerHTML = (c.product ? `<details class="panel"><summary>${esc(businessProfile(meta.business).item)} totals</summary><div class="scroll"><table><thead><tr><th>Item</th><th>Units</th><th>Net sales</th><th>Gross profit</th><th>Margin</th></tr></thead><tbody>${products.map(([name, items]) => {
     const sales = sum(items, "Net_Sales"), profit = sum(items, "Gross_Profit");
     return `<tr><td>${esc(name)}</td><td>${c.Quantity ? sum(items, "Quantity") : "—"}</td><td>${esc(money(sales))}</td><td>${c.Gross_Profit ? esc(money(profit)) : "—"}</td><td>${c.Gross_Profit && sales > 0 ? pct(profit / sales * 100) : "—"}</td></tr>`;
   }).join("")}</tbody></table></div></details>` : "") + (c.employee ? `<details class="panel"><summary>Staff sales totals</summary><div class="scroll"><table><thead><tr><th>Employee</th><th>Gross sales</th><th>Discounts</th><th>Net sales</th><th>Gross profit</th><th>Margin</th></tr></thead><tbody>${staffTable(rows, c)}</tbody></table></div></details>` : "");
   applyChartVisibility();
+  renderDatasetTable();
   renderInsights(rows);
   resetConversation();
   $("analystEvidence").hidden = true;
@@ -2411,6 +2432,12 @@ $("sheet").onchange = () => {
   uploadPayload.sheet = $("sheet").value;
   inspect();
 };
+function setMappingTool(buttonId, panelId, expanded) {
+  $(buttonId).setAttribute("aria-expanded", String(expanded));
+  $(panelId).hidden = !expanded;
+}
+$("toggleOptionalColumns").onclick = () => setMappingTool("toggleOptionalColumns", "operationalMapping", $("operationalMapping").hidden);
+$("toggleSourcePreview").onclick = () => setMappingTool("toggleSourcePreview", "sourcePreviewPanel", $("sourcePreviewPanel").hidden);
 $("upload").onchange = () => {
   // Switching upload/sample clears the previous mapping preview.
   $("sample").value = "";
@@ -2446,6 +2473,8 @@ $("cancelSetup").onclick = () => showPage("overview");
   $(id).addEventListener("change", render),
 );
 $("reset").onclick = resetFilters;
+$("previousDataPage").onclick = () => { datasetTablePage--; renderDatasetTable(); };
+$("nextDataPage").onclick = () => { datasetTablePage++; renderDatasetTable(); };
 $("chooseCharts").onclick = () => showChartChooser(false);
 $("closeChartChooser").onclick = () => $("chartChooser").close();
 $("chartChooser").addEventListener("close", () => $("chooseCharts").focus());

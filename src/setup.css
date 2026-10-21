@@ -201,7 +201,7 @@ header #datasetName {
 /* Contain the uploaded row preview without stretching the page. */
 #preview {
   overflow: auto;
-  max-height: 180px;
+  max-height: 260px;
 }
 .setup th,
 .setup td {
@@ -889,9 +889,7 @@ header #businessName, .businessHint { color: var(--business-accent); }
 .chartChoice input { accent-color: var(--business-accent); }
 .recommendedBadge { display: inline-block; color: var(--business-accent); font-size: 11px; font-style: normal; margin-left: 6px; }
 .recommendationExplanation { margin: 12px 0; font-size: 13px; color: #526377; }
-.recommendationExplanation summary, .operationalMapping summary { cursor: pointer; }
-.operationalMapping { grid-column: 1 / -1; padding: 14px; border: 1px solid #dce5eb; border-radius: 10px; }
-.operationalMapping .mappingGrid { margin-top: 16px; }
+.recommendationExplanation summary { cursor: pointer; }
 .businessDetailGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
 .businessDetailChart { max-height: 520px; overflow: auto; }
 .businessDetailChart svg, .overviewChartContent svg { width: 100%; height: auto; }
@@ -908,6 +906,92 @@ body.overviewMode .card { border-top-color: var(--business-accent); }
 body.overviewMode .filters { background: color-mix(in srgb, var(--business-tint) 50%, white); }
 /* A short description makes the selected demo and next action clear. */
 .setup .sampleDescription { padding: 12px 14px; border-radius: 8px; background: var(--business-tint); color: #34485d; }
+
+/* Missing mappings stay optional, with a clear red label until a column is chosen. */
+#mappingPanel select.missingMapping {
+  color: #b42336;
+  border-color: #edc2c7;
+  background: #fff6f6;
+}
+#mappingPanel select option { color: var(--ink); background: white; }
+#mappingPanel select option[value=""] { color: #b42336; }
+.mappingTools { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 22px; }
+.mappingTool { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; text-align: left; font-size: 13px; line-height: 1.45; font-weight: 600; border-radius: 10px; }
+.optionalColumnsButton { background: #edf7f2; border-color: #cee5d7; color: #32634b; }
+.optionalColumnsButton:hover, .optionalColumnsButton[aria-expanded="true"] { background: #e1f0e7; border-color: #9fcab2; }
+.sourcePreviewButton { background: #eef4fd; border-color: #d4e1f4; color: #365d88; }
+.sourcePreviewButton:hover, .sourcePreviewButton[aria-expanded="true"] { background: #e2ecfa; border-color: #abc5e8; }
+.disclosureIcon { flex-shrink: 0; font-size: 20px; font-weight: 400; transition: transform 150ms ease; }
+.mappingTool[aria-expanded="true"] .disclosureIcon { transform: rotate(45deg); }
+.mappingToolsPanel { margin-top: 12px; padding: 20px; border: 1px solid var(--line); border-radius: 12px; background: #fafcfb; }
+.mappingToolsPanel h3 { margin: 0 0 14px; font-size: 16px; }
+.mappingToolsPanel .sub { margin: 0 0 12px; font-size: 12px; }
+
+/* The shared filters become a full-width, aligned toolbar on the detail page. */
+.filterHeading { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.filterHeading strong { font-size: 14px; }
+.filterHeading .hint { font-size: 12px; }
+.filterActions { display: flex; gap: 8px; flex-wrap: wrap; }
+body.overviewMode .filterHeading { flex-direction: column; align-items: flex-start; gap: 4px; }
+body.overviewMode .filterActions { flex-direction: column; }
+body.detailMode #dashboardMain { max-width: 1500px; padding: 24px; }
+body.detailMode .filters {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  align-items: end;
+  gap: 14px;
+  padding: 20px;
+  margin-bottom: 28px;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  box-shadow: 0 5px 18px rgb(24 49 58 / 5%);
+}
+body.detailMode .filterHeading { grid-column: 1 / -1; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+body.detailMode .filters label { min-width: 0; gap: 6px; font-size: 12px; color: var(--muted); }
+body.detailMode .filters input, body.detailMode .filters select { width: 100%; min-width: 0; height: 40px; padding: 7px 10px; font-size: 13px; color: var(--ink); }
+body.detailMode .filterActions { grid-column: 1 / 5; }
+body.detailMode .filterActions button { font-size: 12px; padding: 7px 12px; }
+body.detailMode .filters > details { grid-column: 5 / -1; justify-self: end; align-self: center; margin: 0; max-width: 100%; }
+body.detailMode .filters > details[open] { grid-column: 1 / -1; width: 100%; }
+.detailHeading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+.detailHeading h2 { font-size: 23px; margin: 0 0 4px; }
+.detailHeading .sub { font-size: 13px; margin: 0; }
+.tableJump { color: var(--business-accent); font-size: 13px; text-underline-offset: 3px; white-space: nowrap; }
+#detailPage .cards { grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: 14px; margin-bottom: 20px; }
+#detailPage .card { padding: 16px; min-width: 0; grid-column: auto; }
+#detailPage .card .value { font-size: 27px; margin: 5px 0; }
+#detailCharts { gap: 20px; }
+#detailCharts .detailChartPanel { height: 390px; padding: 20px; display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
+.detailChartHeader { flex-shrink: 0; padding-bottom: 14px; border-bottom: 1px solid var(--line); margin-bottom: 16px; }
+.detailChartHeader h2 { font-size: 16px; margin: 0 0 4px; }
+.detailChartHeader .sub { margin: 0; font-size: 11px; }
+#detailCharts .businessDetailChart { flex: 1; min-height: 0; max-height: none; overflow: auto; overscroll-behavior: contain; }
+#detailCharts .businessDetailChart svg { max-height: 100%; }
+#detailCharts .businessDetailChart[data-detail-chart="category"] { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: 16px; }
+#detailCharts .businessDetailChart .barhead { font-size: 13px; overflow-wrap: anywhere; }
+#detailTables { align-items: start; }
+#detailTables > details { min-width: 0; }
+#detailTables > details[open] > .scroll { max-height: 400px; margin-top: 16px; }
+#detailTables summary { font-size: 14px; }
+.datasetTablePanel { margin-top: 24px; scroll-margin-top: 20px; min-width: 0; }
+.datasetTableHeader { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 16px; }
+.datasetTableHeader h2 { font-size: 18px; margin: 0 0 4px; }
+.datasetTableHeader .sub { margin: 0; font-size: 12px; }
+.rowCount { padding: 5px 10px; border-radius: 7px; background: var(--business-tint); color: var(--business-accent); font-size: 12px; white-space: nowrap; }
+.datasetTableScroll { overflow: auto; max-height: 460px; border: 1px solid var(--line); border-radius: 10px; overscroll-behavior: contain; }
+.datasetTableScroll:focus-visible, #preview:focus-visible { outline: 2px solid var(--business-accent); outline-offset: 3px; }
+#datasetTable { width: 100%; font-size: 12px; }
+#datasetTable th, #datasetTable td { padding: 11px 14px; white-space: nowrap; }
+#datasetTable thead th { position: sticky; top: 0; z-index: 1; background: #f1f6f4; color: #38505a; font-weight: 600; }
+#datasetTable tbody th { font-weight: 400; color: var(--muted); }
+#datasetTable tbody tr:nth-child(even) { background: #fafcfb; }
+.datasetPagination { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 14px; }
+.datasetPagination small { color: var(--muted); font-size: 12px; }
+.datasetPagination > div { display: flex; gap: 8px; }
+.datasetPagination button { padding: 6px 12px; font-size: 12px; }
+.datasetPagination button:disabled { cursor: default; }
+#datasetTable .tableEmpty { text-align: center; padding: 32px; color: var(--muted); }
 
 /* Compact overview workspace: conversation growth stays inside a fixed card. */
 .overviewBottom,
@@ -1032,6 +1116,8 @@ body.overviewMode .overviewBottom .compactAssistant #insightForm {
 .compactAssistant .insightHeader .quietButton { padding: 4px 8px; border: 1px solid var(--line); border-radius: 7px; }
 .overviewBottom .highlightsPanel,
 body.overviewMode .overviewBottom .highlightsPanel {
+  display: flex;
+  flex-direction: column;
   height: 300px;
   min-height: 0;
   min-width: 0;
@@ -1044,18 +1130,23 @@ body.overviewMode .highlightsPanel h2 { font-size: 15px; margin: 0 0 12px; }
 body.overviewMode .overviewBottom .highlightsPanel .insightCards {
   display: grid;
   grid-template-columns: 1fr;
-  grid-template-rows: none;
-  gap: 10px;
+  grid-template-rows: repeat(3, minmax(min-content, 1fr));
+  flex: 1;
+  gap: 8px;
   margin: 0;
 }
 .overviewBottom .highlightsPanel .insightCards article,
 body.overviewMode .overviewBottom .highlightsPanel .insightCards article {
-  border: 0;
-  border-left: 2px solid var(--business-accent);
-  border-radius: 0;
-  padding: 0 0 0 10px !important;
-  font-size: 12px !important;
-  line-height: 1.4 !important;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--business-accent);
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--business-tint) 45%, white);
+  padding: 8px 12px !important;
+  font-size: 13px !important;
+  line-height: 1.35 !important;
 }
 .highlightsPanel .insightCards p { margin: 3px 0 0; }
 .highlightsPanel .insightCards strong { color: var(--ink); }
@@ -1119,12 +1210,15 @@ body.overviewMode .overviewBottom .highlightsPanel .insightCards article {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: end;
   }
-  body.overviewMode .filters > strong,
+  body.overviewMode .filters > .filterHeading,
+  body.overviewMode .filters > .filterActions,
   body.overviewMode .filters > details,
   body.overviewMode .filters > #count { grid-column: 1 / -1; }
   body.overviewMode .filters label { min-width: 0; }
   body.overviewMode .filters input,
   body.overviewMode .filters select { width: 100%; min-width: 0; }
+  body.overviewMode .filterHeading { flex-direction: row; align-items: center; }
+  body.overviewMode .filterActions { flex-direction: row; }
 }
 @media (max-width: 550px) {
   .chartChooser .kpiOptions { grid-template-columns: 1fr; }
@@ -1135,4 +1229,33 @@ body.overviewMode .overviewBottom .highlightsPanel .insightCards article {
   .chartChooserActions small { max-width: 140px; }
   .aiSettingsContent { padding: 18px; }
   .conversationFooter small { max-width: 155px; }
+}
+
+@media (max-width: 1100px) {
+  body.detailMode .filters { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  body.detailMode .filterActions { grid-column: 1 / 3; }
+  body.detailMode .filters > details { grid-column: 3; }
+}
+@media (max-width: 850px) {
+  .overviewBottom .highlightsPanel,
+  body.overviewMode .overviewBottom .highlightsPanel { height: auto; max-height: none; }
+  .overviewBottom .highlightsPanel .insightCards { flex: none; }
+  #detailCharts .detailChartPanel { height: 360px; }
+}
+@media (max-width: 550px) {
+  .mappingTools { gap: 8px; }
+  .mappingTool { font-size: 11px; padding: 10px; gap: 6px; }
+  .mappingToolsPanel { padding: 14px; }
+  .filterHeading { flex-wrap: wrap; }
+  body.detailMode #dashboardMain { padding: 18px 12px; }
+  body.detailMode .filters { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 16px; gap: 12px; }
+  body.detailMode .filterActions { grid-column: 1 / -1; }
+  body.detailMode .filters > details { grid-column: 1 / -1; justify-self: start; }
+  .detailHeading, .datasetTableHeader { flex-direction: column; align-items: flex-start; gap: 10px; }
+  #detailPage .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  #detailPage .card { padding: 12px; }
+  #detailPage .card .value { font-size: 23px; }
+  #detailCharts .detailChartPanel { padding: 16px; }
+  .datasetTablePanel { padding: 16px; }
+  .datasetPagination { flex-wrap: wrap; }
 }
