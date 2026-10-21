@@ -1,3 +1,4 @@
+import {BrowserOllama, runBrowserAnalyst} from "./browser-ollama.js";
 import {SAMPLE_DATASETS} from "./sample-datasets.js";
 import {BUSINESS_FIELDS, CHARTS, businessProfile, chartPlan, chartTitle} from "./business-config.js";
 import {renderBusinessChart} from "./business-charts.js";
@@ -41,7 +42,11 @@ let data = [],
   overviewChartIds = [],
   aiOptions = answerOptions({}),
   modelsLoaded = false,
-  groqConfigured = false;
+  groqConfigured = false,
+  hosted = false,
+  backendModels = {};
+const browserOllama = new BrowserOllama();
+let localAnalysisController = null;
 
 // Fields the dashboard understands. The mapping UI connects source columns to these names.
 const fields = {
@@ -109,10 +114,11 @@ function note(text) {
 }
 
 // POST helper for the local Python API. The token ties requests to this page load.
-async function api(path, payload) {
+async function api(path, payload, {signal} = {}) {
   if (!token) token = (await (await fetch("/api/session")).json()).token;
   const response = await fetch(path, {
     method: "POST",
+    signal,
     headers: { "Content-Type": "application/json", "X-Dashboard-Token": token },
     body: JSON.stringify(payload),
   });
@@ -2249,6 +2255,7 @@ function renderAnalystEvidence(response) {
 }
 // Forget the browser conversation token/transcript and clear evidence for the old selection.
 function resetConversation() {
+  localAnalysisController?.abort();
   conversationId = null;
   conversationTurns = [];
   $("insightAnswer").textContent = "";
@@ -2278,10 +2285,14 @@ async function ask(question) {
     if (model) {
       if (!meta.datasetId) throw Error(meta.analystNote || "Build the dashboard again to load the dataset for AI analysis.");
       // Send only the dataset reference, conversation token, question, and current filters; rows are cached on the server.
-      const response = await api("/api/analyst", {
+      const payload = {
         provider: option.provider, model, question, datasetId: meta.datasetId, conversationId,
         filters: Object.fromEntries(["from", "to", "category", "product", "weekday", "period"].map(id => [id, $(id).value])),
-      });
+      };
+      localAnalysisController = new AbortController();
+      const response = option.provider === "browser_ollama"
+        ? await runBrowserAnalyst(api, browserOllama, payload, {signal: localAnalysisController.signal})
+        : await api("/api/analyst", payload);
       if (revision === current) {
         // If backend memory expired or scope changed, discard the old visible transcript too.
         if (conversationId && conversationId !== response.conversationId) conversationTurns = [];
@@ -2311,9 +2322,53 @@ async function ask(question) {
 }
 function updateAnswerModeNotice() {
   const option = aiOptions.find(item => item.value === $("localModel").value);
-  $("aiDataNotice").textContent = answerModeNotice(option, groqConfigured);
+  $("aiDataNotice").textContent = answerModeNotice(option, groqConfigured, hosted);
   $("insightMode").textContent = "Calculated insights · " + (option?.model ? option.label : "AI optional");
 }
+function applyAIOptions(current = $("localModel").value, initial = false) {
+  const options = [...(backendModels.options || []), ...browserOllama.models.map(model => ({
+    provider: "browser_ollama", model, label: `${model} · Local Ollama (this browser)`, available: true,
+  }))];
+  aiOptions = answerOptions({...backendModels, options});
+  const value = chooseAnswerMode(aiOptions, current, initial);
+  $("localModel").replaceChildren(...aiOptions.map(item => {
+    const element = new Option(item.label, item.value);
+    element.disabled = !item.available;
+    return element;
+  }));
+  $("localModel").value = value;
+  if (current !== value) { revision++; resetConversation(); }
+  updateAnswerModeNotice();
+}
+async function connectBrowserOllama() {
+  $("connectBrowserOllama").disabled = true;
+  $("disconnectBrowserOllama").disabled = false;
+  $("browserOllamaStatus").textContent = "Connecting to Ollama on this computer. Allow Chrome’s Local Network Access prompt if shown…";
+  try {
+    const models = await browserOllama.connect();
+    applyAIOptions();
+    $("browserOllamaStatus").textContent = models.length
+      ? `Connected · ${models.length} local model(s). Select Local Ollama under Answer mode to use one.`
+      : "Connected, but no downloaded local models were found. Run ollama pull llama3.2:3b, then Reconnect.";
+    $("connectBrowserOllama").textContent = "Reconnect Local Ollama";
+  } catch (error) {
+    applyAIOptions();
+    $("browserOllamaStatus").textContent = error.message;
+  } finally {
+    $("connectBrowserOllama").disabled = false;
+  }
+}
+$("connectBrowserOllama").onclick = connectBrowserOllama;
+$("disconnectBrowserOllama").onclick = () => {
+  browserOllama.disconnect();
+  localAnalysisController?.abort();
+  applyAIOptions();
+  $("connectBrowserOllama").textContent = "Connect Local Ollama";
+  $("disconnectBrowserOllama").disabled = true;
+  $("browserOllamaStatus").textContent = "Disconnected. Local inference requests have stopped; choose an answer mode to continue.";
+};
+// Use the page's actual origin for setup; custom domains must be allowed explicitly in Ollama.
+for (const element of document.querySelectorAll("[data-ollama-origin]")) element.textContent = window.location.origin;
 async function refreshModels() {
   // Discover local models and backend Groq configuration without sending data to cloud AI.
   $("refreshModels").disabled = true;
@@ -2328,17 +2383,11 @@ async function refreshModels() {
         if (group.label === "Earlier samples") group.hidden = true;
       }
     }
-    aiOptions = answerOptions(result);
+    hosted = Boolean(result.hosted);
+    backendModels = result;
+    applyAIOptions(current, !modelsLoaded);
     groqConfigured = Boolean(result.groqConfigured);
-    const value = chooseAnswerMode(aiOptions, current, !modelsLoaded);
     modelsLoaded = true;
-    $("localModel").replaceChildren(...aiOptions.map(item => {
-      const element = new Option(item.label, item.value);
-      element.disabled = !item.available;
-      return element;
-    }));
-    $("localModel").value = value;
-    if (current !== value) { revision++; resetConversation(); }
     updateAnswerModeNotice();
   } catch {
     $("insightMode").textContent = "Could not refresh AI options. Check that the backend is running.";

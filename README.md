@@ -363,7 +363,8 @@ resources are created by the repository preparation itself.
   immediately delete server data; expiry/eviction/restart clears it.
 - Per-minute process-local limits: 240 total authenticated/unauthenticated requests,
   120 expensive password checks, 20 failed authentications, 90 requests per user,
-  20 POSTs per user, and 6 AI questions per user. Limits return 429 with Retry-After.
+  20 ordinary POSTs per user, 60 browser-local step/cancel POSTs per user,
+  and 6 AI questions (Groq/server Ollama or browser-local starts combined) per user. Limits return 429 with Retry-After.
   They deliberately ignore spoofable forwarded IP headers. Health checks are exempt.
   Limits reset on restart; they are not distributed abuse protection.
 - One Gunicorn worker is essential because ownership, rates, datasets, and history
@@ -375,8 +376,9 @@ resources are created by the repository preparation itself.
 - Groq reads only `GROQ_API_KEY` in the server environment. Selecting cloud AI sends
   dataset context and query results to Groq; use fictional/nonconfidential data and
   review your provider account's limits. Discovery reports configuration, not live
-  connectivity. Ollama is unavailable in hosted mode, including direct API requests;
-  Render never connects to a visitor's computer. Keep `APP_ENV` unset for local
+  connectivity. Server-side Ollama is unavailable in hosted mode. The explicit browser-local
+  workflow below connects the visitor’s browser to their own Ollama; Render never
+  connects to a visitor’s computer. Keep `APP_ENV` unset for local
   `python app.py` and local Ollama. Vite development continues to proxy to port 8765.
 - Secure HttpOnly SameSite cookies, exact-origin POST validation, CSRF checks,
   authentication on static files/APIs, no-store responses, frame protection, and a
@@ -414,7 +416,7 @@ invited demo after deployment verification; use stronger identity, persistent
 storage, external rate controls, and further security review for broader use.
 
 
-Local preparation verification: 53 Python tests and 9 JavaScript tests pass, sample
+Original Render preparation verification: 53 Python tests and 9 JavaScript tests passed, sample
 validation and Vite builds pass, and the Linux/amd64 multi-stage image builds.
 The real Gunicorn container smoke test runs as non-root with a custom PORT under
 512 MiB / 0.1 CPU limits, verifies authentication plus profile/analyze APIs, and
@@ -434,3 +436,265 @@ docker run --rm --platform linux/amd64 --memory=512m --cpus=0.1 -i ai-business-i
 
 This test uses generated credentials only and makes no Groq requests. The resource
 limit check is a small sample smoke test, not a concurrency/capacity certification.
+
+
+## Connect your own Ollama from the deployed website
+
+Browser Local Ollama lets an invited user run AI inference on their own Windows
+or macOS computer while using the Render website. No companion application,
+public Ollama server, tunnel, or Render-hosted model is required. Install Ollama,
+download a local model, allow the exact trusted website origin, and explicitly
+connect in the dashboard. Ollama settings are local computer settings, not Render
+environment variables.
+
+**Data flow:** uploads and SQL processing still happen on Render. Render sends
+schema/sample context, recent conversation, and verified query results to your
+browser. Your browser sends that context to your own `127.0.0.1:11434` Ollama.
+The browser returns model action text to Render, where dataset ownership and SQL
+restrictions are checked. No Groq inference is requested in this mode. The raw
+file remains subject to the existing temporary server storage and authentication
+rules. This feature does not provide fully offline or device-only data analysis.
+
+### Windows setup
+
+1. Install [Ollama for Windows](https://ollama.com/download/windows).
+2. In PowerShell, download a local model (internet is needed for the download):
+
+   ```powershell
+   ollama pull llama3.2:3b
+   ```
+
+3. Quit the running Ollama app from the taskbar/system tray before starting another
+   server. In PowerShell run, and keep that window open:
+
+   ```powershell
+   $env:OLLAMA_HOST="127.0.0.1:11434"
+   $env:OLLAMA_NO_CLOUD="1"
+   $env:OLLAMA_ORIGINS="https://ai-business-insights-generator.onrender.com"
+   ollama serve
+   ```
+
+4. Alternatively set those same three **user environment variables** through Windows
+   Settings → Edit environment variables for your account, then restart the Ollama
+   app. Terminal settings affect only the server launched from that terminal.
+
+### macOS setup
+
+1. Install [Ollama for macOS](https://ollama.com/download/mac).
+2. In Terminal, download `ollama pull llama3.2:3b` (or use a local model you already
+   installed). Quit an already running Ollama app/server first. Then run:
+
+   ```sh
+   OLLAMA_HOST=127.0.0.1:11434 OLLAMA_NO_CLOUD=1 OLLAMA_ORIGINS=https://ai-business-insights-generator.onrender.com ollama serve
+   ```
+
+   Keep this terminal open. If you prefer the macOS Ollama app, set its environment
+   before restarting it:
+
+   ```sh
+   launchctl setenv OLLAMA_HOST "127.0.0.1:11434"
+   launchctl setenv OLLAMA_NO_CLOUD "1"
+   launchctl setenv OLLAMA_ORIGINS "https://ai-business-insights-generator.onrender.com"
+   ```
+
+   Reopen Ollama yourself after quitting the old app. These commands configure the
+   app launched in your macOS login session; they do not modify the Render server.
+
+The allowed origin must be the exact site you trust, with scheme and hostname, no
+path. For a preview/custom domain, replace the example with that exact HTTPS
+origin. The dashboard shows the active origin in its setup instructions. Never
+use `OLLAMA_ORIGINS=*`, bind to `0.0.0.0`, open router ports, disable browser
+security, or create a public tunnel. The allowlisted origin can call your local
+Ollama API while Ollama is running; remove it and restart Ollama to revoke that
+access. The connection button is consent within this app, not an access-control
+boundary for a compromised trusted site.
+
+Ollama's [environment and origin configuration](https://docs.ollama.com/faq) and
+[structured output documentation](https://docs.ollama.com/capabilities/structured-outputs)
+explain the underlying server settings and JSON-schema format.
+
+### Use it in the website
+
+1. Sign in, upload a fictional CSV/XLSX or load a demo, confirm mappings, choose
+   KPIs/charts, and load the dashboard.
+2. Under **Business insights**, click **Connect Local Ollama**. No localhost fetch
+   is made by the browser during page load, upload, model refresh, or cloud chat.
+3. If Chrome asks for **Local Network Access**, allow it for this trusted website.
+   Current Chrome supports the `targetAddressSpace: "loopback"` fetch hint used by
+   this transport. CORS permission from Ollama is still required separately. See
+   [Chrome's permission guidance](https://developer.chrome.com/blog/local-network-access)
+   and the [Local Network Access specification](https://wicg.github.io/local-network-access/).
+4. The status shows connected, missing models, or troubleshooting details. Select
+   an installed **Local Ollama (this browser)** entry under **Answer mode**. Connecting
+   does not automatically select local inference or switch a prior Groq choice.
+5. Ask your business question. Supporting calculations and follow-up history work
+   through the same server-owned analyst engine as Groq. Changing filters, dataset,
+   provider, model, or conversation resets the relevant scope. A question uses at
+   most six model actions and four model-requested SQL queries; advice can also
+   receive a server-calculated product/month overview.
+6. **Reconnect Local Ollama** refreshes installed models explicitly. **Disconnect**
+   aborts this page's local fetches and pending local analysis, removes local browser
+   models, and returns an active local selection to Calculated answers. It never
+   switches to Groq. Disconnect does not stop Ollama, revoke Chrome permission,
+   or change the allowlisted origin. Normal local-development/server Ollama remains
+   available when running `python app.py` with `APP_ENV` unset.
+
+### Troubleshooting and compatibility
+
+- **Connection/CORS/permission error:** check Ollama is running, the exact active
+  website origin is allowed, and the old Ollama process was stopped before changing
+  settings. In Chrome's site settings, allow local-network access if previously
+  denied. JavaScript cannot reliably distinguish CORS denial from permission denial
+  or an offline loopback service, so the message lists these checks together.
+- **Connected with no models:** download a local model, then Reconnect. Llama 3 (`llama3:latest`) is the preferred
+  tested model when your computer has sufficient memory; `llama3.2:3b` is lighter
+  but was less reliable on recommendations and comparisons. Remote/cloud
+  linked models and names ending in `:cloud` are excluded. Run `ollama list` locally
+  to inspect installed models.
+- **Missing model / timeout:** a selected model might have been removed or need time
+  to load into memory. Reconnect, wait, or select a smaller model. Each local chat
+  request times out after 120 seconds; a complete pending question expires after
+  ten minutes. There is no cloud fallback after any local failure.
+- **Session/server restart or expired dataset:** reload, upload/build the dashboard
+  again, and reconnect. Pending runs and conversations are temporary.
+- **Browser limitations:** Chrome on Windows/macOS is the primary manual acceptance
+  target. Older Chrome, managed browser policies, OS privacy controls, Firefox,
+  Safari, and mobile devices can have different mixed-content, CORS, or local-network
+  behavior. They are not certified by the automated transport tests. Do not disable
+  browser security flags to make a connection work; use supported Chrome or choose
+  an existing answer mode explicitly.
+
+### Browser-local security and validation
+
+The production CSP adds only `http://127.0.0.1:11434` to `connect-src 'self'`.
+The transport has no configurable URL, rejects redirects, omits all credentials
+and referrers, requests only `/api/tags` and `/api/chat`, excludes cloud-linked
+model discovery results, and does not call generation, pull, delete, or arbitrary
+Ollama endpoints. Model output remains untrusted even with structured output.
+
+Authenticated, CSRF-protected `/api/ollama-start`, `/api/ollama-step`, and
+`/api/ollama-cancel` retain the production host/origin checks and user rate limits.
+Runs are bound to the browser session and checked against dataset ownership on
+every step. Single-use random step tokens prevent replay/out-of-order actions.
+Clients cannot supply evidence, SQL results, conversation history, or different
+filters mid-run. The shared engine validates model text and uses the unchanged
+read-only SQLite authorizer/limits. No Python evaluation or remote SQL connection
+is introduced. Weighted product margins and monthly rankings/comparisons receive additional
+server-calculated evidence. Grouped margin queries reject bare per-line financial
+ratios, and explicit conflicting margin/change/ranking claims receive corrective
+feedback. These checks are deliberately limited, not a general SQL/prose proof.
+Natural-language correctness checks remain heuristic; supporting
+numbers do not prove a model's causal explanation or recommendation.
+
+At most four pending runs exist per process, one per session, with a ten-minute
+TTL. Inference packets are capped at 128 KiB, accepted model text at 16,000
+characters, and browser HTTP responses at 256 KiB. SQL connections and filtered
+DataFrames are not retained between browser steps. Cancellation, completed runs,
+new questions, TTL expiry and capacity eviction free pending-run slots. No browser
+model request occupies a Render worker while local inference is running.
+
+Automated validation includes all six requested question types with deterministic
+model actions and real authorized SQL, active filters, history, evidence tables,
+wrong-user/browser access, replay, malicious SQL, forged evidence, expiry, output
+bounds, and cancellation. Browser transport tests cover explicit connection,
+local model discovery, schema format, credentials/redirect restrictions, timeout,
+permission/CORS messages, no cloud fallback, and privacy notices. Existing Groq
+transport and conversation tests still run against mocked provider responses;
+these are not a live Groq quota/credential test.
+
+Optional macOS Chrome check with the installed Ollama and **fictional data only**:
+
+```sh
+.venv/bin/python -m pip install playwright
+.venv/bin/python -m scripts.check_browser_ollama
+```
+
+By default this check uses the already-installed `llama3:latest`; use
+`--model llama3.2:3b` to try the smaller model. This uses an isolated headless Chrome profile and temporary HTTPS server at
+`https://127.0.0.1:9443`. It does not change your Ollama settings, download models,
+use Groq, or access the deployed service. The local HTTPS origin is normally
+allowed by Ollama's default origins; a custom Ollama allowlist may reject it.
+This checks local browser integration, not a public-origin permission prompt.
+
+Manual release checks on **both Windows Chrome and macOS Chrome**, using the
+actual HTTPS Render origin and individual team accounts:
+
+1. Load/sign in and inspect browser Network tools: no `11434` request until Connect.
+2. Set up the exact Ollama origin, click Connect, and allow the Chrome permission.
+   Repeat with permission denied and wrong origin to check the troubleshooting UI.
+3. Upload fictional CSV and XLSX, choose a model, and test:
+   - Which product generated the highest revenue?
+   - Which product has the lowest gross profit margin?
+   - What month had the lowest sales?
+   - How can this business improve profitability?
+   - Why did revenue decrease compared with the previous month?
+   - What other information is needed to make a better recommendation?
+4. Compare tables to the dashboard with and without active date/product filters.
+   Check that missing/cause information is stated honestly rather than invented.
+5. Verify follow-up history, New conversation, filter/provider/model changes,
+   disconnect during inference, reconnect, stopped Ollama, missing models and timeout.
+6. Confirm browser `/api/chat` calls go only to `127.0.0.1:11434`, and server-local
+   inference does not occur. Explicitly switch to Groq and check its existing flow.
+7. Verify two separate signed-in accounts/browsers cannot use each other's dataset,
+   conversation or pending-run IDs. Restart the service and check reload/reupload
+   recovery. Keep credentials and provider keys out of browser screenshots.
+
+### Review and deploy this change
+
+Work is on `feature/browser-local-ollama`, separate from the running
+`feature/render-free-deployment` branch. Nothing is pushed, merged or deployed
+automatically. Run `npm test`, `npm run build`, and review the diff. After review:
+
+1. Commit and push only this reviewed feature branch to GitHub. Keep `.env`, keys,
+   hashes, model files and uploaded datasets out of commits.
+2. Open a pull request from `feature/browser-local-ollama` into
+   `feature/render-free-deployment`, review it, and merge when approved. You can
+   alternatively create a separate Render test service from the new branch.
+3. The existing Render service has Auto-Deploy off. After merging, use **Manual
+   Deploy → Deploy latest commit** for `feature/render-free-deployment`. Docker
+   rebuilds the frontend and Python backend together. No new Render environment
+   variables are needed; preserve `APP_ENV`, `PUBLIC_ORIGIN`, `DEMO_USERS_JSON`,
+   `GROQ_API_KEY`, the Free plan, one Gunicorn worker and `/health`.
+4. Complete the Windows/macOS production-origin acceptance checks before sponsor
+   use. If necessary, use Render rollback to return to the prior working image.
+
+
+After reviewing the diff, these commands stage only the intended feature files:
+
+```sh
+git switch feature/browser-local-ollama
+git diff --check
+git add README.md docs/local-data-analyst.md backend/ai_providers.py backend/analyst_agent.py backend/api.py backend/production.py backend/browser_analyst.py src/App.jsx src/ai-options.js src/browser-ollama.js src/dashboard.js src/styles.css tests/test_analyst.py tests/container_smoke.py tests/test_browser_analyst.py tests/browser-ollama.test.mjs scripts/check_browser_ollama.py
+git diff --cached --stat
+git commit -m "Add browser-mediated local Ollama analyst"
+git push -u origin feature/browser-local-ollama
+```
+
+These commands are instructions for your review/release step; they are not run
+automatically. On GitHub, create a pull request with **base**
+`feature/render-free-deployment` and **compare** `feature/browser-local-ollama`.
+
+
+Browser feature test status: the deterministic suite passes 61 Python tests and
+17 JavaScript tests, including all six question categories, real filtered SQL,
+owned sessions, unsafe actions and evidence verification. Vite and Linux Docker
+builds pass. Live macOS Chrome 155 testing used installed local models with
+fictional rows on a temporary HTTPS origin; this does not certify the actual
+public-origin permission prompt. Initial 3B runs exposed wrong margin and monthly
+interpretations; the resulting regression checks now reject grouped bare-row
+margins and selected explicit contradictory claims. Model interpretation remains
+fallible, so verify supporting tables and use a stronger model when possible.
+Windows Chrome, the real Render-origin permission/CORS path, and live Groq remain
+manual release checks. No Groq key was available for a live connection test here.
+
+
+The final macOS Chrome 155 / `llama3:latest` browser check completed all six
+questions through the real local Ollama. It verified Tea USD 220 revenue, Coffee
+10% margin, February USD 60 sales, and rendered evidence for recommendations.
+The comparison/follow-up checks used a real date-filter change to January–February:
+three selected rows, January USD 100, February USD 60 and a USD 40 decline. The
+model correctly stated that causal information was missing. Disconnect and zero
+server/Groq inference calls were verified. The final Gunicorn Linux container
+smoke check passed under 512 MiB / 0.1 CPU, including authenticated browser-analysis
+SQL steps with synthetic actions. No public Render-origin or Windows browser
+acceptance check was performed, and no service was deployed or changed.

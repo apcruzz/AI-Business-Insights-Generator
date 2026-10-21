@@ -7,10 +7,17 @@ from backend.ai_providers import available_models
 from backend.groq_client import GroqError
 from backend.analyst_datasets import DATASETS
 from backend.analyst_agent import analyze_question
+from backend.browser_analyst import BROWSER_RUNS
 
 
 def dispatch(path, payload):
-    if path == "/api/profile":
+    if path == "/api/ollama-start":
+        return BROWSER_RUNS.start(payload)
+    elif path == "/api/ollama-step":
+        return BROWSER_RUNS.advance(payload)
+    elif path == "/api/ollama-cancel":
+        return BROWSER_RUNS.cancel(payload)
+    elif path == "/api/profile":
         # Inspect columns and suggest mappings before analysis.
         frame, name, sheets = frame_from_payload(payload)
         return (

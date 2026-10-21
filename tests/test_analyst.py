@@ -114,7 +114,7 @@ class AnalystTests(unittest.TestCase):
         ], {'to':'2025-12-31'})
         self.assertEqual(result['status'],'answered')
         self.assertEqual(result['selectedRows'],3)
-        self.assertEqual(result['evidence'][0]['rows'],[['2025-02',60.0]])
+        self.assertEqual(result['evidence'][-1]['rows'],[['2025-02',60.0]])
         self.assertEqual(calls.call_count,2)
 
     def test_unverified_answer_is_rejected_and_bad_query_can_be_corrected(self):
@@ -125,7 +125,8 @@ class AnalystTests(unittest.TestCase):
             {'action':'answer','answer':'Selected sales total USD 130.','sql':''},
         ])
         self.assertEqual(result['status'],'answered')
-        self.assertEqual(len(result['evidence']),1)
+        self.assertEqual(sum('SUM(Net_Sales) AS revenue FROM sales' in item['query'] for item in result['evidence']), 1)
+        self.assertTrue(all('nonexistent' not in item['query'] for item in result['evidence']))
         self.assertEqual(calls.call_count,4)
 
     def test_growth_rejects_ranking_and_followup_receives_context(self):

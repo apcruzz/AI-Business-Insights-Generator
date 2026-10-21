@@ -256,6 +256,26 @@ export default function App() {
               <p id="aiDataNotice" className="sub aiDataNotice" aria-live="polite">
                 Choose an answer mode to see how your data is used.
               </p>
+              <div className="browserOllamaPanel">
+                <div className="browserOllamaActions">
+                  <button id="connectBrowserOllama" type="button">Connect Local Ollama</button>
+                  <button id="disconnectBrowserOllama" type="button" disabled>Disconnect</button>
+                </div>
+                <p id="browserOllamaStatus" role="status">Not connected. Connect only if you want AI inference on this computer.</p>
+                <details className="ollamaSetup">
+                  <summary>Local Ollama setup and troubleshooting</summary>
+                  <p>Install <a href="https://ollama.com/download" target="_blank" rel="noreferrer">Ollama for Windows or macOS</a> and download a model:</p>
+                  <pre>ollama pull llama3.2:3b</pre>
+                  <p>Quit the running Ollama app first. Keep the server on 127.0.0.1:11434 and allow only this trusted website origin: <code data-ollama-origin></code>.</p>
+                  <p>macOS Terminal (keep it open while using the dashboard):</p>
+                  <pre>OLLAMA_HOST=127.0.0.1:11434 OLLAMA_NO_CLOUD=1 OLLAMA_ORIGINS=<span data-ollama-origin></span> ollama serve</pre>
+                  <p>Windows PowerShell (keep it open while using the dashboard):</p>
+                  <pre>{'$env:OLLAMA_HOST="127.0.0.1:11434"\n$env:OLLAMA_NO_CLOUD="1"\n$env:OLLAMA_ORIGINS="'}<span data-ollama-origin></span>{'"\nollama serve'}</pre>
+                  <p>Click Connect, allow Chrome’s Local Network Access prompt, then select a model in Answer mode. If no models appear, download a local model and Reconnect. Cloud-linked models are excluded.</p>
+                  <p>If access fails: check Ollama is running, quit an older instance before changing its settings, check the exact origin, and allow local-network access in Chrome’s site settings. A timeout can mean your model is still loading; wait or try a smaller model. Other browsers and managed devices may block HTTPS-to-loopback access.</p>
+                  <p>AI inference runs on your computer. Uploads, SQL calculations, evidence verification and conversation storage still run on the dashboard server. Keep Ollama on loopback; no public tunnel, wildcard origin or extra desktop app is required. Disconnect stops this page’s requests; it does not stop Ollama or revoke the site’s permission.</p>
+                </details>
+              </div>
               <div className="insightBody">
                 <div className="insightAsk">
                   {/* Submitting a question calls ask(); suggestion buttons reuse the same path. */}

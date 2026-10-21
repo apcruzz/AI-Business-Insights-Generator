@@ -862,3 +862,10 @@
           max-height: 90px;
         }
       }
+
+.browserOllamaPanel { padding: 12px; margin: 8px 0; border: 1px solid var(--line, #dedee5); border-radius: 10px; }
+.browserOllamaActions { display: flex; flex-wrap: wrap; gap: 8px; }
+.browserOllamaPanel p { font-size: 12px; line-height: 1.5; margin: 8px 0; }
+.ollamaSetup summary { cursor: pointer; font-size: 12px; font-weight: 600; }
+.ollamaSetup pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 11px; padding: 8px; background: #f4f5f8; color: #202332; border-radius: 5px; }
+.ollamaSetup code { overflow-wrap: anywhere; }

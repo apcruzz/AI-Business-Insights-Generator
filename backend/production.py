@@ -123,9 +123,10 @@ def create_app():
                 return error('Your session expired. Reload the page and rebuild the dashboard.', 403)
             if request.mimetype != 'application/json':
                 return error('Submit a JSON request.', 415)
-            if not limits.allow(('post', name), 20):
+            browser_step = request.path in ('/api/ollama-step', '/api/ollama-cancel')
+            if not limits.allow(('browser-step' if browser_step else 'post', name), 60 if browser_step else 20):
                 return error('Upload/question limit reached. Try again shortly.', 429)
-            if request.path == '/api/analyst' and not limits.allow(('ai', name), 6):
+            if request.path in ('/api/analyst', '/api/ollama-start') and not limits.allow(('ai', name), 6):
                 return error('AI question limit reached. Try again shortly.', 429)
 
     @app.after_request
@@ -134,7 +135,7 @@ def create_app():
             'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff',
             'X-Frame-Options': 'DENY', 'Referrer-Policy': 'no-referrer',
             'Strict-Transport-Security': 'max-age=31536000',
-            'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
+            'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' http://127.0.0.1:11434; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
         })
         if hasattr(g, 'sid'):
             response.set_cookie('__Host-demo', g.sid, max_age=3600, secure=True, httponly=True, samesite='Strict', path='/')
@@ -168,7 +169,7 @@ def create_app():
 
     @app.post('/api/<action>')
     def api(action):
-        if action not in ('profile', 'analyze', 'analyst', 'explain'):
+        if action not in ('profile', 'analyze', 'analyst', 'explain', 'ollama-start', 'ollama-step', 'ollama-cancel'):
             return error('Not found.', 404)
         if action == 'explain':
             return error('Local Ollama is available only in local development.', 400)
