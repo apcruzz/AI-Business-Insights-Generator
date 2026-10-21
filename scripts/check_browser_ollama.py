@@ -62,14 +62,15 @@ def main():
                 page.locator('#inspectButton').click()
                 page.wait_for_selector('#mappingPanel:not([hidden])')
                 page.locator('#buildButton').click()
-                page.wait_for_selector('#kpiPanel:not([hidden])')
-                page.locator('#dashboardButton').click()
+                page.wait_for_selector('#chartChooser[open] #kpiPanel')
                 page.locator('#loadSelectedCharts').click()
                 page.wait_for_selector('#dashboardMain:not([hidden])')
                 assert not local_requests, 'Dashboard load must not contact localhost Ollama'
                 page.screenshot(path='/tmp/browser-ollama-dashboard.png', full_page=True)
+                page.locator('#openAiSettings').click()
                 page.locator('#connectBrowserOllama').click()
                 expect(page.locator("#browserOllamaStatus")).to_have_text(re.compile(r"^Connected.*"), timeout=25000)
+                page.locator('#closeAiSettings').click()
                 page.select_option('#localModel', 'browser_ollama:' + args.model)
                 print('PASS: production HTTPS UI, upload, KPI selection, no automatic local connection, explicit model discovery', flush=True)
                 questions = [
@@ -112,6 +113,7 @@ def main():
                 assert any('/api/chat' in path for path in local_requests)
                 assert not any(path.endswith('/api/analyst') for path in backend_requests)
                 assert not errors, errors
+                page.locator('#openAiSettings').click()
                 page.locator('#disconnectBrowserOllama').click()
                 assert page.locator('#localModel').input_value() == ''
                 assert page.locator('#browserOllamaStatus').inner_text().startswith('Disconnected')

@@ -663,17 +663,6 @@
         color: white;
         font-size: 14px;
       }
-      .suggestions {
-        display: flex;
-        gap: 6px;
-        margin-top: 6px;
-      }
-      .suggestions button {
-        font-size: 12px;
-        padding: 3px 8px;
-        color: #087968;
-        border-color: #addfd6;
-      }
       .insightCards {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
@@ -742,9 +731,6 @@
         }
         body.overviewMode .insightCards p {
           margin: 3px 0;
-        }
-        body.overviewMode .suggestions {
-          margin-top: 3px;
         }
         body.overviewMode #overviewCards {
           flex-basis: 80px;

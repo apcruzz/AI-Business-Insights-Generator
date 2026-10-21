@@ -103,7 +103,9 @@ npm run build
 2. Upload a CSV, XLSX, or XLS file, or choose an included sample.
 3. Click **Inspect columns**. For a workbook, choose the worksheet containing the sales table.
 4. Check the suggested mappings, date order, decimal separator, and currency. The first row must contain unique column headings. No merged heading rows or subtotal rows.
-5. Click **Build dashboard**. Use the top navigation to switch between Business Overview and Detailed Dashboard.
+5. Click **Confirm columns**. In **Customize your overview**, choose KPI cards first, then up to three charts, and click **Load dashboard**. Leave KPIs unchecked to use the defaults. Reopen **Customize overview** beside the filters to change either selection later. Closing the popup discards unsaved choices.
+
+The Business assistant has a fixed-height conversation area that scrolls through long answers and supporting calculations. **AI settings** contains model refresh, local Ollama connection controls, setup help, and data-use details. The answer-mode selector stays beside the conversation. Use the top navigation to switch between Business Overview and Detailed Dashboard.
 
 The selected business sets the recommended charts, dashboard heading, terminology, and accent colors. Recommendations follow each business’s preferred three charts and fill missing slots with supported alternatives. **Why these charts?** explains missing data; you can override the choices. If fewer than three meaningful charts are supported, only those are recommended. This version is designed for sales/order data. Payroll logs, inventory-only files, and unrelated business records require additional data models.
 
@@ -149,7 +151,7 @@ $env:OLLAMA_NO_CLOUD="1"
 ollama serve
 ```
 
-4. In your dashboard, click **Refresh AI options**. On initial discovery, `llama3:latest` is preferred under **Answer mode**, with Llama 3.2 as a fallback. You can still choose a different downloaded local model. Refreshing preserves your explicit choice, including Calculated answers.
+4. In **Business assistant → AI settings**, click **Refresh AI options**, then close settings. On initial discovery, `llama3:latest` is preferred under **Answer mode**, with Llama 3.2 as a fallback. You can still choose a different downloaded local model. Refreshing preserves your explicit choice, including Calculated answers.
 
 The Ollama option connects only to `127.0.0.1:11434`, excludes cloud-linked Ollama model entries, and does not sign in or download models automatically. After column confirmation, the backend retains the uploaded CSV/selected Excel worksheet as a bounded in-memory analysis dataset. When you ask a question, the selected model receives its schema and sample values, requests read-only calculations against **all filtered rows**, inspects the returned results, and explains them. Extra source columns remain available for analysis even if they are not dashboard fields.
 
@@ -181,7 +183,7 @@ python app.py
 The app reads the process environment; it does not automatically load `.env` files. No new Python dependencies or local model downloads are required for Groq.
 
 3. Reload the dashboard and upload your CSV/Excel file again, or choose a sample. Confirm the columns and load the dashboard. Restarting the backend clears previously uploaded datasets.
-4. Under **Business insights**, click **Refresh AI options**, then choose **GPT-OSS 120B · Groq (cloud)** in **Answer mode**. It stays disabled until the backend has a key. Discovery checks configuration, not whether your key is valid; authentication is checked when you ask a question. Groq is never automatically selected, and works even if Ollama is stopped.
+4. Open **Business assistant → AI settings**, click **Refresh AI options**, then close settings and choose **GPT-OSS 120B · Groq (cloud)** in **Answer mode**. It stays disabled until the backend has a key. Discovery checks configuration, not whether your key is valid; authentication is checked when you ask a question. Groq is never automatically selected, and works even if Ollama is stopped.
 5. Ask questions such as “Compare monthly revenue changes and explain which products contributed,” “Which Milk Type brings in the most revenue?” or “How can we grow the business based on this data?” Follow up with “Why?” or “Break that down by category.” Expand **Supporting calculations** to review the numbers.
 
 Groq uses `openai/gpt-oss-120b` and the same bounded analysis tools as Ollama. It can run multiple calculations, correct rejected queries, compare trends, and explain business recommendations. The complete selected dataset is queryable locally; the raw file is not uploaded wholesale. Column samples and returned query values can still include sensitive data, and those values are sent to Groq when selected. Only the selected Excel worksheet and current dashboard filters are included. Uploading a file alone makes no Groq call. Weather comes only from uploaded columns; no web search or external data tools are enabled.
@@ -202,7 +204,7 @@ A successful connection check confirms the key and basic analysis flow, not ever
 
 ## Samples and validation
 
-Choose a business demo under **Or try a sample**. The matching business is selected automatically. Click **Inspect columns → Build dashboard → Load dashboard** to see its three preferred charts. All eleven demos are fictional, use USD, and include the required columns; no outside weather or business data is fetched. Sales and bookings are generated from August–September 2026; some deliveries and completed jobs extend into October.
+Choose a business demo under **Or try a sample**. The matching business is selected automatically. Click **Inspect columns → Confirm columns → Load dashboard** to see its three preferred charts. All eleven demos are fictional, use USD, and include the required columns; no outside weather or business data is fetched. Sales and bookings are generated from August–September 2026; some deliveries and completed jobs extend into October.
 
 | Business | Demo CSV | Included chart data |
 | --- | --- | --- |
@@ -225,6 +227,8 @@ Regenerate these demos with `python scripts/generate_business_samples.py`. Fixed
 The earlier furniture, restaurant, and retail samples are still available under **Earlier samples** and remain unchanged. They span June 1–August 29, 2026. `Cafe.csv` is the original provided café dataset and includes receipt-grouping warnings.
 
 Run `npm test` on Mac after creating `.venv`, or run `python -m tests.validate_samples` from an activated environment, to verify expected totals and key missing-data behavior. CSV/Excel ingestion, number/date parsing, model request wiring, adaptive chart generation, filtering, and page switching were checked. The analyst was additionally checked against local Llama 3 with synthetic monthly and extra-column questions. The desktop overview uses a compact layout, with scrolling retained on small screens for access to controls.
+
+For the optional macOS Chrome UI check, install test-only Playwright (`.venv/bin/python -m pip install playwright`), run `npm run build`, then `.venv/bin/python -m scripts.check_dashboard_ui`. It checks the combined KPI/chart popup, saved and canceled selections, fixed conversation dimensions, settings controls, and desktop/mobile layouts. It uses fictional uploads and mocked AI responses; it does not verify live Groq/Ollama inference or change Ollama settings. Screenshots are written to `/tmp/dashboard-ui-*.png`.
 
 ## Sources
 
@@ -517,14 +521,14 @@ explain the underlying server settings and JSON-schema format.
 
 1. Sign in, upload a fictional CSV/XLSX or load a demo, confirm mappings, choose
    KPIs/charts, and load the dashboard.
-2. Under **Business insights**, click **Connect Local Ollama**. No localhost fetch
+2. Open **Business assistant → AI settings** and click **Connect Local Ollama**. No localhost fetch
    is made by the browser during page load, upload, model refresh, or cloud chat.
 3. If Chrome asks for **Local Network Access**, allow it for this trusted website.
    Current Chrome supports the `targetAddressSpace: "loopback"` fetch hint used by
    this transport. CORS permission from Ollama is still required separately. See
    [Chrome's permission guidance](https://developer.chrome.com/blog/local-network-access)
    and the [Local Network Access specification](https://wicg.github.io/local-network-access/).
-4. The status shows connected, missing models, or troubleshooting details. Select
+4. The status shows connected, missing models, or troubleshooting details. Close settings and select
    an installed **Local Ollama (this browser)** entry under **Answer mode**. Connecting
    does not automatically select local inference or switch a prior Groq choice.
 5. Ask your business question. Supporting calculations and follow-up history work

@@ -58,26 +58,27 @@ header #datasetName {
   color: white;
   border: 0;
 }
-/* Cover the viewport with the chart-selection modal backdrop. */
-.chartChooser {
-  position: fixed;
-  inset: 0;
-  z-index: 60;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  background: rgba(15, 23, 42, 0.42);
+/* Native dialogs provide focus containment, Escape dismissal and a backdrop. */
+.chartChooser,
+.aiSettingsDialog {
+  width: min(860px, calc(100% - 32px));
+  max-height: calc(100dvh - 40px);
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: white;
+  color: var(--ink);
+  box-shadow: 0 24px 80px rgb(15 23 42 / 22%);
+}
+.chartChooser::backdrop,
+.aiSettingsDialog::backdrop {
+  background: rgb(15 30 37 / 42%);
+  backdrop-filter: blur(3px);
 }
 .chartChooserPanel {
-  width: min(760px, 100%);
-  max-height: min(760px, calc(100vh - 48px));
-  overflow: auto;
-  padding: 22px;
-  background: #fff;
-  border: 1px solid #d6e1e8;
-  border-radius: 8px;
-  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.24);
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - 42px);
 }
 .chartChooserPanel h2 {
   margin: 0 0 5px;
@@ -123,9 +124,12 @@ header #datasetName {
 }
 .chartChooserActions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
   gap: 10px;
-  margin-top: 18px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--line);
+  flex-shrink: 0;
 }
 .chartChooserActions button.primary {
   background: #008d79;
@@ -528,21 +532,6 @@ body.overviewMode .overviewChartContent .chartNote {
   color: white;
   min-width: 78px;
 }
-/* Wrap suggested question buttons and provide hover feedback. */
-.suggestions {
-  flex-wrap: wrap;
-  gap: 5px;
-  margin-top: 6px;
-}
-.suggestions button {
-  border-color: #d3e2e4;
-  color: #28515a;
-  background: #f7fbfb;
-  padding: 5px 10px;
-}
-.suggestions button:hover {
-  background: #edf6f5;
-}
 .insightsPanel #insightAnswer {
   background: white;
   border: 1px solid #dbe7e8;
@@ -823,13 +812,6 @@ th {
     gap: 10px;
     margin-top: 6px;
   }
-  body.overviewMode .suggestions {
-    gap: 4px;
-    margin-top: 5px;
-  }
-  body.overviewMode .suggestions button {
-    padding: 4px 9px;
-  }
   body.overviewMode .insightsPanel #insightAnswer {
     margin-top: 6px;
   }
@@ -858,18 +840,8 @@ th {
 }
 /* Apply these overrides only at the viewport size specified below; later matching rules take precedence. */
 @media (max-width: 850px) {
-  .chartChooser {
-    align-items: stretch;
-    padding: 14px;
-  }
-  .chartChooserPanel {
-    max-height: calc(100vh - 28px);
-  }
   .chartChoices {
     grid-template-columns: 1fr;
-  }
-  .chartChooserActions {
-    flex-direction: column;
   }
   .insightHeader,
   .insightHeader .modelRow {
@@ -920,7 +892,6 @@ header #businessName, .businessHint { color: var(--business-accent); }
 .recommendationExplanation summary, .operationalMapping summary { cursor: pointer; }
 .operationalMapping { grid-column: 1 / -1; padding: 14px; border: 1px solid #dce5eb; border-radius: 10px; }
 .operationalMapping .mappingGrid { margin-top: 16px; }
-.chartChooserPanel { max-height: 90vh; overflow: auto; }
 .businessDetailGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
 .businessDetailChart { max-height: 520px; overflow: auto; }
 .businessDetailChart svg, .overviewChartContent svg { width: 100%; height: auto; }
@@ -937,3 +908,231 @@ body.overviewMode .card { border-top-color: var(--business-accent); }
 body.overviewMode .filters { background: color-mix(in srgb, var(--business-tint) 50%, white); }
 /* A short description makes the selected demo and next action clear. */
 .setup .sampleDescription { padding: 12px 14px; border-radius: 8px; background: var(--business-tint); color: #34485d; }
+
+/* Compact overview workspace: conversation growth stays inside a fixed card. */
+.overviewBottom,
+body.overviewMode .overviewBottom {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(260px, 1fr);
+  gap: 12px;
+  margin-top: 12px;
+  min-height: 0;
+  flex: 0 0 auto;
+}
+.overviewBottom .compactAssistant,
+body.overviewMode .overviewBottom .compactAssistant {
+  display: flex;
+  flex-direction: column;
+  height: 300px;
+  min-height: 0;
+  min-width: 0;
+  padding: 16px;
+  margin: 0;
+  overflow: hidden;
+  background: white;
+  gap: 8px;
+}
+.compactAssistant .insightHeader,
+body.overviewMode .compactAssistant .insightHeader {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.compactAssistant .insightHeader > div { min-width: 0; }
+.compactAssistant .insightHeader h2,
+body.overviewMode .compactAssistant .insightHeader h2 {
+  font-size: 17px;
+  line-height: 1.3;
+  margin: 0;
+}
+.compactAssistant .modelRow {
+  margin: 0;
+  gap: 10px;
+  flex-shrink: 0;
+  min-width: 0;
+}
+.compactAssistant .modelRow select {
+  max-width: min(260px, 58%);
+  padding: 5px 8px;
+  font-size: 12px;
+  text-overflow: ellipsis;
+}
+.modeSummary {
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--muted);
+  min-width: 0;
+}
+.conversationViewport {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #f8fbfa;
+  padding: 10px 12px;
+  overflow-wrap: anywhere;
+}
+.conversationViewport:focus-visible { outline: 2px solid var(--business-accent); outline-offset: 2px; }
+.overviewBottom .compactAssistant #insightAnswer,
+body.overviewMode .overviewBottom .compactAssistant #insightAnswer {
+  display: block;
+  height: auto;
+  min-height: 0;
+  max-height: none;
+  overflow: visible;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  margin: 0;
+  padding: 0;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.compactAssistant #insightAnswer:empty::before {
+  content: "What would you like to know about your business?";
+  color: var(--muted);
+}
+.compactAssistant #analystEvidence {
+  max-height: none;
+  overflow: visible;
+  font-size: 12px;
+  margin-top: 10px;
+}
+.overviewBottom .compactAssistant #insightForm,
+body.overviewMode .overviewBottom .compactAssistant #insightForm {
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  flex-shrink: 0;
+}
+.compactAssistant .askRow { margin: 0; gap: 8px; }
+.overviewBottom .compactAssistant .askRow input,
+.overviewBottom .compactAssistant .askRow button {
+  min-height: 38px;
+  height: 38px;
+  padding: 7px 11px;
+  font-size: 13px;
+}
+.compactAssistant .askRow button { min-width: 62px; }
+.conversationFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.conversationFooter small { font-size: 10px; color: var(--muted); }
+.quietButton { padding: 3px 0; border: 0; background: transparent; font-size: 12px; color: var(--business-accent); white-space: nowrap; }
+.quietButton:hover { background: transparent; text-decoration: underline; }
+.compactAssistant .insightHeader .quietButton { padding: 4px 8px; border: 1px solid var(--line); border-radius: 7px; }
+.overviewBottom .highlightsPanel,
+body.overviewMode .overviewBottom .highlightsPanel {
+  height: 300px;
+  min-height: 0;
+  min-width: 0;
+  padding: 16px;
+  overflow: auto;
+}
+.highlightsPanel h2,
+body.overviewMode .highlightsPanel h2 { font-size: 15px; margin: 0 0 12px; }
+.overviewBottom .highlightsPanel .insightCards,
+body.overviewMode .overviewBottom .highlightsPanel .insightCards {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: none;
+  gap: 10px;
+  margin: 0;
+}
+.overviewBottom .highlightsPanel .insightCards article,
+body.overviewMode .overviewBottom .highlightsPanel .insightCards article {
+  border: 0;
+  border-left: 2px solid var(--business-accent);
+  border-radius: 0;
+  padding: 0 0 0 10px !important;
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+}
+.highlightsPanel .insightCards p { margin: 3px 0 0; }
+.highlightsPanel .insightCards strong { color: var(--ink); }
+.highlightsPanel .insightCards small { color: var(--muted); }
+.srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+
+/* Keep dialog headings and actions visible while the choices scroll. */
+.chooserHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 24px;
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+}
+.chooserHeader h2 { margin: 0 0 5px; font-size: 22px; }
+.chooserHeader .sub { font-size: 13px; margin: 0; }
+.iconButton { display: grid; place-items: center; padding: 0; width: 30px; height: 30px; flex-shrink: 0; border-radius: 50%; font-size: 22px; line-height: 1; color: var(--muted); }
+.chooserContent { overflow: auto; min-height: 0; padding: 0 24px; }
+.chooserSection { padding: 22px 0; }
+.chooserSection + .chooserSection { border-top: 1px solid var(--line); }
+.chooserSection h3 { display: flex; align-items: center; gap: 9px; margin: 0; font-size: 16px; }
+.sectionNumber { font-size: 11px; font-weight: 600; color: var(--business-accent); border: 1px solid var(--line); padding: 3px 6px; border-radius: 6px; }
+.chooserSection > .sub { margin: 8px 0 0; font-size: 12px; }
+.chooserSectionHeading { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.chooserSectionHeading button { font-size: 11px; padding: 5px 8px; }
+.chartChooser .kpiOptions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.chartChooser .kpiOption { padding: 10px; gap: 8px !important; border-radius: 9px; }
+.chartChooser .kpiOption strong { font-size: 12px; }
+.chartChooser .kpiOption small { font-size: 11px; line-height: 1.4; }
+.kpiOption:has(input:checked) { border-color: var(--business-accent); background: var(--business-tint); }
+.chartChooser .chartChoice { padding: 10px; }
+.chartChooser .chartChoice strong { font-size: 12px; }
+.chartChooser .chartChoice small { font-size: 11px; }
+.chartChooserActions small { font-size: 11px; color: var(--muted); }
+.chartChooserActions button { font-size: 13px; white-space: nowrap; }
+.aiSettingsDialog { width: min(600px, calc(100% - 32px)); }
+.aiSettingsContent { padding: 20px 24px; }
+.aiSettingsContent h3 { font-size: 14px; margin: 0 0 10px; }
+.aiSettingsContent button { font-size: 12px; }
+.aiSettingsContent .modelStatus { margin: 8px 0 0; font-size: 12px; }
+.aiSettingsContent .aiDataNotice { font-size: 13px; line-height: 1.6; margin: 0 0 12px; }
+.aiSettingsContent .browserOllamaPanel { border: 0; border-top: 1px solid var(--line); border-radius: 0; padding: 20px 0 0; margin: 20px 0 0; }
+
+@media (min-width: 1000px) and (min-height: 650px) {
+  body.overviewMode .overviewGrid { min-height: 200px; }
+  body.overviewMode main { min-height: 664px; height: calc(100dvh - 64px); }
+  body.overviewMode { overflow: auto; }
+}
+@media (max-width: 1100px) {
+  .overviewBottom, body.overviewMode .overviewBottom { grid-template-columns: minmax(0, 1.5fr) minmax(220px, 1fr); }
+  .compactAssistant .modelRow { flex-wrap: nowrap; }
+}
+@media (max-width: 850px) {
+  .overviewBottom, body.overviewMode .overviewBottom { grid-template-columns: minmax(0, 1fr); }
+  .overviewBottom .compactAssistant, body.overviewMode .overviewBottom .compactAssistant { height: 320px; }
+  .overviewBottom .highlightsPanel, body.overviewMode .overviewBottom .highlightsPanel { height: auto; max-height: 300px; }
+  body.overviewMode .filters {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: end;
+  }
+  body.overviewMode .filters > strong,
+  body.overviewMode .filters > details,
+  body.overviewMode .filters > #count { grid-column: 1 / -1; }
+  body.overviewMode .filters label { min-width: 0; }
+  body.overviewMode .filters input,
+  body.overviewMode .filters select { width: 100%; min-width: 0; }
+}
+@media (max-width: 550px) {
+  .chartChooser .kpiOptions { grid-template-columns: 1fr; }
+  .chooserHeader { padding: 18px; }
+  .chooserHeader h2 { font-size: 19px; }
+  .chooserContent { padding: 0 18px; }
+  .chartChooserActions { padding: 14px 18px; }
+  .chartChooserActions small { max-width: 140px; }
+  .aiSettingsContent { padding: 18px; }
+  .conversationFooter small { max-width: 155px; }
+}
