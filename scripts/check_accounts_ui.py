@@ -76,6 +76,16 @@ def main():
                 page.screenshot(path='/tmp/accounts-ui-dashboard.png', full_page=True)
                 assert not local_requests
 
+                # The alternate overview exposes the same authenticated account dialog.
+                page.locator('#previewNav').click()
+                page.get_by_role('button', name='Manage your account').click()
+                expect(page.locator('#profileUsername')).to_have_value('browser.analyst')
+                page.keyboard.press('Escape')
+                expect(page.get_by_role('button', name='Manage your account')).to_be_focused()
+                page.screenshot(path='/tmp/accounts-ui-overview-preview.png', full_page=True)
+                page.get_by_role('link', name='Original overview').click()
+                expect(page.locator('#previewSidebar')).to_be_hidden()
+
                 # Profile update rotates the session and reloads without leaving dataset data behind.
                 page.locator('#accountButton').click()
                 expect(page.locator('#profileUsername')).to_have_value('browser.analyst')
