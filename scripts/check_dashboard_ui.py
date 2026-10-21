@@ -68,6 +68,21 @@ def main():
                 page.goto(origin)
                 page.locator('#upload').set_input_files(str(source))
                 page.locator('#inspectButton').click()
+                expect(page.locator('#mappingPanel')).to_be_visible()
+                expect(page.locator('#map_Hour')).to_have_class('missingMapping')
+                assert page.locator('#map_Hour').evaluate('(el) => getComputedStyle(el).color') == 'rgb(180, 35, 54)'
+                page.select_option('#map_Hour', 'Quantity')
+                expect(page.locator('#map_Hour')).not_to_have_class('missingMapping')
+                page.select_option('#map_Hour', '')
+                tools = [page.locator(selector).bounding_box() for selector in ('#toggleOptionalColumns', '#toggleSourcePreview')]
+                assert tools[0]['y'] == tools[1]['y']
+                page.locator('#toggleOptionalColumns').click()
+                expect(page.locator('#operationalMapping')).to_be_visible()
+                assert page.locator('#operationalMapping').evaluate('(el) => el.getBoundingClientRect().top >= document.getElementById("toggleOptionalColumns").getBoundingClientRect().bottom')
+                page.locator('#toggleOptionalColumns').click()
+                page.locator('#toggleSourcePreview').click()
+                expect(page.locator('#preview tbody tr')).to_have_count(4)
+                page.screenshot(path='/tmp/dashboard-ui-mapping.png', full_page=True)
                 page.locator('#buildButton').click()
                 expect(page.locator('#chartChooser')).to_be_visible()
                 assert page.locator('#kpiPanel').evaluate('(el) => el.compareDocumentPosition(document.getElementById("chartChoices")) & Node.DOCUMENT_POSITION_FOLLOWING')
@@ -81,6 +96,25 @@ def main():
                 assert 'Units sold' in page.locator('#overviewCards').inner_text()
                 assert page.locator('[data-question]').count() == 0
                 assert not local_requests, 'Page load/upload must not contact Ollama'
+                highlights = page.locator('.highlightsPanel').bounding_box()
+                highlight_items = page.locator('#insightCards').bounding_box()
+                assert highlights['y'] + highlights['height'] - highlight_items['y'] - highlight_items['height'] <= 18
+
+                # Detail layout and the complete mapped table share the chart filters.
+                page.locator('#detailNav').click()
+                expect(page.locator('#detailPage')).to_be_visible()
+                expect(page.locator('#datasetTable tbody tr')).to_have_count(4)
+                expect(page.locator('#datasetRowCount')).to_have_text('4 of 4 rows')
+                assert page.locator('#detailPage').evaluate('(el) => el.lastElementChild.id') == 'datasetTablePanel'
+                assert page.locator('#detailCharts .detailChartPanel').count() >= 3
+                assert page.locator('#from').bounding_box()['y'] == page.locator('#category').bounding_box()['y']
+                page.screenshot(path='/tmp/dashboard-ui-detail.png', full_page=True)
+                page.locator('#category').select_option('Drinks')
+                expect(page.locator('#datasetRowCount')).to_have_text('3 of 4 rows')
+                page.locator('#product').select_option('Cookie')
+                expect(page.locator('#datasetTable .tableEmpty')).to_have_text('No rows match these filters.')
+                page.locator('#reset').click()
+                page.locator('#overviewNav').click()
 
                 # Reopening restores committed choices; Escape discards pending edits.
                 page.locator('#chooseCharts').click()
@@ -155,8 +189,50 @@ def main():
                     expect(page.locator('#loadSelectedCharts')).to_be_in_viewport()
                     page.keyboard.press('Escape')
                     page.screenshot(path=f'/tmp/dashboard-ui-{width}.png', full_page=True)
+                    page.locator('#detailNav').click()
+                    assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'), f'Detail overflow at {width}'
+                    assert all(box['height'] == (360 if width <= 850 else 390) for box in page.locator('.detailChartPanel').evaluate_all('(els) => els.map(el => ({height: el.getBoundingClientRect().height}))'))
+                    page.screenshot(path=f'/tmp/dashboard-ui-detail-{width}.png', full_page=True)
+                    if width == 390:
+                        page.locator('.filters').screenshot(path='/tmp/dashboard-ui-detail-mobile-filters.png')
+                        page.locator('#detailCharts .detailChartPanel').first.screenshot(path='/tmp/dashboard-ui-detail-mobile-chart.png')
+                    page.locator('#overviewNav').click()
+
+                # Pagination reaches every row and resets when filters change.
+                page.set_viewport_size({'width': 1440, 'height': 900})
+                page.locator('#setupNav').click()
+                paginated = temp / 'paginated.csv'
+                paginated.write_text('Date,Product_Name,Net_Sales\n' + ''.join(
+                    f'2026-01-{index % 28 + 1:02d},{"Tea" if index % 2 else "Coffee"},{index}\n' for index in range(1, 61)))
+                page.locator('#upload').set_input_files(str(paginated))
+                page.locator('#inspectButton').click()
+                page.locator('#buildButton').click()
+                page.locator('#loadSelectedCharts').click()
+                page.locator('#detailNav').click()
+                expect(page.locator('#datasetTable tbody tr')).to_have_count(50)
+                page.locator('#nextDataPage').click()
+                expect(page.locator('#datasetTable tbody tr')).to_have_count(10)
+                expect(page.locator('#datasetPageStatus')).to_contain_text('Page 2 of 2')
+                expect(page.locator('#nextDataPage')).to_be_disabled()
+                page.locator('#product').select_option('Tea')
+                expect(page.locator('#datasetTable tbody tr')).to_have_count(30)
+                expect(page.locator('#datasetPageStatus')).to_contain_text('Page 1 of 1')
+
+                # A richer business demo exercises operational mappings and dense charts.
+                page.locator('#setupNav').click()
+                page.select_option('#sample', 'Salon_Demo.csv')
+                page.locator('#inspectButton').click()
+                expect(page.locator('#toggleOptionalColumns')).to_have_attribute('aria-expanded', 'true')
+                expect(page.locator('#map_Appointment_ID')).not_to_have_class('missingMapping')
+                page.locator('#buildButton').click()
+                page.locator('#loadSelectedCharts').click()
+                page.locator('#detailNav').click()
+                expect(page.locator('[data-chart-panel="bookings"]')).to_be_visible()
+                expect(page.locator('[data-chart-panel="utilization"]')).to_be_visible()
+                assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+                page.screenshot(path='/tmp/dashboard-ui-detail-salon.png', full_page=True)
                 assert not errors, errors
-                print('PASS: upload → combined KPI/chart dialog; save/cancel/defaults; calculated chat; long mocked AI + evidence; settings/connect/disconnect; responsive layout and keyboard focus.')
+                print('PASS: mapping colors/tools; KPI/chart save/cancel/defaults; calculated chat; mocked AI/evidence/settings; responsive overview/detail layouts; filtered full table and pagination; keyboard focus.')
                 print('Chrome:', browser.version)
                 browser.close()
         finally:
