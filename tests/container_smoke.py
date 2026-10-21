@@ -57,10 +57,22 @@ def main():
         payload = json.dumps({'sample': 'Cafe_Demo.csv', 'mapping': profile['mapping'], 'business': 'Cafe'})
         status, _, result = call('/api/analyze', payload, post_headers)
         assert status == 200 and json.loads(result)['datasetId'], result
+        dataset_id = json.loads(result)['datasetId']
+        payload = json.dumps({'provider':'browser_ollama', 'model':'llama3.2:3b', 'datasetId':dataset_id, 'question':'What information is missing?'})
+        status, _, packet = call('/api/ollama-start', payload, post_headers)
+        assert status == 200, packet
+        packet = json.loads(packet)
+        payload = json.dumps({'runId':packet['runId'], 'step':packet['step'], 'output':json.dumps({'action':'query', 'sql':'SELECT SUM(Net_Sales) AS revenue FROM sales', 'answer':''})})
+        status, _, packet = call('/api/ollama-step', payload, post_headers)
+        assert status == 200, packet
+        packet = json.loads(packet)
+        payload = json.dumps({'runId':packet['runId'], 'step':packet['step'], 'output':json.dumps({'action':'unavailable', 'sql':'', 'answer':'Operating costs are not supplied.'})})
+        status, _, completed = call('/api/ollama-step', payload, post_headers)
+        assert status == 200 and json.loads(completed)['result']['evidence'], completed
         status, _, models = call('/api/models', headers=authenticated)
         assert status == 200 and json.loads(models)['models'] == []
         assert call('/health')[0] == 200
-        print('PASS: non-root image, synthetic samples only, Gunicorn custom PORT, health, authentication, CSRF, static UI, profile/analyze, hosted Ollama exclusion', flush=True)
+        print('PASS: non-root image, synthetic samples only, Gunicorn custom PORT, health, authentication, CSRF, static UI, profile/analyze, browser-mediated SQL steps, hosted server-Ollama exclusion', flush=True)
     finally:
         process.terminate()
         process.wait(timeout=35)

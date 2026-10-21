@@ -1,4 +1,4 @@
-# Data analyst: local Ollama and GroqCloud
+# Data analyst: browser Ollama, server-local Ollama and GroqCloud
 
 ## Workflow
 
@@ -60,3 +60,20 @@ For local AI, Ollama must be running with a downloaded model. Llama 3 (`llama3:l
 Groq tests mock only the provider/network while running actual CSV/Excel parsing, filtered in-memory SQL, source-column queries, multi-step/window calculations, and conversation scoping. Transport tests check authentication, strict schema, quota/connectivity failures, truncated output, and secret-free errors. Browser helper tests ensure cloud inference is never selected automatically and that explicit Calculated answers choices survive refresh. These tests do not establish live Groq answer quality; that requires a configured key and a live request.
 
 Automated tests cover month/year aggregation and ties, active filters, extra source dimensions, CSV/Excel parity, cache eviction/expiry, unsupported data, invalid query correction, evidence checks and blocked filesystem/write operations. Live synthetic-data checks with Llama 3 correctly returned March 2025 / USD 320 and, under a January–February filter, Oat USD 150 / Whole USD 200. These examples are tests of this workflow, not a general accuracy guarantee.
+
+
+## Browser-mediated local inference
+
+The explicit `browser_ollama` provider uses `/api/ollama-start`, `/api/ollama-step`
+and `/api/ollama-cancel`. `AnalystRun` is the shared server-owned state machine for
+all transports: prompts, schema, filters, evidence, SQL authorization and history
+stay on the backend. `BrowserRuns` stores bounded, session-owned runs with
+single-use step tokens. The browser calls only its own fixed loopback Ollama and
+returns raw model text; it cannot replace evidence or switch datasets mid-run.
+QueryTool connections are created/closed per step, so no SQLite connection crosses
+HTTP request threads. Inference is never proxied through Render or Groq in this
+mode. Existing synchronous `/api/analyst` remains the path for Groq and local
+server Ollama, with its existing deadlines and provider behavior.
+
+See the README's browser Ollama section for exact OS setup, privacy boundaries,
+limits, automated checks and the production-origin manual acceptance checklist.
