@@ -198,6 +198,8 @@ def main():
                         page.locator('#detailCharts .detailChartPanel').first.screenshot(path='/tmp/dashboard-ui-detail-mobile-chart.png')
                     page.locator('#overviewNav').click()
 
+                check_overview_preview(page, context, expect, origin, source, local_requests)
+
                 # Pagination reaches every row and resets when filters change.
                 page.set_viewport_size({'width': 1440, 'height': 900})
                 page.locator('#setupNav').click()
@@ -232,13 +234,114 @@ def main():
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
                 page.screenshot(path='/tmp/dashboard-ui-detail-salon.png', full_page=True)
                 assert not errors, errors
-                print('PASS: mapping colors/tools; KPI/chart save/cancel/defaults; calculated chat; mocked AI/evidence/settings; responsive overview/detail layouts; filtered full table and pagination; keyboard focus.')
+                print('PASS: mapping colors/tools; KPI/chart save/cancel/defaults; calculated chat; mocked AI/evidence/settings; responsive original/preview/detail layouts; shared layout state and dataset changes; filtered full table and pagination; keyboard focus.')
                 print('Chrome:', browser.version)
                 browser.close()
         finally:
             server.shutdown()
             thread.join(5)
             server.server_close()
+
+
+def check_overview_preview(page, context, expect, origin, source, local_requests):
+    """Exercise real uploads, shared state, navigation history, and the alternate layout."""
+    page.set_viewport_size({'width': 1440, 'height': 900})
+    page.locator('#insightQuestion').fill('Which product leads sales?')
+    page.locator('#askButton').click()
+    expect(page.locator('#insightAnswer')).to_contain_text('Calculated answer')
+    transcript = page.locator('#insightAnswer').inner_text()
+    local_count = len(local_requests)
+    page.locator('#previewNav').click()
+    expect(page).to_have_url(origin + '/#overview-preview')
+    expect(page.locator('#previewSidebar')).to_be_visible()
+    expect(page.locator('#overviewCards .card')).to_have_count(4)
+    expect(page.locator('#insightAnswer')).to_have_text(transcript)
+    assert page.locator('#upload').is_hidden()
+    assert page.locator('[data-question]').count() == 0
+    assert page.locator('.compactAssistant').bounding_box()['x'] > page.locator('#overviewSlot1').bounding_box()['x']
+    page.screenshot(path='/tmp/dashboard-ui-preview-draft.png', full_page=True)
+    page.locator('#previewCustomize').click()
+    page.keyboard.press('Escape')
+    expect(page.locator('#previewCustomize')).to_be_focused()
+    page.locator('#previewFilterButton').click()
+    page.select_option('#category', 'Drinks')
+    expect(page.locator('#overviewCards .card').first.locator('.value')).to_have_text('$220.00')
+    expect(page.locator('#previewFilterCount')).to_have_text('1')
+    page.select_option('#product', 'Cookie')
+    expect(page.locator('#insightCards')).to_contain_text('No sales match')
+    expect(page.locator('#overviewCards .card').first.locator('.value')).to_have_text('$0.00')
+    page.locator('#reset').click()
+    page.locator('#previewFilterButton').click()
+    expect(page.locator('#dashboardFilters')).to_be_hidden()
+
+    # Switching layouts preserves both the pending/finished conversation and chosen mode.
+    page.select_option('#localModel', 'groq:openai/gpt-oss-120b')
+    page.locator('#insightQuestion').fill('Summarize this business')
+    assistant_height = page.locator('.compactAssistant').bounding_box()['height']
+    page.locator('#askButton').click()
+    expect(page.locator('#insightAnswer')).to_contain_text('mock-ui-only')
+    transcript = page.locator('#insightAnswer').inner_text()
+    assert page.locator('.compactAssistant').bounding_box()['height'] == assistant_height
+    assert page.locator('.conversationViewport').evaluate('(el) => el.scrollHeight > el.clientHeight')
+    page.get_by_role('link', name='Original overview').click()
+    expect(page.locator('#previewSidebar')).to_be_hidden()
+    expect(page.locator('#insightAnswer')).to_have_text(transcript)
+    assert page.locator('.compactAssistant').bounding_box()['height'] == 300
+    page.go_back()
+    expect(page.locator('#previewSidebar')).to_be_visible()
+    expect(page.locator('#insightAnswer')).to_have_text(transcript)
+    page.locator('#previewAiSettings').click()
+    expect(page.locator('#aiSettings')).to_be_visible()
+    page.keyboard.press('Escape')
+    expect(page.locator('#previewAiSettings')).to_be_focused()
+
+    for width, height in [(1920, 1080), (1440, 900), (1280, 800), (1024, 768), (768, 1024), (390, 844), (320, 700)]:
+        page.set_viewport_size({'width': width, 'height': height})
+        assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'), f'Preview overflow at {width}'
+        assert page.locator('.compactAssistant').bounding_box()['width'] < width
+        page.screenshot(path=f'/tmp/dashboard-ui-preview-{width}.png', full_page=True)
+    page.set_viewport_size({'width': 1440, 'height': 900})
+    page.locator('#previewChangeDataset').click()
+    expect(page.locator('#setupPage')).to_be_visible()
+    page.locator('#cancelSetup').click()
+    expect(page.locator('#previewSidebar')).to_be_visible()
+    expect(page.locator('#insightAnswer')).to_have_text(transcript)
+    page.get_by_role('link', name='Detailed dashboard', exact=True).click()
+    expect(page.locator('#datasetTable tbody tr')).to_have_count(4)
+    page.locator('#previewNav').click()
+    page.locator('#previewChangeDataset').click()
+    page.select_option('#sample', 'Cafe_Demo.csv')
+    page.locator('#inspectButton').click()
+    page.locator('#buildButton').click()
+    page.locator('#loadSelectedCharts').click()
+    expect(page.locator('#previewSidebarDataset')).to_have_text('Cafe_Demo.csv')
+    expect(page.locator('#insightAnswer')).to_have_text('')
+    page.screenshot(path='/tmp/dashboard-ui-preview-cafe.png', full_page=True)
+    assert len(local_requests) == local_count, 'Layout navigation must not connect to Ollama'
+    page.locator('#previewCustomize').click()
+    page.locator('input[name="kpi"][value="netSales"]').check()
+    page.locator('input[name="kpi"][value="grossMargin"]').check()
+    while page.locator('input[name="chartChoice"]:checked').count():
+        page.locator('input[name="chartChoice"]:checked').first.uncheck()
+    page.locator('input[name="chartChoice"][value="trend"]').check()
+    page.locator('#loadSelectedCharts').click()
+    expect(page.locator('#overviewCards .card')).to_have_count(2)
+    expect(page.locator('.overviewChartSlot:visible')).to_have_count(1)
+    page.get_by_role('link', name='Original overview').click()
+    expect(page.locator('#previewSidebar')).to_be_hidden()
+    expect(page.locator('#overviewCards .card')).to_have_count(2)
+    expect(page.locator('.overviewChartSlot:visible')).to_have_count(1)
+
+    # A fresh preview URL still goes through normal upload and column confirmation.
+    fresh = context.new_page()
+    fresh.goto(origin + '/#overview-preview')
+    expect(fresh.locator('#setupPage')).to_be_visible()
+    fresh.locator('#upload').set_input_files(str(source))
+    fresh.locator('#inspectButton').click()
+    fresh.locator('#buildButton').click()
+    fresh.locator('#loadSelectedCharts').click()
+    expect(fresh.locator('#previewSidebar')).to_be_visible()
+    fresh.close()
 
 
 if __name__ == '__main__':

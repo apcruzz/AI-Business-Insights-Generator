@@ -4,9 +4,11 @@ import { BUSINESSES } from "./business-config.js";
 import { useEffect } from "react";
 import { initDashboard } from "./dashboard.js";
 import { AccountAccess } from "./AccountAccess.jsx";
+import { OverviewPreview } from "./OverviewPreview.jsx";
 import "./styles.css";
 // Load setup.css after the base stylesheet so its layout overrides win.
 import "./setup.css";
+import "./overview-preview.css";
 
 export default function App() {
   return <AccountAccess>{({openAccount}) => <Dashboard openAccount={openAccount} />}</AccountAccess>;
@@ -15,13 +17,14 @@ export default function App() {
 function Dashboard({openAccount}) {
   // Run the DOM controller after React has mounted the elements it needs.
   useEffect(() => {
-    initDashboard();
+    return initDashboard();
   }, []);
 
   return (
     <>
       {/* Navigation and dataset labels are updated by showPage() and build(). */}
-      <header>
+      <OverviewPreview openAccount={openAccount} />
+      <header className="dashboardHeader">
         <div>
           <small>
             <span id="businessName">BUSINESS INSIGHTS</span>
@@ -37,6 +40,9 @@ function Dashboard({openAccount}) {
           </button>
           <button id="detailNav" type="button">
             Detailed Dashboard
+          </button>
+          <button id="previewNav" type="button">
+            Overview preview
           </button>
           <button id="setupNav" type="button">
             Change dataset
@@ -315,13 +321,14 @@ function Dashboard({openAccount}) {
             </section>
             <section className="panel highlightsPanel" aria-labelledby="highlightsTitle">
               <h2 id="highlightsTitle">At a glance</h2>
+              <p className="previewHighlightsNote">Calculated from your selected data</p>
               <div id="insightCards" className="insightCards"></div>
             </section>
           </div>
         </div>
 
         {/* These controls filter both browser calculations and backend analyst queries. */}
-        <div className="filters">
+        <div id="dashboardFilters" className="filters" role="region" aria-label="Dashboard filters">
           <div className="filterHeading">
             <strong>Filters</strong>
             <span className="hint" id="count" aria-live="polite"></span>

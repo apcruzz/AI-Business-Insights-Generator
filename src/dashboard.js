@@ -3,6 +3,7 @@ import {SAMPLE_DATASETS} from "./sample-datasets.js";
 import {BUSINESS_FIELDS, CHARTS, businessProfile, chartPlan, chartTitle} from "./business-config.js";
 import {renderBusinessChart} from "./business-charts.js";
 import {answerOptions, chooseAnswerMode, answerModeNotice} from "./ai-options.js";
+import {overviewIcon} from "./overview-icons.js";
 // Frontend controller: upload -> map columns -> normalize via API -> filter/render -> ask questions.
 import {
   $,
@@ -49,6 +50,13 @@ let data = [],
   backendModels = {};
 const browserOllama = new BrowserOllama();
 let localAnalysisController = null;
+const pageHashes = {overview: "#business-overview", detail: "#detailed-dashboard", preview: "#overview-preview"};
+const pageFromHash = () => Object.keys(pageHashes).find(page => pageHashes[page] === window.location.hash);
+let lastDashboardPage = pageFromHash() || "overview";
+let chooserTrigger = null;
+function updatePageHash(hash) {
+  if (window.location.hash !== hash) window.history.pushState(null, "", hash);
+}
 
 // Fields the dashboard understands. The mapping UI connects source columns to these names.
 const fields = {
@@ -102,6 +110,7 @@ const colors = [
   "#475569",
   "#4d7c0f",
 ];
+const previewColors = ["#5489ff", "#9c90f7", "#39bd90", "#ffba8e", "#7db9eb", "#cc82b6", "#8eab92", "#718096"];
 
 // Gives each category or product a stable color while the dashboard is open.
 function colorFor(name, field = "Category") {
@@ -138,27 +147,44 @@ async function api(path, payload, {signal} = {}) {
   }
   return result;
 }
-function showSetup() {
+function showSetup(updateRoute = true) {
   // Show the upload/mapping screen and hide the dashboard views.
   $("setupPage").hidden = false;
   $("dashboardMain").hidden = true;
   document.body.classList.remove("overviewMode");
   document.body.classList.remove("detailMode");
+  document.body.classList.remove("previewMode");
+  $("previewSidebar").hidden = true;
+  $("previewHeader").hidden = true;
+  document.querySelector(".dashboardHeader").hidden = false;
+  ["overviewNav", "detailNav", "previewNav"].forEach(id => $(id).setAttribute("aria-current", "false"));
+  $("setupNav").setAttribute("aria-current", "page");
   $("cancelSetup").hidden = !data.length;
+  if (updateRoute && data.length) updatePageHash("#change-dataset");
 }
-function showPage(page) {
+function showPage(page, updateRoute = true) {
   // The overview page uses the compact dashboard layout; detail keeps full charts.
-  if (!data.length) return showSetup();
+  lastDashboardPage = page;
+  if (updateRoute) updatePageHash(pageHashes[page]);
+  if (!data.length) return showSetup(false);
   applyBusinessTheme(meta.business);
-  const overview = page === "overview";
+  const preview = page === "preview", overview = page !== "detail";
   $("setupPage").hidden = true;
   $("dashboardMain").hidden = false;
   $("overview").hidden = !overview;
   $("detailPage").hidden = overview;
-  document.body.classList.toggle("overviewMode", overview);
+  document.body.classList.toggle("overviewMode", page === "overview");
   document.body.classList.toggle("detailMode", !overview);
-  $("overviewNav").setAttribute("aria-current", overview ? "page" : "false");
+  document.body.classList.toggle("previewMode", preview);
+  $("previewSidebar").hidden = !preview;
+  $("previewHeader").hidden = !preview;
+  document.querySelector(".dashboardHeader").hidden = preview;
+  $("overviewNav").setAttribute("aria-current", page === "overview" ? "page" : "false");
   $("detailNav").setAttribute("aria-current", overview ? "false" : "page");
+  $("previewNav").setAttribute("aria-current", preview ? "page" : "false");
+  $("setupNav").setAttribute("aria-current", "false");
+  // Redraw only the layout-dependent markup. Dataset, filters, and chat stay intact.
+  if (overview) renderOverviewLayout(filtered());
 }
 // Rank business preferences first, then choose distinct, supported fallback metrics.
 function chartOptions() {
@@ -196,6 +222,7 @@ function applyChartVisibility() {
 function showChartChooser(resetSelection = false) {
   // Edit KPI cards and charts together; drafts apply only when the user loads them.
   if (!data.length) return;
+  chooserTrigger = document.body.classList.contains("previewMode") ? $("previewCustomize") : $("chooseCharts");
   const options = chartOptions(),
     optionIds = options.map((option) => option.id);
   overviewChartIds = overviewChartIds.filter((id) => optionIds.includes(id));
@@ -461,12 +488,14 @@ function buildDashboard() {
   $("product").disabled = !meta.capabilities.product;
   applyBusinessTheme(meta.business);
   $("datasetName").textContent = meta.filename;
+  $("previewSidebarDataset").textContent = meta.filename;
+  $("previewSidebarDataset").title = meta.filename;
   $("sidebarNotes").innerHTML = meta.warnings
     .map((w) => `<p>${esc(w)}</p>`)
     .join("");
   $("dataNotes").textContent = meta.warnings.join(" ");
   setDefaultFilterValues();
-  showPage("overview");
+  showPage(lastDashboardPage === "preview" ? "preview" : "overview");
   render();
   showChartChooser(true);
   $("setupStatus").textContent = "Choose KPI cards and charts for your overview.";
@@ -498,7 +527,7 @@ function filtered() {
       (!$("period").value || period(r.Hour) === $("period").value),
   );
 }
-function chart(items, dual = false) {
+function chart(items, dual = false, color = businessProfile(meta.business).color) {
   // Generic SVG bar chart used by trend and weekday charts.
   if (!items.length) return note("No matching sales.");
   const W = 680,
@@ -526,7 +555,7 @@ function chart(items, dual = false) {
     for (let k = 1; k <= (dual ? 2 : 1); k++) {
       const y = Y(x[k]),
         h = Math.abs(zero - y);
-      svg += `<rect x="${cx - bw / 2 + (k - 1) * w}" y="${Math.min(y, zero)}" width="${w}" height="${h}" fill="${k === 1 ? businessProfile(meta.business).color : "#438dcc"}" rx="2"><title>${esc(x[0])}: ${k === 1 ? "Net sales" : "Gross profit"} ${esc(money(x[k]))}</title></rect>`;
+      svg += `<rect x="${cx - bw / 2 + (k - 1) * w}" y="${Math.min(y, zero)}" width="${w}" height="${h}" fill="${k === 1 ? color : "#438dcc"}" rx="2"><title>${esc(x[0])}: ${k === 1 ? "Net sales" : "Gross profit"} ${esc(money(x[k]))}</title></rect>`;
     }
     if (items.length <= 12 || i % Math.ceil(items.length / 10) === 0)
       svg += `<text x="${cx}" y="245" text-anchor="middle" font-size="12" fill="#657686">${esc(x[0])}</text>`;
@@ -562,7 +591,7 @@ function trend(rows, dual = false) {
     dual,
   );
 }
-function categoryPie(rows) {
+function categoryPie(rows, preview = false) {
   // Category share is shown as a pie only when totals are positive.
   const groups = group(rows, "Category")
       .map(([c, r]) => [c, sum(r, "Net_Sales")])
@@ -593,24 +622,25 @@ function categoryPie(rows) {
   groups.forEach(([c, n], i) => {
     const share = n / total,
       next = angle + share * 2 * Math.PI,
-      col = colorFor(c);
+      col = preview ? previewColors[i] : colorFor(c);
     if (share > 0.999999)
       svg += `<circle cx="160" cy="150" r="119" fill="${col}"/>`;
     else
       svg += `<path d="M160 150 L${160 + 119 * Math.cos(angle)} ${150 + 119 * Math.sin(angle)} A119 119 0 ${share > 0.5 ? 1 : 0} 1 ${160 + 119 * Math.cos(next)} ${150 + 119 * Math.sin(next)} Z" fill="${col}" stroke="white" stroke-width="2"><title>${esc(c)}: ${money(n)} (${pct(share * 100)})</title></path>`;
-    if (share > 0.08) {
+    if (share > 0.08 && !preview) {
       const mid = (angle + next) / 2;
       svg += `<text x="${160 + 77 * Math.cos(mid)}" y="${155 + 77 * Math.sin(mid)}" text-anchor="middle" fill="white" font-size="16" font-weight="600">${pct(share * 100)}</text>`;
     }
     angle = next;
   });
+  if (preview) svg += `<circle cx="160" cy="150" r="77" fill="white"/><text x="160" y="145" text-anchor="middle" fill="#17213b" font-size="21" font-weight="700">${esc(axisMoney(total))}</text><text x="160" y="170" text-anchor="middle" fill="#778197" font-size="13">Net sales</text>`;
   return (
     svg +
     '</svg><div class="categoryLegendList">' +
     groups
       .map(
-        ([c, n]) =>
-          `<div class="categoryLegend"><span><i style="display:inline-block;width:10px;height:10px;background:${colorFor(c)};margin-right:5px"></i>${esc(c)}</span><span>${money(n)} · ${pct((n / total) * 100)}</span></div>`,
+        ([c, n], index) =>
+          `<div class="categoryLegend"><span><i style="display:inline-block;width:10px;height:10px;background:${preview ? previewColors[index] : colorFor(c)};margin-right:5px"></i>${esc(c)}</span><span>${money(n)} · ${pct((n / total) * 100)}</span></div>`,
       )
       .join("") +
     "</div>"
@@ -813,18 +843,22 @@ function metrics(rows, overview = false) {
       "Recorded weather condition with highest net sales",
     ],
   };
-  const cards = overview && picked.length
+  let cards = overview && picked.length
     ? picked.map((key) => custom[key]).filter(Boolean)
     : defaults;
+  const preview = overview && document.body.classList.contains("previewMode");
+  // Four default measures fit the alternative layout; explicit KPI choices are preserved.
+  if (preview && !picked.length) cards = defaults.filter((_, index) => index !== 3);
+  if (preview) $("overviewCards").style.setProperty("--preview-kpi-columns", Math.min(4, cards.length) || 1);
   return cards
     .map(
-      (m) =>
-        `<article class="card"><div class="label">${esc(m[0])}</div><div class="value">${esc(m[1])}</div><div class="hint">${esc(m[2])}</div></article>`,
+      (m, index) =>
+        `<article class="card">${preview ? `<span class="previewMetricIcon previewMetricIcon${index % 4}">${overviewIcon(/margin|rate|change/i.test(m[0]) ? "percent" : /order|line/i.test(m[0]) ? "orders" : /units|quantity/i.test(m[0]) ? "units" : "money")}</span>` : ""}<div class="label">${esc(m[0])}</div><div class="value">${esc(m[1])}</div><div class="hint">${esc(m[2])}</div></article>`,
     )
 	    .join("");
 }
 // Sum selected revenue for each weekday in Monday-to-Sunday display order.
-function weekdayChart(rows, c) {
+function weekdayChart(rows, c, color) {
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   return c.Date
     ? chart(
@@ -838,7 +872,7 @@ function weekdayChart(rows, c) {
             ),
             "Net_Sales",
           ),
-        ]),
+        ]), false, color,
       )
     : note("Map a date column to compare weekdays.");
 }
@@ -907,13 +941,13 @@ function staffChart(rows, c) {
   );
 }
 // Compare sales per recorded date for each uploaded weather label; no weather lookup occurs.
-function weatherChart(rows, c) {
+function weatherChart(rows, c, color) {
   return c.weather && c.Date
     ? chart(
         group(rows, "Weather").map(([weather, items]) => [
           weather,
           sum(items, "Net_Sales") / new Set(items.map((row) => row.Date)).size,
-        ]),
+        ]), false, color,
       ) +
         note(
           "Average per recorded day; coverage and other factors can affect this comparison.",
@@ -921,16 +955,16 @@ function weatherChart(rows, c) {
     : note("Map date and weather columns to compare sales by weather.");
 }
 // Dispatch a selected chart ID to the same chart builders used in the detail view.
-function overviewChartHtml(id, rows, products, c) {
-  const specialized = renderBusinessChart(id, rows, meta, businessProfile(meta.business).color, money);
+function overviewChartHtml(id, rows, products, c, preview = false) {
+  const specialized = renderBusinessChart(id, rows, meta, preview ? (id === "trend" ? "#5489ff" : "#9285ed") : businessProfile(meta.business).color, money);
   if (specialized !== null) return specialized;
   if (id === "trend") return trend(rows);
-  if (id === "category") return categoryPie(rows);
+  if (id === "category") return categoryPie(rows, preview);
   if (id === "products") return topProductsChart(products, c);
-  if (id === "weekday") return weekdayChart(rows, c);
+  if (id === "weekday") return weekdayChart(rows, c, preview ? "#9c90f7" : undefined);
   if (id === "hour") return hourStack(rows);
   if (id === "profitability") return profitabilityChart(products, c);
-  if (id === "weather") return weatherChart(rows, c);
+  if (id === "weather") return weatherChart(rows, c, preview ? "#9c90f7" : undefined);
   if (id === "staff") return staffChart(rows, c);
   return note("Choose a chart to show here.");
 }
@@ -944,14 +978,21 @@ function renderOverviewCharts(rows, products, c) {
     .slice(0, 3);
   if (!overviewChartIds.length)
     overviewChartIds = options.slice(0, 3).map((option) => option.id);
+  const preview = document.body.classList.contains("previewMode");
+  document.body.dataset.previewChartCount = overviewChartIds.length;
   document.querySelectorAll(".overviewChartSlot").forEach((slot, index) => {
     const id = overviewChartIds[index],
       option = optionById.get(id);
     slot.hidden = !option;
     slot.innerHTML = option
-      ? `<h2>${esc(option.title)}</h2><div class="overviewChartContent" data-overview-chart="${esc(id)}">${overviewChartHtml(id, rows, products, c)}</div>`
+      ? `${preview ? `<div class="previewChartHeader"><span class="previewChartIcon">${overviewIcon(id === "trend" ? "insights" : "charts")}</span><h2>${esc(option.title)}</h2><span class="previewChartType">${esc(CHARTS[id].kind)}</span></div>` : `<h2>${esc(option.title)}</h2>`}<div class="overviewChartContent" data-overview-chart="${esc(id)}">${overviewChartHtml(id, rows, products, c, preview)}</div>`
       : "";
   });
+}
+function renderOverviewLayout(rows) {
+  $("overviewCards").innerHTML = metrics(rows, true);
+  const products = group(rows, "Product_Name").sort((a, b) => sum(b[1], "Net_Sales") - sum(a[1], "Net_Sales"));
+  renderOverviewCharts(rows, products, meta.capabilities);
 }
 function renderDatasetTable() {
   // Paginate the complete filtered dataset so large uploads do not create a huge DOM.
@@ -982,6 +1023,12 @@ function render() {
     rows.length.toLocaleString() + " sales lines selected";
   $("cards").innerHTML = metrics(rows);
   $("overviewCards").innerHTML = metrics(rows, true);
+  const activeFilters = ["category", "product", "weekday", "period"].filter(id => $(id).value).length
+    + Number(Boolean($("from").value && $("from").value !== (meta.dateMin || "")))
+    + Number(Boolean($("to").value && $("to").value !== (meta.dateMax || "")));
+  $("previewFilterCount").hidden = !activeFilters;
+  $("previewFilterCount").textContent = activeFilters;
+  $("previewFilterCount").setAttribute("aria-label", `${activeFilters} active filters`);
   const products = group(rows, "Product_Name").sort(
     (a, b) => sum(b[1], "Net_Sales") - sum(a[1], "Net_Sales"),
   );
@@ -2474,8 +2521,28 @@ $("sample").onchange = () => {
 $("business").onchange = () => applyBusinessTheme($("business").value);
 $("overviewNav").onclick = () => showPage("overview");
 $("detailNav").onclick = () => showPage("detail");
-$("setupNav").onclick = showSetup;
-$("cancelSetup").onclick = () => showPage("overview");
+$("previewNav").onclick = () => showPage("preview");
+$("setupNav").onclick = () => showSetup();
+$("previewChangeDataset").onclick = () => showSetup();
+$("cancelSetup").onclick = () => showPage(lastDashboardPage);
+$("previewCustomize").onclick = () => showChartChooser(false);
+$("previewAiSettings").onclick = () => $("aiSettings").showModal();
+$("previewInsights").onclick = () => {
+  const panel = document.querySelector(".highlightsPanel");
+  panel.setAttribute("tabindex", "-1");
+  panel.focus({preventScroll: true});
+  panel.scrollIntoView({block: "nearest", behavior: "auto"});
+};
+$("previewFilterButton").onclick = () => {
+  const open = document.body.classList.toggle("previewFiltersOpen");
+  $("previewFilterButton").setAttribute("aria-expanded", String(open));
+};
+const followPageHash = () => {
+  const page = pageFromHash();
+  if (page) showPage(page, false);
+  else if (window.location.hash === "#change-dataset") showSetup(false);
+};
+window.addEventListener("hashchange", followPageHash);
 ["from", "to", "category", "product", "weekday", "period"].forEach((id) =>
   $(id).addEventListener("change", render),
 );
@@ -2484,7 +2551,7 @@ $("previousDataPage").onclick = () => { datasetTablePage--; renderDatasetTable()
 $("nextDataPage").onclick = () => { datasetTablePage++; renderDatasetTable(); };
 $("chooseCharts").onclick = () => showChartChooser(false);
 $("closeChartChooser").onclick = () => $("chartChooser").close();
-$("chartChooser").addEventListener("close", () => $("chooseCharts").focus());
+$("chartChooser").addEventListener("close", () => chooserTrigger?.focus());
 $("selectRecommendedCharts").onclick = selectRecommendedCharts;
 $("loadSelectedCharts").onclick = loadSelectedCharts;
 $("openAiSettings").onclick = () => $("aiSettings").showModal();
@@ -2498,7 +2565,8 @@ $("insightForm").onsubmit = (e) => {
   e.preventDefault();
   ask($("insightQuestion").value);
 };
-showSetup();
+showSetup(false);
 applyBusinessTheme($("business").value);
 refreshModels().catch(() => {});
+return () => window.removeEventListener("hashchange", followPageHash);
 }
