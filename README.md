@@ -268,7 +268,21 @@ Repeated event IDs must have consistent details. Conflicts disable the correspon
 
 The preferred charts and fallback order live in `src/business-config.js`; calculations and SVG rendering live in `src/business-charts.js`. Backend validation in `backend/business_data.py` controls availability. The same renderers serve both dashboard pages.
 
-## Render Free sponsor/team demonstration
+## Self-service accounts on Render Free
+
+Users can register, sign in, view/edit their own profile, change their password,
+delete their account, and sign out through the website. Persistent PostgreSQL
+stores accounts and sessions; uploads and conversations remain temporary.
+See [the complete Neon Free and Render account setup](docs/self-service-accounts.md)
+for required environment variables, deployment steps, tests, and security limits.
+Set `AUTH_MODE=accounts` and `DATABASE_URL` to enable it. No demo-user JSON is
+required in account mode. `python app.py` still works locally without accounts.
+
+## Legacy Render Free sponsor/team demonstration
+
+The following Basic-auth configuration is retained for existing deployments using
+`AUTH_MODE=demo` (the code-level compatibility default). New `render.yaml`
+deployments select self-service account mode; follow the account setup above.
 
 This deployment runs the React build and Python APIs on **one Docker Web Service**.
 It is restricted to invited team members using individual HTTP Basic credentials
@@ -343,9 +357,10 @@ if its key is missing; configure it for this demo's AI requirement.
    deployed checks pass. Rotate/remove credentials in `DEMO_USERS_JSON` and restart
    the service to revoke access; rotate the Groq key if it was exposed.
 
-`render.yaml` provides the same service definition for an optional Blueprint.
-Select the reviewed pushed branch and provide the three `sync: false` secrets
-when prompted. The Blueprint disables auto deploys. If the Render CLI is installed,
+`render.yaml` now provides the self-service account configuration for an optional
+Blueprint. Follow the account guide for its database and `sync: false` secrets;
+retain `AUTH_MODE=demo` and `DEMO_USERS_JSON` only when using the legacy setup.
+The Blueprint disables auto deploys. If the Render CLI is installed,
 validate with `render blueprints validate render.yaml` before applying. No remote
 resources are created by the repository preparation itself.
 

@@ -3,11 +3,16 @@ import { SAMPLE_DATASETS } from "./sample-datasets.js";
 import { BUSINESSES } from "./business-config.js";
 import { useEffect } from "react";
 import { initDashboard } from "./dashboard.js";
+import { AccountAccess } from "./AccountAccess.jsx";
 import "./styles.css";
 // Load setup.css after the base stylesheet so its layout overrides win.
 import "./setup.css";
 
 export default function App() {
+  return <AccountAccess>{({openAccount}) => <Dashboard openAccount={openAccount} />}</AccountAccess>;
+}
+
+function Dashboard({openAccount}) {
   // Run the DOM controller after React has mounted the elements it needs.
   useEffect(() => {
     initDashboard();
@@ -36,6 +41,7 @@ export default function App() {
           <button id="setupNav" type="button">
             Change dataset
           </button>
+          {openAccount && <button id="accountButton" type="button" onClick={openAccount} aria-haspopup="dialog">Account</button>}
         </nav>
       </header>
 
