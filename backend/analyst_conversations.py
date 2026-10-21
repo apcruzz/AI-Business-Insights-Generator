@@ -1,5 +1,6 @@
 # Stores recent exchanges in memory; used by analyst_agent to resolve follow-up questions.
 """Bounded, local conversation memory, isolated by dataset, filters and model."""
+from backend.request_scope import OWNER
 from collections import OrderedDict
 import copy
 import json
@@ -17,7 +18,7 @@ class ConversationCache:
 
     # Resume only when dataset, filters, and model match; otherwise create an empty conversation.
     def open(self, token, dataset_id, filters, model):
-        scope = (dataset_id, json.dumps(filters, sort_keys=True), model)
+        scope = (OWNER.get(), dataset_id, json.dumps(filters, sort_keys=True), model)
         with self.lock:
             now = time.monotonic()
             # Expire idle conversations before attempting to reuse a token.
@@ -39,7 +40,7 @@ class ConversationCache:
     # Save a completed exchange with its evidence, keeping at most four recent turns.
     def append(self, token, question, answer, evidence):
         with self.lock:
-            if token in self.items:
+            if token in self.items and self.items[token]['scope'][0] == OWNER.get():
                 entry = self.items[token]
                 entry['turns'].append({'question': question, 'answer': answer, 'evidence': evidence})
                 entry['turns'] = entry['turns'][-4:]

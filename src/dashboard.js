@@ -1,3 +1,4 @@
+import {BrowserOllama, runBrowserAnalyst} from "./browser-ollama.js";
 import {SAMPLE_DATASETS} from "./sample-datasets.js";
 import {BUSINESS_FIELDS, CHARTS, businessProfile, chartPlan, chartTitle} from "./business-config.js";
 import {renderBusinessChart} from "./business-charts.js";
@@ -33,14 +34,21 @@ let data = [],
   uploadPayload = {},
   profile = null,
   token = "",
+  uploadLimitMb = 20,
   busy = false,
   conversationId = null,
   conversationTurns = [],
   revision = 0,
   overviewChartIds = [],
+  overviewKpiIds = [],
+  datasetTablePage = 0,
   aiOptions = answerOptions({}),
   modelsLoaded = false,
-  groqConfigured = false;
+  groqConfigured = false,
+  hosted = false,
+  backendModels = {};
+const browserOllama = new BrowserOllama();
+let localAnalysisController = null;
 
 // Fields the dashboard understands. The mapping UI connects source columns to these names.
 const fields = {
@@ -108,16 +116,19 @@ function note(text) {
 }
 
 // POST helper for the local Python API. The token ties requests to this page load.
-async function api(path, payload) {
+async function api(path, payload, {signal} = {}) {
   if (!token) token = (await (await fetch("/api/session")).json()).token;
   const response = await fetch(path, {
     method: "POST",
+    signal,
     headers: { "Content-Type": "application/json", "X-Dashboard-Token": token },
     body: JSON.stringify(payload),
   });
   const result = await response.json();
-  if (!response.ok)
+  if (!response.ok) {
+    if (response.status === 403) token = "";
     throw Error(result.error || "Unable to complete this action.");
+  }
   return result;
 }
 function showSetup() {
@@ -125,6 +136,7 @@ function showSetup() {
   $("setupPage").hidden = false;
   $("dashboardMain").hidden = true;
   document.body.classList.remove("overviewMode");
+  document.body.classList.remove("detailMode");
   $("cancelSetup").hidden = !data.length;
 }
 function showPage(page) {
@@ -137,6 +149,7 @@ function showPage(page) {
   $("overview").hidden = !overview;
   $("detailPage").hidden = overview;
   document.body.classList.toggle("overviewMode", overview);
+  document.body.classList.toggle("detailMode", !overview);
   $("overviewNav").setAttribute("aria-current", overview ? "page" : "false");
   $("detailNav").setAttribute("aria-current", overview ? "false" : "page");
 }
@@ -159,8 +172,6 @@ function applyBusinessTheme(name) {
   $("insightQuestion").placeholder = `Example: How can we improve ${p.item.toLowerCase()} sales?`;
   $("productFilterLabel").textContent = p.item;
   if ($("product").firstChild) $("product").firstChild.textContent = p.item.startsWith("Service") ? "All services" : p.item === "Dish" ? "All dishes" : "All products";
-  const topChip = document.querySelector('[data-question="Which product leads sales?"]');
-  if (topChip) topChip.textContent = p.item.startsWith("Service") ? "Top service" : p.item === "Dish" ? "Top dish" : "Top product";
 }
 function applyChartVisibility() {
   // Every supported chart remains in Detailed Dashboard; Overview is a curated subset.
@@ -176,7 +187,7 @@ function applyChartVisibility() {
   });
 }
 function showChartChooser(resetSelection = false) {
-  // Ask which three available charts should be featured in Business Overview.
+  // Edit KPI cards and charts together; drafts apply only when the user loads them.
   if (!data.length) return;
   const options = chartOptions(),
     optionIds = options.map((option) => option.id);
@@ -199,9 +210,12 @@ function showChartChooser(resetSelection = false) {
   document
     .querySelectorAll('input[name="chartChoice"]')
     .forEach((input) => input.addEventListener("change", updateChartChoiceState));
+  document.querySelectorAll('input[name="kpi"]').forEach((input) => {
+    input.checked = overviewKpiIds.includes(input.value);
+  });
   updateChartChoiceState();
-  $("chartChooser").hidden = false;
-  $("loadSelectedCharts").focus();
+  $("chartChooser").showModal();
+  $("chartChooser").querySelector(".chooserContent").scrollTop = 0;
 }
 function updateChartChoiceState() {
   // Limit Business Overview to three featured charts.
@@ -227,7 +241,9 @@ function loadSelectedCharts() {
     : chartOptions()
         .slice(0, 3)
         .map((option) => option.id);
-  $("chartChooser").hidden = true;
+  overviewKpiIds = [...document.querySelectorAll('input[name="kpi"]:checked')]
+    .map((input) => input.value);
+  $("chartChooser").close();
   applyChartVisibility();
   render();
   $("setupStatus").textContent = "Dashboard ready.";
@@ -243,18 +259,16 @@ async function inspect() {
   // Read the chosen sample/upload and ask the server for column suggestions.
   $("setupError").textContent = "";
   analyzedData = null;
-  $("kpiPanel").hidden = true;
-  $("buildButton").hidden = false;
   $("setupStatus").textContent = "Reading columns…";
   $("inspectButton").disabled = true;
   try {
     if ($("sample").value) uploadPayload = { sample: $("sample").value };
     else if ($("upload").files.length) {
       const file = $("upload").files[0];
-      if (file.size > 20 * 1024 * 1024)
-        throw Error("Choose a file smaller than 20 MB.");
+      if (file.size > uploadLimitMb * 1024 * 1024)
+        throw Error(`Choose a file no larger than ${uploadLimitMb} MB.`);
       const base64 = await new Promise((resolve, reject) => {
-        // Uploads are encoded in the browser, then sent only to the local server.
+        // Uploads are encoded in the browser, then sent to the Python backend.
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result.split(",")[1]);
         reader.onerror = () => reject(Error("Cannot read this file."));
@@ -283,23 +297,22 @@ async function inspect() {
           `<label>${esc(label)}<select id="map_${key}"></select></label>`,
       )
       .join("");
-    Object.keys(fields).forEach((key) =>
+    Object.keys(fields).forEach((key) => {
       sourceOptions(
         $("map_" + key),
         profile.columns,
         profile.mapping[key] || "",
-      ),
-    );
-    // Keep operational fields in a separate collapsible group; expose detected fields automatically.
-    const operational = document.createElement("details");
-    operational.className = "operationalMapping";
-    const summary = document.createElement("summary");
-    summary.textContent = "Optional delivery, booking, waste, channel and job columns";
-    operational.append(summary);
-    const grid = document.createElement("div"); grid.className = "mappingGrid";
-    Object.keys(BUSINESS_FIELDS).forEach(key => grid.append($("map_" + key).parentElement));
-    operational.append(grid); $("mappingGrid").append(operational);
-    operational.open = Object.keys(BUSINESS_FIELDS).some(key => profile.mapping[key]);
+      );
+      const input = $("map_" + key);
+      const updateMissing = () => input.classList.toggle("missingMapping", !input.value);
+      input.addEventListener("change", updateMissing);
+      updateMissing();
+    });
+    // Keep both tool buttons in one row; detected operational fields expand below them.
+    $("operationalGrid").replaceChildren();
+    Object.keys(BUSINESS_FIELDS).forEach(key => $("operationalGrid").append($("map_" + key).parentElement));
+    setMappingTool("toggleOptionalColumns", "operationalMapping", Object.keys(BUSINESS_FIELDS).some(key => profile.mapping[key]));
+    setMappingTool("toggleSourcePreview", "sourcePreviewPanel", false);
     // Ask about amount semantics only for mapped add-on or line-total columns.
     $("lineTotalBasis").value = "";
     $("modifierBasis").value = "line";
@@ -355,9 +368,7 @@ async function confirmColumns() {
       modifierBasis: $("modifierBasis").value,
     });
     renderKpiOptions(analyzedData);
-    $("kpiPanel").hidden = false;
-    $("buildButton").hidden = true;
-    $("setupStatus").textContent = "Columns confirmed. Choose your KPIs.";
+    buildDashboard();
   } catch (e) {
     $("setupError").textContent = e.message;
   } finally {
@@ -411,13 +422,15 @@ function renderKpiOptions(result) {
         `<label class="kpiOption"><input type="checkbox" name="kpi" value="${id}"><span><strong>${title}</strong><small>${description}</small></span></label>`,
     )
     .join("");
-  $("kpiPanel").querySelector("p").textContent =
-    `Choose the measures that matter to your ${$("business").value.toLowerCase()}. Options depend on the columns you confirmed; leave everything unchecked for the default KPI cards.`;
+  $("kpiHelp").textContent =
+    "Choose the measures that matter most, or leave all unchecked to use the defaults. Only measures supported by your columns are shown.";
 }
 function buildDashboard() {
   if (!analyzedData) return;
   meta = analyzedData;
   data = meta.rows;
+  overviewKpiIds = [];
+  overviewChartIds = chartOptions().slice(0, 3).map((option) => option.id);
   for (const id of ["category", "product"])
     sourceOptions(
       $(id),
@@ -447,8 +460,9 @@ function buildDashboard() {
   $("dataNotes").textContent = meta.warnings.join(" ");
   setDefaultFilterValues();
   showPage("overview");
+  render();
   showChartChooser(true);
-  $("setupStatus").textContent = "Choose charts to load.";
+  $("setupStatus").textContent = "Choose KPI cards and charts for your overview.";
 }
 function setDefaultFilterValues() {
   // Return all filters to the full dataset range.
@@ -722,9 +736,7 @@ function metrics(rows, overview = false) {
             "Discounts ÷ gross sales",
           ],
         ];
-  const picked = [...document.querySelectorAll('input[name="kpi"]:checked')].map(
-    (input) => input.value,
-  );
+  const picked = overviewKpiIds;
   const orders = c.orders ? new Set(rows.map((r) => r.Order_Key)).size : 0;
   const custom = {
     netSales: ["Net sales", money(n), "Selected recorded revenue"],
@@ -934,11 +946,29 @@ function renderOverviewCharts(rows, products, c) {
       : "";
   });
 }
+function renderDatasetTable() {
+  // Paginate the complete filtered dataset so large uploads do not create a huge DOM.
+  const pageSize = 50;
+  const pages = Math.max(1, Math.ceil(selected.length / pageSize));
+  datasetTablePage = Math.max(0, Math.min(datasetTablePage, pages - 1));
+  const start = datasetTablePage * pageSize;
+  const rows = selected.slice(start, start + pageSize);
+  const columns = Object.keys(data[0] || {}).filter(key => key !== "Order_Key");
+  $("datasetTable").innerHTML = `<caption class="srOnly">Filtered mapped dataset, page ${datasetTablePage + 1} of ${pages}</caption><thead><tr><th scope="col">Row</th>${columns.map(key => `<th scope="col">${esc(fields[key] || key.replaceAll("_", " "))}</th>`).join("")}</tr></thead><tbody>${rows.length ? rows.map((row, index) => `<tr><th scope="row">${start + index + 1}</th>${columns.map(key => `<td${typeof row[key] === "number" ? ' class="num"' : ""}>${esc(row[key] === null || row[key] === "" ? "—" : row[key])}</td>`).join("")}</tr>`).join("") : `<tr><td colspan="${columns.length + 1}" class="tableEmpty">No rows match these filters.</td></tr>`}</tbody>`;
+  $("datasetRowCount").textContent = `${selected.length.toLocaleString()} of ${data.length.toLocaleString()} rows`;
+  $("datasetPageStatus").textContent = selected.length
+    ? `Rows ${(start + 1).toLocaleString()}–${Math.min(start + pageSize, selected.length).toLocaleString()} · Page ${datasetTablePage + 1} of ${pages}`
+    : "No matching rows";
+  $("previousDataPage").disabled = datasetTablePage === 0;
+  $("nextDataPage").disabled = datasetTablePage >= pages - 1;
+  $("datasetTable").parentElement.scrollTop = 0;
+}
 function render() {
   // Recalculate every chart/table whenever filters or data change.
   if (!data.length) return;
   revision++;
   selected = filtered();
+  datasetTablePage = 0;
   const rows = selected,
     c = meta.capabilities;
   $("count").textContent =
@@ -951,13 +981,14 @@ function render() {
   renderOverviewCharts(rows, products, c);
   // Render remaining charts through the same dispatcher as Overview.
   $("detailCharts").innerHTML = chartOptions().map(option =>
-    `<section class="panel" data-chart-panel="${esc(option.id)}"><h2>${esc(option.title)}</h2><p class="sub">${esc(CHARTS[option.id].kind)}</p><div class="businessDetailChart">${overviewChartHtml(option.id, rows, products, c)}</div></section>`).join("") || '<p class="chartNote">All supported charts are shown in Business Overview.</p>';
+    `<section class="panel detailChartPanel" data-chart-panel="${esc(option.id)}"><div class="detailChartHeader"><h2>${esc(option.title)}</h2><p class="sub">${esc(CHARTS[option.id].kind)}</p></div><div class="businessDetailChart" data-detail-chart="${esc(option.id)}">${overviewChartHtml(option.id, rows, products, c)}</div></section>`).join("") || '<p class="chartNote">No optional charts are available from these columns.</p>';
   // Retain the detailed source summaries alongside the new business charts.
   $("detailTables").innerHTML = (c.product ? `<details class="panel"><summary>${esc(businessProfile(meta.business).item)} totals</summary><div class="scroll"><table><thead><tr><th>Item</th><th>Units</th><th>Net sales</th><th>Gross profit</th><th>Margin</th></tr></thead><tbody>${products.map(([name, items]) => {
     const sales = sum(items, "Net_Sales"), profit = sum(items, "Gross_Profit");
     return `<tr><td>${esc(name)}</td><td>${c.Quantity ? sum(items, "Quantity") : "—"}</td><td>${esc(money(sales))}</td><td>${c.Gross_Profit ? esc(money(profit)) : "—"}</td><td>${c.Gross_Profit && sales > 0 ? pct(profit / sales * 100) : "—"}</td></tr>`;
   }).join("")}</tbody></table></div></details>` : "") + (c.employee ? `<details class="panel"><summary>Staff sales totals</summary><div class="scroll"><table><thead><tr><th>Employee</th><th>Gross sales</th><th>Discounts</th><th>Net sales</th><th>Gross profit</th><th>Margin</th></tr></thead><tbody>${staffTable(rows, c)}</tbody></table></div></details>` : "");
   applyChartVisibility();
+  renderDatasetTable();
   renderInsights(rows);
   resetConversation();
   $("analystEvidence").hidden = true;
@@ -2246,6 +2277,7 @@ function renderAnalystEvidence(response) {
 }
 // Forget the browser conversation token/transcript and clear evidence for the old selection.
 function resetConversation() {
+  localAnalysisController?.abort();
   conversationId = null;
   conversationTurns = [];
   $("insightAnswer").textContent = "";
@@ -2256,7 +2288,9 @@ function resetConversation() {
 function showConversation(pending = "") {
   const panel = $("insightAnswer");
   panel.textContent = [...conversationTurns, pending].filter(Boolean).join("\n\n");
-  panel.scrollTop = panel.scrollHeight;
+  const viewport = panel.closest(".conversationViewport");
+  // Keep the latest answer visible while leaving its evidence just below it.
+  viewport.scrollTop = Math.max(0, panel.offsetHeight - viewport.clientHeight);
 }
 async function ask(question) {
   // Ask the deterministic engine or the explicitly selected AI provider.
@@ -2275,10 +2309,14 @@ async function ask(question) {
     if (model) {
       if (!meta.datasetId) throw Error(meta.analystNote || "Build the dashboard again to load the dataset for AI analysis.");
       // Send only the dataset reference, conversation token, question, and current filters; rows are cached on the server.
-      const response = await api("/api/analyst", {
+      const payload = {
         provider: option.provider, model, question, datasetId: meta.datasetId, conversationId,
         filters: Object.fromEntries(["from", "to", "category", "product", "weekday", "period"].map(id => [id, $(id).value])),
-      });
+      };
+      localAnalysisController = new AbortController();
+      const response = option.provider === "browser_ollama"
+        ? await runBrowserAnalyst(api, browserOllama, payload, {signal: localAnalysisController.signal})
+        : await api("/api/analyst", payload);
       if (revision === current) {
         // If backend memory expired or scope changed, discard the old visible transcript too.
         if (conversationId && conversationId !== response.conversationId) conversationTurns = [];
@@ -2308,9 +2346,59 @@ async function ask(question) {
 }
 function updateAnswerModeNotice() {
   const option = aiOptions.find(item => item.value === $("localModel").value);
-  $("aiDataNotice").textContent = answerModeNotice(option, groqConfigured);
+  $("aiDataNotice").textContent = answerModeNotice(option, groqConfigured, hosted);
+  $("localModel").title = $("aiDataNotice").textContent;
+  $("aiModeSummary").textContent = option?.provider === "groq"
+    ? "Shares question & data context with Groq cloud"
+    : ["ollama", "browser_ollama"].includes(option?.provider)
+      ? "AI inference on your computer"
+      : "Uses dashboard data · No AI inference";
   $("insightMode").textContent = "Calculated insights · " + (option?.model ? option.label : "AI optional");
 }
+function applyAIOptions(current = $("localModel").value, initial = false) {
+  const options = [...(backendModels.options || []), ...browserOllama.models.map(model => ({
+    provider: "browser_ollama", model, label: `${model} · Local Ollama (this browser)`, available: true,
+  }))];
+  aiOptions = answerOptions({...backendModels, options});
+  const value = chooseAnswerMode(aiOptions, current, initial);
+  $("localModel").replaceChildren(...aiOptions.map(item => {
+    const element = new Option(item.label, item.value);
+    element.disabled = !item.available;
+    return element;
+  }));
+  $("localModel").value = value;
+  if (current !== value) { revision++; resetConversation(); }
+  updateAnswerModeNotice();
+}
+async function connectBrowserOllama() {
+  $("connectBrowserOllama").disabled = true;
+  $("disconnectBrowserOllama").disabled = false;
+  $("browserOllamaStatus").textContent = "Connecting to Ollama on this computer. Allow Chrome’s Local Network Access prompt if shown…";
+  try {
+    const models = await browserOllama.connect();
+    applyAIOptions();
+    $("browserOllamaStatus").textContent = models.length
+      ? `Connected · ${models.length} local model(s). Select Local Ollama under Answer mode to use one.`
+      : "Connected, but no downloaded local models were found. Run ollama pull llama3.2:3b, then Reconnect.";
+    $("connectBrowserOllama").textContent = "Reconnect Local Ollama";
+  } catch (error) {
+    applyAIOptions();
+    $("browserOllamaStatus").textContent = error.message;
+  } finally {
+    $("connectBrowserOllama").disabled = false;
+  }
+}
+$("connectBrowserOllama").onclick = connectBrowserOllama;
+$("disconnectBrowserOllama").onclick = () => {
+  browserOllama.disconnect();
+  localAnalysisController?.abort();
+  applyAIOptions();
+  $("connectBrowserOllama").textContent = "Connect Local Ollama";
+  $("disconnectBrowserOllama").disabled = true;
+  $("browserOllamaStatus").textContent = "Disconnected. Local inference requests have stopped; choose an answer mode to continue.";
+};
+// Use the page's actual origin for setup; custom domains must be allowed explicitly in Ollama.
+for (const element of document.querySelectorAll("[data-ollama-origin]")) element.textContent = window.location.origin;
 async function refreshModels() {
   // Discover local models and backend Groq configuration without sending data to cloud AI.
   $("refreshModels").disabled = true;
@@ -2318,17 +2406,18 @@ async function refreshModels() {
     const response = await fetch("/api/models");
     if (!response.ok) throw Error("AI discovery failed");
     const result = await response.json(), current = $("localModel").value;
-    aiOptions = answerOptions(result);
+    if (result.hosted) {
+      uploadLimitMb = 2;
+      $("uploadLimitNote").hidden = false;
+      for (const group of $("sample").querySelectorAll("optgroup")) {
+        if (group.label === "Earlier samples") group.hidden = true;
+      }
+    }
+    hosted = Boolean(result.hosted);
+    backendModels = result;
+    applyAIOptions(current, !modelsLoaded);
     groqConfigured = Boolean(result.groqConfigured);
-    const value = chooseAnswerMode(aiOptions, current, !modelsLoaded);
     modelsLoaded = true;
-    $("localModel").replaceChildren(...aiOptions.map(item => {
-      const element = new Option(item.label, item.value);
-      element.disabled = !item.available;
-      return element;
-    }));
-    $("localModel").value = value;
-    if (current !== value) { revision++; resetConversation(); }
     updateAnswerModeNotice();
   } catch {
     $("insightMode").textContent = "Could not refresh AI options. Check that the backend is running.";
@@ -2336,14 +2425,19 @@ async function refreshModels() {
     $("refreshModels").disabled = false;
   }
 }
-// Connect page buttons, dropdowns, and question chips to the functions above.
+// Connect page buttons and dropdowns to the functions above.
 $("inspectButton").onclick = inspect;
 $("buildButton").onclick = confirmColumns;
-$("dashboardButton").onclick = buildDashboard;
 $("sheet").onchange = () => {
   uploadPayload.sheet = $("sheet").value;
   inspect();
 };
+function setMappingTool(buttonId, panelId, expanded) {
+  $(buttonId).setAttribute("aria-expanded", String(expanded));
+  $(panelId).hidden = !expanded;
+}
+$("toggleOptionalColumns").onclick = () => setMappingTool("toggleOptionalColumns", "operationalMapping", $("operationalMapping").hidden);
+$("toggleSourcePreview").onclick = () => setMappingTool("toggleSourcePreview", "sourcePreviewPanel", $("sourcePreviewPanel").hidden);
 $("upload").onchange = () => {
   // Switching upload/sample clears the previous mapping preview.
   $("sample").value = "";
@@ -2352,8 +2446,6 @@ $("upload").onchange = () => {
   uploadPayload = {};
   analyzedData = null;
   $("mappingPanel").hidden = true;
-  $("kpiPanel").hidden = true;
-  $("buildButton").hidden = false;
   $("sheet").replaceChildren();
 };
 $("sample").onchange = () => {
@@ -2364,13 +2456,11 @@ $("sample").onchange = () => {
   $("upload").value = "";
   $("sheet").replaceChildren();
   $("mappingPanel").hidden = true;
-  $("kpiPanel").hidden = true;
-  $("buildButton").hidden = false;
   const sample = SAMPLE_DATASETS.find(item => item.filename === $("sample").value);
   if (sample) $("business").value = sample.business;
   $("sampleDescription").hidden = !sample;
   $("sampleDescription").textContent = sample
-    ? (sample.legacy ? "Earlier sample. " : "Fictional demo · ") + (sample.description || sample.label) + " Click Inspect columns, then Build dashboard."
+    ? (sample.legacy ? "Earlier sample. " : "Fictional demo · ") + (sample.description || sample.label) + " Click Inspect columns, then Confirm columns."
     : "";
   applyBusinessTheme($("business").value);
 };
@@ -2383,9 +2473,15 @@ $("cancelSetup").onclick = () => showPage("overview");
   $(id).addEventListener("change", render),
 );
 $("reset").onclick = resetFilters;
+$("previousDataPage").onclick = () => { datasetTablePage--; renderDatasetTable(); };
+$("nextDataPage").onclick = () => { datasetTablePage++; renderDatasetTable(); };
 $("chooseCharts").onclick = () => showChartChooser(false);
+$("closeChartChooser").onclick = () => $("chartChooser").close();
+$("chartChooser").addEventListener("close", () => $("chooseCharts").focus());
 $("selectRecommendedCharts").onclick = selectRecommendedCharts;
 $("loadSelectedCharts").onclick = loadSelectedCharts;
+$("openAiSettings").onclick = () => $("aiSettings").showModal();
+$("closeAiSettings").onclick = () => $("aiSettings").close();
 $("refreshModels").onclick = refreshModels;
 // Starting over or switching model invalidates outstanding answers and clears local chat context.
 $("newConversation").onclick = () => { revision++; resetConversation(); };
@@ -2395,14 +2491,6 @@ $("insightForm").onsubmit = (e) => {
   e.preventDefault();
   ask($("insightQuestion").value);
 };
-document.querySelectorAll("[data-question]").forEach(
-  (b) =>
-    (b.onclick = () => {
-      // Clicking a suggested question copies it into the input and answers it.
-      $("insightQuestion").value = b.dataset.question;
-      ask(b.dataset.question);
-    }),
-);
 showSetup();
 applyBusinessTheme($("business").value);
 refreshModels().catch(() => {});

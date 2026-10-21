@@ -10,13 +10,8 @@ import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from backend.config import DIST, ROOT, UPLOAD_LIMIT_BYTES
-from backend.data_loader import frame_from_payload
-from backend.normalizer import normalize, suggest_mapping
-from backend.ollama_client import explain
 from backend.ai_providers import available_models
 from backend.groq_client import GroqError
-from backend.analyst_datasets import DATASETS
-from backend.analyst_agent import analyze_question
 
 # One process-wide request token is fetched by dashboard.js before it posts data.
 TOKEN = secrets.token_urlsafe(32)
@@ -38,7 +33,9 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         """Serve dashboard files and small read-only API endpoints."""
         # Serve the static dashboard files and lightweight local API endpoints.
-        if self.path == "/api/session":
+        if self.path == "/health":
+            self.send_json({"status": "ok"})
+        elif self.path == "/api/session":
             self.send_json({"token": TOKEN})
         elif self.path == "/api/models":
             self.send_json(available_models())
@@ -82,47 +79,12 @@ class Handler(BaseHTTPRequestHandler):
             if length <= 0 or length > UPLOAD_LIMIT_BYTES * 1.5:
                 raise ValueError("Upload size exceeds the 20 MB file limit.")
             payload = json.loads(self.rfile.read(length))
-            if self.path == "/api/profile":
-                # Inspect columns and suggest mappings before analysis.
-                frame, name, sheets = frame_from_payload(payload)
-                self.send_json(
-                    {
-                        "filename": name,
-                        "rows": len(frame),
-                        "columns": frame.columns.tolist(),
-                        "sheets": sheets,
-                        "mapping": suggest_mapping(frame.columns),
-                        "preview": json.loads(frame.head(5).to_json(orient="records")),
-                    }
-                )
-            elif self.path == "/api/analyze":
-                # Normalize the selected sheet/file into dashboard-ready records.
-                frame, name, _ = frame_from_payload(payload)
-                result = normalize(
-                    frame,
-                    payload.get("mapping"),
-                    payload.get("business", "Other business"),
-                    payload.get("currency", "USD"),
-                    payload.get("dateOrder", "month"),
-                    payload.get("decimal", "dot"),
-                    line_total_basis=payload.get("lineTotalBasis"),
-                    modifier_basis=payload.get("modifierBasis", "line"),
-                )
-                result["filename"] = name
-                # Register rows for later questions; a cache limit must not prevent ordinary dashboard use.
-                try:
-                    result["datasetId"] = DATASETS.put(frame, result, payload.get("mapping", {}))
-                except ValueError as error:
-                    result["analystNote"] = str(error)
-                self.send_json(result)
-            # Pass the question, dataset ID, filters, and conversation ID to the SQL analyst.
-            elif self.path == "/api/analyst":
-                self.send_json(analyze_question(payload))
-            elif self.path == "/api/explain":
-                # Optional local AI explanation through Ollama.
-                self.send_json(explain(payload))
+            from backend.api import dispatch
+            result = dispatch(self.path, payload)
+            if isinstance(result, tuple):
+                self.send_json(*result)
             else:
-                self.send_json({"error": "Not found"}, 404)
+                self.send_json(result)
         # Provider failures are explicit: never silently switch a cloud question to local AI.
         except GroqError as error:
             self.send_json({"error": str(error)}, error.status)
@@ -143,6 +105,9 @@ class Handler(BaseHTTPRequestHandler):
 
 def main():
     """Start the dashboard as a local-only website on this computer."""
+    import os
+    if os.getenv("APP_ENV") == "production":
+        raise RuntimeError("Use Gunicorn and backend.production:create_app() in production.")
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int, default=8765)
     parser.add_argument("--no-browser", action="store_true")

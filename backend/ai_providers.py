@@ -1,4 +1,6 @@
 """Provider selection and discovery, independent of dataset/query orchestration."""
+import os
+import re
 from dataclasses import dataclass
 
 from backend import groq_client, ollama_client
@@ -12,6 +14,8 @@ class AnalystModel:
 
     @property
     def mode(self):
+        if self.provider == 'browser_ollama':
+            return 'Local Ollama via browser'
         return 'Groq cloud data analyst' if self.provider == 'groq' else 'Local data analyst'
 
     @property
@@ -20,6 +24,8 @@ class AnalystModel:
         return f'{self.provider}:{self.model}'
 
     def chat(self, messages, **options):
+        if self.provider == 'browser_ollama':
+            raise ValueError('Browser Ollama inference must run in the browser.')
         transport = groq_client if self.provider == 'groq' else ollama_client
         return transport.chat(self.model, messages, **options)
 
@@ -40,6 +46,9 @@ def resolve_model(provider, model):
             raise ValueError('Ollama is not available. Start Ollama or choose another answer mode.') from None
         if model not in models:
             raise ValueError('Choose a downloaded local Ollama model.')
+    elif provider == 'browser_ollama':
+        if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._/:+-]{0,199}', model) or ':cloud' in model.lower():
+            raise ValueError('Choose a downloaded local Ollama model.')
     else:
         raise ValueError('Choose Ollama or Groq as the AI provider.')
     return AnalystModel(provider, model)
@@ -57,4 +66,4 @@ def available_models():
     options.append({'provider': 'groq', 'model': GROQ_MODEL,
                     'label': 'GPT-OSS 120B · Groq (cloud)', 'available': groq_ready})
     # Keep the original local-only list for older API clients.
-    return {'models': models, 'options': options, 'groqConfigured': groq_ready}
+    return {'models': models, 'options': options, 'groqConfigured': groq_ready, 'hosted': os.getenv('APP_ENV') == 'production'}

@@ -44,8 +44,10 @@ export default function App() {
         <h2>Build your business dashboard</h2>
         <p>
           Choose your business, upload a data table, and confirm the columns.
-          Files are processed on this computer.
+          Uploads and AI conversations are temporary and may expire or be cleared
+          when the server restarts. Keep your original file so you can rebuild the dashboard.
         </p>
+        <p id="uploadLimitNote" hidden>Demo uploads: up to 2 MB, 10,000 rows, and 60 columns. Use fictional or nonconfidential data.</p>
         <p id="businessHint" className="businessHint"></p>
         <div className="setupGrid">
           <label>
@@ -144,11 +146,26 @@ export default function App() {
             </label>
             <p>Map a numeric charge, not an ingredient name. Blank charges count as zero. When a sales total is mapped, it takes priority and modifiers are not added again.</p>
           </div>
-          {/* Show source rows for checking the mapping before normalization. */}
-          <details style={{ marginTop: 18 }}>
-            <summary>Preview source rows</summary>
-            <div id="preview"></div>
-          </details>
+          {/* The controls stay together; either expanded panel spans the full form. */}
+          <div className="mappingTools">
+            <button id="toggleOptionalColumns" className="mappingTool optionalColumnsButton" type="button" aria-expanded="false" aria-controls="operationalMapping">
+              <span>Optional delivery, booking, waste, channel and job columns</span>
+              <span className="disclosureIcon" aria-hidden="true">+</span>
+            </button>
+            <button id="toggleSourcePreview" className="mappingTool sourcePreviewButton" type="button" aria-expanded="false" aria-controls="sourcePreviewPanel">
+              <span>Preview source rows</span>
+              <span className="disclosureIcon" aria-hidden="true">+</span>
+            </button>
+          </div>
+          <section id="operationalMapping" className="mappingToolsPanel" aria-labelledby="optionalColumnsTitle" hidden>
+            <h3 id="optionalColumnsTitle">Optional operational columns</h3>
+            <div id="operationalGrid" className="mappingGrid"></div>
+          </section>
+          <section id="sourcePreviewPanel" className="mappingToolsPanel" aria-labelledby="sourcePreviewTitle" hidden>
+            <h3 id="sourcePreviewTitle">Source preview</h3>
+            <p className="sub">First five rows, before mapping and calculations.</p>
+            <div id="preview" tabIndex="0" role="region" aria-label="Source row preview"></div>
+          </section>
           <div className="setupActions">
             <button className="primary" id="buildButton" type="button">
               Confirm columns
@@ -157,56 +174,86 @@ export default function App() {
               Return to dashboard
             </button>
           </div>
-          <section id="kpiPanel" className="kpiPanel" hidden>
-            <hr />
-            <h2>Customize your Business Overview</h2>
-            <p>
-              Choose the KPI cards and overview charts you want to see. Choices
-              depend on your confirmed columns. Leave everything unchecked for
-              the default Business Overview. The Detailed Dashboard always
-              includes all of its sections.
-            </p>
-            <h3>KPI cards</h3>
-            <div id="kpiOptions" className="kpiOptions"></div>
-            <div className="setupActions">
-              <button className="primary" id="dashboardButton" type="button">
-                Build dashboard
-              </button>
-              <span id="kpiStatus" aria-live="polite"></span>
-            </div>
-          </section>
         </div>
         <div id="setupError" className="error" role="alert"></div>
       </section>
 
-      {/* Chart selection dialog: only charts supported by validated columns are offered. */}
-      <section
+      {/* One customization dialog: KPI cards first, then supported overview charts. */}
+      <dialog
         className="chartChooser"
         id="chartChooser"
-        role="dialog"
-        aria-modal="true"
         aria-labelledby="chartChooserTitle"
-        hidden
       >
         <div className="chartChooserPanel">
-          <div>
-            <h2 id="chartChooserTitle">Choose overview charts</h2>
-            <p id="chartChooserSummary" className="sub">
-              Pick up to 3 charts for Business Overview
-            </p>
+          <div className="chooserHeader">
+            <div>
+              <h2 id="chartChooserTitle">Customize your overview</h2>
+              <p className="sub">Put your most useful numbers and charts up front.</p>
+            </div>
+            <button id="closeChartChooser" className="iconButton" type="button" aria-label="Close customization">×</button>
           </div>
-          <details className="recommendationExplanation"><summary>Why these charts?</summary><div id="chartRecommendationNotes"></div></details>
-          <div id="chartChoices" className="chartChoices"></div>
+          <div className="chooserContent">
+            <section id="kpiPanel" className="chooserSection" aria-labelledby="kpiTitle">
+              <h3 id="kpiTitle"><span className="sectionNumber">01</span> KPI cards</h3>
+              <p id="kpiHelp" className="sub">Choose your key measures, or leave all unchecked to use the defaults.</p>
+              <div id="kpiOptions" className="kpiOptions"></div>
+            </section>
+            <section className="chooserSection" aria-labelledby="chartsTitle">
+              <div className="chooserSectionHeading">
+                <h3 id="chartsTitle"><span className="sectionNumber">02</span> Overview charts</h3>
+                <button id="selectRecommendedCharts" type="button">Recommended charts</button>
+              </div>
+              <p id="chartChooserSummary" className="sub" aria-live="polite">Pick up to 3 charts.</p>
+              <details className="recommendationExplanation"><summary>Why these charts?</summary><div id="chartRecommendationNotes"></div></details>
+              <div id="chartChoices" className="chartChoices"></div>
+            </section>
+          </div>
           <div className="chartChooserActions">
-            <button id="selectRecommendedCharts" type="button">
-              Use recommendations
-            </button>
+            <small>Detailed Dashboard keeps every supported chart.</small>
             <button className="primary" id="loadSelectedCharts" type="button">
               Load dashboard
             </button>
           </div>
         </div>
-      </section>
+      </dialog>
+
+      {/* Connection controls and setup help stay available without expanding the chat card. */}
+      <dialog id="aiSettings" className="aiSettingsDialog" aria-labelledby="aiSettingsTitle">
+        <div className="chooserHeader">
+          <div>
+            <h2 id="aiSettingsTitle">AI settings</h2>
+            <p className="sub">Choose how you connect and review how your data is used.</p>
+          </div>
+          <button id="closeAiSettings" className="iconButton" type="button" aria-label="Close AI settings">×</button>
+        </div>
+        <div className="aiSettingsContent">
+          <h3>Current answer mode</h3>
+          <p id="aiDataNotice" className="sub aiDataNotice" aria-live="polite">Choose an answer mode to see how your data is used.</p>
+          <button id="refreshModels" type="button">Refresh AI options</button>
+          <p className="sub modelStatus" id="insightMode" role="status">Calculated insights · AI optional</p>
+          <div className="browserOllamaPanel">
+            <h3>Local Ollama</h3>
+            <div className="browserOllamaActions">
+              <button id="connectBrowserOllama" type="button">Connect Local Ollama</button>
+              <button id="disconnectBrowserOllama" type="button" disabled>Disconnect</button>
+            </div>
+            <p id="browserOllamaStatus" role="status">Not connected. Connect only if you want AI inference on this computer.</p>
+            <details className="ollamaSetup">
+              <summary>Setup and troubleshooting</summary>
+              <p>Install <a href="https://ollama.com/download" target="_blank" rel="noreferrer">Ollama for Windows or macOS</a> and download a model:</p>
+              <pre>ollama pull llama3.2:3b</pre>
+              <p>Quit the running Ollama app first. Keep the server on 127.0.0.1:11434 and allow only this trusted website origin: <code data-ollama-origin></code>.</p>
+              <p>macOS Terminal (keep it open while using the dashboard):</p>
+              <pre>OLLAMA_HOST=127.0.0.1:11434 OLLAMA_NO_CLOUD=1 OLLAMA_ORIGINS=<span data-ollama-origin></span> ollama serve</pre>
+              <p>Windows PowerShell (keep it open while using the dashboard):</p>
+              <pre>{'$env:OLLAMA_HOST="127.0.0.1:11434"\n$env:OLLAMA_NO_CLOUD="1"\n$env:OLLAMA_ORIGINS="'}<span data-ollama-origin></span>{'"\nollama serve'}</pre>
+              <p>Click Connect, allow Chrome’s Local Network Access prompt, then select a model in Answer mode. If no models appear, download a local model and Reconnect. Cloud-linked models are excluded.</p>
+              <p>If access fails: check Ollama is running, quit an older instance before changing its settings, check the exact origin, and allow local-network access in Chrome’s site settings. A timeout can mean your model is still loading; wait or try a smaller model. Other browsers and managed devices may block HTTPS-to-loopback access.</p>
+              <p>AI inference runs on your computer. Uploads, SQL calculations, evidence verification and conversation storage still run on the dashboard server. Keep Ollama on loopback; no public tunnel, wildcard origin or extra desktop app is required. Disconnect stops this page’s requests; it does not stop Ollama or revoke the site’s permission.</p>
+            </details>
+          </div>
+        </div>
+      </dialog>
 
       {/* Dashboard content stays hidden until an upload is normalized successfully. */}
       <main id="dashboardMain" hidden>
@@ -230,86 +277,49 @@ export default function App() {
 
           {/* Insights combine computed cards with calculated answers, Ollama, or Groq chat. */}
           <div className="overviewBottom">
-            <section className="panel insightsPanel">
+            <section className="panel insightsPanel compactAssistant" aria-labelledby="assistantTitle">
               <div className="insightHeader">
                 <div>
-                  <h2>Business insights</h2>
-                  <p className="sub">
-                    <span id="insightMode">
-                      Calculated insights · AI optional
-                    </span>
-                  </p>
+                  <h2 id="assistantTitle">Business assistant</h2>
                 </div>
-                {/* Backend discovery lists local and cloud models; blank selects calculated answers. */}
-                <div className="modelRow">
-                  <label htmlFor="localModel">Answer mode</label>
-                  <select id="localModel" defaultValue="" aria-describedby="aiDataNotice">
-                    <option value="">Calculated answers</option>
-                  </select>
-                  <button id="refreshModels" type="button">
-                    Refresh AI options
-                  </button>
-                </div>
+                <button id="openAiSettings" className="quietButton" type="button" aria-haspopup="dialog">AI settings</button>
               </div>
-              <p id="aiDataNotice" className="sub aiDataNotice" aria-live="polite">
-                Choose an answer mode to see how your data is used.
-              </p>
-              <div className="insightBody">
-                <div className="insightAsk">
-                  {/* Submitting a question calls ask(); suggestion buttons reuse the same path. */}
-                  <form id="insightForm">
-                    <label htmlFor="insightQuestion">
-                      Ask a question about this dashboard
-                    </label>
-                    <div className="askRow">
-                      <input
-                        id="insightQuestion"
-                        placeholder="Example: Which product should we investigate?"
-                        required
-                      />
-                      <button id="askButton" type="submit">
-                        Ask
-                      </button>
-                    </div>
-                    <div className="suggestions">
-                      <button
-                        type="button"
-                        data-question="Which product leads sales?"
-                      >
-                        Top product
-                      </button>
-                      <button
-                        type="button"
-                        data-question="Which product sold the least?"
-                      >
-                        Least sold
-                      </button>
-                      <button
-                        type="button"
-                        data-question="Is the business successful?"
-                      >
-                        Business health
-                      </button>
-                      <button type="button" data-question="What should we do next?">
-                        Next step
-                      </button>
-                    </div>
-                  </form>
-                  {/* Chat transcript and supporting SQL results are filled safely by the controller. */}
-                  <button type="button" id="newConversation">New conversation</button>
-                  <small>Follow up on your last answer. Changing data or filters starts a new conversation.</small>
-                  <p id="insightAnswer" aria-live="polite"></p>
-                  <div id="analystEvidence" hidden></div>
-                </div>
-                <div id="insightCards" className="insightCards"></div>
+              <div className="modelRow">
+                <label htmlFor="localModel" className="srOnly">Answer mode</label>
+                <select id="localModel" defaultValue="" aria-describedby="aiModeSummary">
+                  <option value="">Calculated answers</option>
+                </select>
+                <span id="aiModeSummary" className="modeSummary" aria-live="polite">Uses dashboard data</span>
               </div>
+              <div className="conversationViewport" tabIndex="0" aria-label="Conversation and supporting calculations">
+                <p id="insightAnswer" aria-live="polite"></p>
+                <div id="analystEvidence" hidden></div>
+              </div>
+              <form id="insightForm">
+                <label htmlFor="insightQuestion" className="srOnly">Ask a question about this dashboard</label>
+                <div className="askRow">
+                  <input id="insightQuestion" placeholder="Ask about your business…" required />
+                  <button id="askButton" type="submit">Ask</button>
+                </div>
+              </form>
+              <div className="conversationFooter">
+                <small>New data or filters reset the conversation.</small>
+                <button type="button" id="newConversation" className="quietButton">New conversation</button>
+              </div>
+            </section>
+            <section className="panel highlightsPanel" aria-labelledby="highlightsTitle">
+              <h2 id="highlightsTitle">At a glance</h2>
+              <div id="insightCards" className="insightCards"></div>
             </section>
           </div>
         </div>
 
         {/* These controls filter both browser calculations and backend analyst queries. */}
         <div className="filters">
-          <strong style={{ fontSize: 14 }}>Filters</strong>
+          <div className="filterHeading">
+            <strong>Filters</strong>
+            <span className="hint" id="count" aria-live="polite"></span>
+          </div>
           <label>
             From
             <input id="from" type="date" />
@@ -353,13 +363,10 @@ export default function App() {
               <option value="evening">Evening · 6-11 pm</option>
             </select>
           </label>
-          <button id="reset" type="button">
-            Reset filters
-          </button>
-          <button id="chooseCharts" type="button">
-            Choose charts
-          </button>
-          <span className="hint" id="count" aria-live="polite"></span>
+          <div className="filterActions">
+            <button id="reset" type="button">Reset filters</button>
+            <button id="chooseCharts" type="button" aria-haspopup="dialog">Customize overview</button>
+          </div>
           <details>
             <summary>Data notes</summary>
             <div id="sidebarNotes"></div>
@@ -369,9 +376,35 @@ export default function App() {
         {/* Detailed Dashboard includes every chart supported by the mapped data. */}
         {/* The overview selection only controls its three featured chart slots. */}
         <div id="detailPage" hidden>
+          <div className="detailHeading">
+            <div>
+              <h2>Detailed dashboard</h2>
+              <p className="sub">All supported charts, using your current filters.</p>
+            </div>
+            <a href="#datasetTablePanel" className="tableJump">View data table ↓</a>
+          </div>
           <div className="cards" id="cards"></div>
           <div id="detailCharts" className="businessDetailGrid"></div>
           <div id="detailTables" className="businessDetailGrid"></div>
+          <section id="datasetTablePanel" className="panel datasetTablePanel" aria-labelledby="datasetTableTitle">
+            <div className="datasetTableHeader">
+              <div>
+                <h2 id="datasetTableTitle">Dataset rows</h2>
+                <p className="sub">All mapped and calculated columns. Filters apply to every row.</p>
+              </div>
+              <span id="datasetRowCount" className="rowCount" aria-live="polite"></span>
+            </div>
+            <div className="datasetTableScroll" tabIndex="0" role="region" aria-label="Filtered dataset rows">
+              <table id="datasetTable"></table>
+            </div>
+            <nav className="datasetPagination" aria-label="Dataset table pages">
+              <small id="datasetPageStatus" aria-live="polite"></small>
+              <div>
+                <button id="previousDataPage" type="button">Previous</button>
+                <button id="nextDataPage" type="button">Next</button>
+              </div>
+            </nav>
+          </section>
         </div>
 
         <div className="note" id="dataNotes"></div>

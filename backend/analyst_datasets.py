@@ -1,6 +1,8 @@
 # Keeps normalized rows and extra uploaded columns available to future questions by dataset ID.
 """Bounded process-local datasets for the analyst; no uploads are written to disk."""
+import os
 import secrets
+from backend.request_scope import OWNER
 import threading
 import time
 from collections import OrderedDict
@@ -17,12 +19,14 @@ class Dataset:
     source_columns: dict
     size: int
     created: float
+    owner: str
 
 
 class DatasetCache:
     # Set memory/count/age limits and protect shared state from concurrent HTTP requests.
-    def __init__(self, max_bytes=128 * 1024 * 1024, max_items=4, ttl=3600):
-        self.max_bytes, self.max_items, self.ttl = max_bytes, max_items, ttl
+    def __init__(self, max_bytes=None, max_items=4, ttl=3600):
+        self.max_bytes = max_bytes or (32 if os.getenv("APP_ENV") == "production" else 128) * 1024 * 1024
+        self.max_items, self.ttl = max_items, ttl
         self._items = OrderedDict()
         self._lock = threading.Lock()
 
@@ -43,7 +47,7 @@ class DatasetCache:
         if size > self.max_bytes:
             raise ValueError('This dataset is too large for AI analysis memory. Calculated answers still work.')
         metadata = {key: result[key] for key in ('filename', 'business', 'currency', 'capabilities', 'warnings')}
-        entry = Dataset(frame, metadata, extras, size, time.monotonic())
+        entry = Dataset(frame, metadata, extras, size, time.monotonic(), OWNER.get())
         key = secrets.token_urlsafe(24)
         # Expire old datasets and evict least-recently-used entries before storing this upload.
         with self._lock:
@@ -64,7 +68,7 @@ class DatasetCache:
         with self._lock:
             self._expire()
             entry = self._items.get(key) if isinstance(key, str) else None
-            if entry is None:
+            if entry is None or entry.owner != OWNER.get():
                 raise ValueError('The AI dataset expired or the server restarted. Build the dashboard again to reload it.')
             self._items.move_to_end(key)
             return entry

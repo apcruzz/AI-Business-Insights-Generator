@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: ai-business-insights-generator
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeployTrigger: "off"
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: PUBLIC_ORIGIN
+        sync: false
+      - key: DEMO_USERS_JSON
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false

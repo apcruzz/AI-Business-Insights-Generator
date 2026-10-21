@@ -2,6 +2,7 @@
 """Plain-language Ollama integration for dashboard insight explanations."""
 from __future__ import annotations
 
+import os
 import json
 import re
 import urllib.request
@@ -14,6 +15,8 @@ LOCAL_HTTP = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
 def local_models():
     """List downloaded local Ollama models only."""
+    if os.getenv("APP_ENV") == "production":
+        return []
     with LOCAL_HTTP.open(OLLAMA_URL + "/api/tags", timeout=3) as response:
         models = json.load(response).get("models", [])
     # Cloud-linked models are excluded; this app never signs in or downloads models.
@@ -231,6 +234,8 @@ def explain(payload):
 
 def chat(model, messages, *, format=None, timeout=60, num_predict=650):
     """Shared local chat transport; callers validate the downloaded model first."""
+    if os.getenv("APP_ENV") == "production":
+        raise ValueError("Local Ollama is unavailable on the hosted demo.")
     # Build a non-streaming request so callers receive one complete model action.
     body = {'model': model, 'messages': messages, 'stream': False,
             'options': {'temperature': 0, 'num_predict': num_predict, 'num_ctx': 8192}}
