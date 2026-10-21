@@ -52,6 +52,12 @@ class ConversationCache:
                     entry['turns'][-1]['evidence'] = evidence[-1:]
                 entry['updated'] = time.monotonic()
 
+    def discard_owner(self, prefix):
+        with self.lock:
+            for key, entry in list(self.items.items()):
+                if entry['scope'][0].startswith(prefix):
+                    del self.items[key]
+
 
 # One cache is shared by analyst requests until the Python process exits.
 CONVERSATIONS = ConversationCache()

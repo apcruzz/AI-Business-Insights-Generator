@@ -73,6 +73,12 @@ class DatasetCache:
             self._items.move_to_end(key)
             return entry
 
+    def discard_owner(self, prefix):
+        with self._lock:
+            for key, entry in list(self._items.items()):
+                if entry.owner.startswith(prefix):
+                    del self._items[key]
+
 
 # All requests in this server process share this bounded dataset cache.
 DATASETS = DatasetCache()

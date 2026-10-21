@@ -117,7 +117,13 @@ function note(text) {
 
 // POST helper for the local Python API. The token ties requests to this page load.
 async function api(path, payload, {signal} = {}) {
-  if (!token) token = (await (await fetch("/api/session")).json()).token;
+  if (!token) {
+    const session = await fetch("/api/session");
+    if (session.status === 401) { window.location.reload(); throw Error("Sign in again to continue."); }
+    const result = await session.json();
+    if (!session.ok) throw Error(result.error || "Unable to load your session.");
+    token = result.token;
+  }
   const response = await fetch(path, {
     method: "POST",
     signal,
@@ -126,6 +132,7 @@ async function api(path, payload, {signal} = {}) {
   });
   const result = await response.json();
   if (!response.ok) {
+    if (response.status === 401) window.location.reload();
     if (response.status === 403) token = "";
     throw Error(result.error || "Unable to complete this action.");
   }

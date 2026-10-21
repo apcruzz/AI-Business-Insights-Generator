@@ -1,4 +1,4 @@
-"""Restricted, single-process WSGI demo. Never expose the local HTTP handler."""
+"""Hosted WSGI entry point with explicit persistent-account or invited-demo authentication."""
 import json
 import os
 import secrets
@@ -40,6 +40,12 @@ class WindowLimits:
 def create_app():
     if os.getenv('APP_ENV') != 'production':
         raise RuntimeError('Production entry point requires APP_ENV=production.')
+    mode = os.getenv('AUTH_MODE', 'demo')
+    if mode == 'accounts':
+        from backend.account_http import create_account_app
+        return create_account_app()
+    if mode != 'demo':
+        raise RuntimeError('AUTH_MODE must be accounts or demo.')
     try:
         users = json.loads(os.environ['DEMO_USERS_JSON'])
         if not isinstance(users, dict) or not 1 <= len(users) <= 20:
@@ -162,6 +168,10 @@ def create_app():
     @app.get('/api/session')
     def session():
         return jsonify(token=g.csrf, temporaryStorage=True, hosted=True, uploadLimitBytes=2 * 1024 * 1024)
+
+    @app.get('/api/auth/session')
+    def auth_session():
+        return jsonify(authMode='demo', authenticated=True, user=None)
 
     @app.get('/api/models')
     def models():

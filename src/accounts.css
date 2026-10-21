@@ -1,0 +1,60 @@
+.authPage {
+  min-height: 100dvh;
+  max-width: 1180px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 440px);
+  align-items: center;
+  gap: 72px;
+  padding: 44px 32px;
+  margin: auto;
+}
+.authIntroduction { max-width: 480px; }
+.authEyebrow { font-size: 11px; font-weight: 700; letter-spacing: 2px; color: #087b68; margin: 0 0 22px; }
+.authIntroduction h1 { font-size: clamp(32px, 4.5vw, 58px); letter-spacing: -2px; line-height: 1.12; margin: 0 0 24px; color: #183a36; }
+.authIntroduction > p:not(.authEyebrow) { max-width: 350px; color: #5e7772; font-size: 16px; line-height: 1.7; }
+.authFeatures { display: grid; gap: 14px; margin-top: 32px; font-size: 13px; color: #3d665b; }
+.authFeatures span::before { content: "✓"; display: inline-grid; place-items: center; width: 22px; height: 22px; margin-right: 10px; border-radius: 50%; background: #deeee7; color: #087b68; }
+.authCard { width: 100%; padding: 30px; background: white; border: 1px solid #dce7e5; border-radius: 20px; box-shadow: 0 16px 60px rgb(24 49 58 / 7%); }
+.authCard h2 { margin: 24px 0 6px; font-size: 24px; color: #183a36; }
+.authCard > h1 { font-size: 24px; }
+.authDescription { font-size: 13px; color: #62777d; margin: 0 0 22px; }
+.authTabs { display: flex; padding: 4px; gap: 4px; border-radius: 10px; background: #f0f5f3; }
+.authTabs button { flex: 1; font-size: 12px; font-weight: 600; padding: 8px; border: 0; background: transparent; color: #62777d; }
+.authTabs button[aria-pressed="true"] { background: white; color: #087b68; box-shadow: 0 2px 6px rgb(24 49 58 / 8%); }
+.accountForm { display: grid; gap: 14px; }
+.accountForm label { display: grid; gap: 6px; color: #29483f; font-size: 12px; font-weight: 600; }
+.accountForm input { width: 100%; min-width: 0; height: 42px; font-size: 14px; font-weight: 400; padding: 8px 11px; }
+.accountForm small { color: #62777d; font-size: 11px; margin-top: -8px; }
+.optionalLabel { font-size: 10px; color: #62777d; font-weight: 400; }
+.authPrimary { min-height: 40px; padding: 9px 14px; border: 1px solid #087b68; border-radius: 9px; color: white; background: #087b68; font-size: 13px; font-weight: 600; }
+.authPrimary:hover { background: #066452; border-color: #066452; }
+.authError { color: #a32136; background: #fff0f1; border: 1px solid #f0c8cf; border-radius: 8px; padding: 10px 12px; margin: 0; font-size: 12px; overflow-wrap: anywhere; }
+.authFootnote { font-size: 11px; color: #75867f; line-height: 1.6; margin: 20px 0 0; }
+.accountDialog { width: min(520px, calc(100% - 32px)); max-height: calc(100dvh - 40px); padding: 0; border: 1px solid var(--line); border-radius: 18px; background: white; color: var(--ink); box-shadow: 0 24px 80px rgb(15 23 42 / 22%); }
+.accountDialog::backdrop { background: rgb(15 30 37 / 42%); backdrop-filter: blur(3px); }
+.accountDialogLayout { display: flex; flex-direction: column; max-height: calc(100dvh - 42px); }
+.accountDialogBody { overflow: auto; min-height: 0; padding: 20px 24px; }
+.accountChangeNotice { padding: 12px; margin: 0 0 18px; border-radius: 8px; background: #f0f6f3; color: #536f62; font-size: 12px; line-height: 1.6; }
+.accountSection { padding: 18px 0; }
+.accountSection + .accountSection { border-top: 1px solid var(--line); }
+.accountSection h3 { font-size: 15px; margin: 0 0 14px; }
+.accountDanger h3 { color: #a32136; }
+.accountDanger > p { color: #62777d; font-size: 12px; line-height: 1.6; }
+.accountForm .confirmDeletion { display: flex; align-items: flex-start; gap: 10px; color: #6d4650; line-height: 1.6; }
+.confirmDeletion input { width: 16px; height: 16px; flex: 0 0 auto; margin: 2px 0 0; accent-color: #a32136; }
+.dangerButton { font-size: 13px; color: #a32136; border-color: #e3b4be; background: #fff4f6; }
+.dangerButton:hover { background: #ffe8ed; }
+.accountDialogFooter { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 16px 24px; flex-shrink: 0; border-top: 1px solid var(--line); }
+.accountDialogFooter small { font-size: 11px; color: #62777d; }
+.accountDialogFooter button { font-size: 12px; }
+@media (max-width: 1300px) { header:has(#accountButton) > small { display: none; } }
+@media (max-width: 750px) {
+  .authPage { grid-template-columns: minmax(0, 1fr); max-width: 500px; gap: 24px; padding: 28px 18px; }
+  .authIntroduction h1 { font-size: 34px; margin-bottom: 10px; letter-spacing: -1px; }
+  .authEyebrow { margin-bottom: 12px; }
+  .authIntroduction > p:not(.authEyebrow) { font-size: 13px; margin-bottom: 0; }
+  .authFeatures { display: none; }
+  .authCard { padding: 24px; }
+  .accountDialogBody { padding: 16px 18px; }
+  .accountDialogFooter { padding: 14px 18px; }
+}

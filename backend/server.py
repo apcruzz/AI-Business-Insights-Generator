@@ -37,6 +37,8 @@ class Handler(BaseHTTPRequestHandler):
             self.send_json({"status": "ok"})
         elif self.path == "/api/session":
             self.send_json({"token": TOKEN})
+        elif self.path == "/api/auth/session":
+            self.send_json({"authMode": "local", "authenticated": True, "user": None})
         elif self.path == "/api/models":
             self.send_json(available_models())
         elif self.path.split("?")[0] == "/" or self.path.split("?")[0] == "/index.html":
