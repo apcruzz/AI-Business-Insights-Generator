@@ -1,4 +1,5 @@
 """Provider selection and discovery, independent of dataset/query orchestration."""
+import os
 from dataclasses import dataclass
 
 from backend import groq_client, ollama_client
@@ -57,4 +58,4 @@ def available_models():
     options.append({'provider': 'groq', 'model': GROQ_MODEL,
                     'label': 'GPT-OSS 120B · Groq (cloud)', 'available': groq_ready})
     # Keep the original local-only list for older API clients.
-    return {'models': models, 'options': options, 'groqConfigured': groq_ready}
+    return {'models': models, 'options': options, 'groqConfigured': groq_ready, 'hosted': os.getenv('APP_ENV') == 'production'}

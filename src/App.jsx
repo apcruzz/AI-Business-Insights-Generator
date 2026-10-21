@@ -44,8 +44,10 @@ export default function App() {
         <h2>Build your business dashboard</h2>
         <p>
           Choose your business, upload a data table, and confirm the columns.
-          Files are processed on this computer.
+          Uploads and AI conversations are temporary and may expire or be cleared
+          when the server restarts. Keep your original file so you can rebuild the dashboard.
         </p>
+        <p id="uploadLimitNote" hidden>Demo uploads: up to 2 MB, 10,000 rows, and 60 columns. Use fictional or nonconfidential data.</p>
         <p id="businessHint" className="businessHint"></p>
         <div className="setupGrid">
           <label>

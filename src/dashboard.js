@@ -33,6 +33,7 @@ let data = [],
   uploadPayload = {},
   profile = null,
   token = "",
+  uploadLimitMb = 20,
   busy = false,
   conversationId = null,
   conversationTurns = [],
@@ -116,8 +117,10 @@ async function api(path, payload) {
     body: JSON.stringify(payload),
   });
   const result = await response.json();
-  if (!response.ok)
+  if (!response.ok) {
+    if (response.status === 403) token = "";
     throw Error(result.error || "Unable to complete this action.");
+  }
   return result;
 }
 function showSetup() {
@@ -251,10 +254,10 @@ async function inspect() {
     if ($("sample").value) uploadPayload = { sample: $("sample").value };
     else if ($("upload").files.length) {
       const file = $("upload").files[0];
-      if (file.size > 20 * 1024 * 1024)
-        throw Error("Choose a file smaller than 20 MB.");
+      if (file.size > uploadLimitMb * 1024 * 1024)
+        throw Error(`Choose a file no larger than ${uploadLimitMb} MB.`);
       const base64 = await new Promise((resolve, reject) => {
-        // Uploads are encoded in the browser, then sent only to the local server.
+        // Uploads are encoded in the browser, then sent to the Python backend.
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result.split(",")[1]);
         reader.onerror = () => reject(Error("Cannot read this file."));
@@ -2318,6 +2321,13 @@ async function refreshModels() {
     const response = await fetch("/api/models");
     if (!response.ok) throw Error("AI discovery failed");
     const result = await response.json(), current = $("localModel").value;
+    if (result.hosted) {
+      uploadLimitMb = 2;
+      $("uploadLimitNote").hidden = false;
+      for (const group of $("sample").querySelectorAll("optgroup")) {
+        if (group.label === "Earlier samples") group.hidden = true;
+      }
+    }
     aiOptions = answerOptions(result);
     groqConfigured = Boolean(result.groqConfigured);
     const value = chooseAnswerMode(aiOptions, current, !modelsLoaded);
