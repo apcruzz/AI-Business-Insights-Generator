@@ -1,6 +1,6 @@
 # Free Business Dashboard
 
-A local two-page dashboard with business setup, CSV/Excel uploads, column suggestions, automatic charts, calculated insights, and optional AI data analysts through Ollama or GroqCloud GPT-OSS 120B.
+A business dashboard with business setup, CSV/Excel uploads, column suggestions, automatic charts, calculated insights, and optional AI data analysts through Ollama or GroqCloud GPT-OSS 120B.
 
 The dashboard and Ollama run on your computer without API keys or subscriptions. Uploaded files are processed in memory and are not saved by the server. Groq is a separate, optional cloud choice requiring a Groq API key and internet access. Selecting it sends questions, recent conversation, dataset metadata, column samples, and query results to Groq. Groq's free plan has usage limits; your account's plan determines any charges.
 
@@ -109,7 +109,9 @@ The Business assistant has a fixed-height conversation area that scrolls through
 
 To compare the alternative design, click **Overview preview** after loading a dataset. It has a light sidebar, colored KPI icons, a two-column chart layout, and a bounded assistant on the right on larger screens. **Original overview** switches back without losing filters, chart/KPI choices, or the conversation. **Filters** and **Customize** are at the top; **Change dataset** in the sidebar opens the existing upload and mapping workflow. The `/#overview-preview` URL also opens this view after you load a dataset; reloading still requires rebuilding temporary data. Both layouts use the same real calculations and AI connections.
 
-During mapping, **Not provided** appears in red; optional fields can still be left blank. The tinted **Optional delivery, booking, waste, channel and job columns** and **Preview source rows** buttons sit side by side and expand their panels below. In Detailed Dashboard, the aligned filters apply to all charts, summaries, and the **Dataset rows** table at the bottom. That table includes mapped and calculated columns, with 50 rows per page; it does not include source columns left unmapped. **View data table** jumps directly to it.
+During mapping, **Not provided** appears in red; optional fields can still be left blank. The tinted **Optional delivery, booking, waste, channel and job columns** and **Preview source rows** buttons sit side by side and expand their panels below.
+
+**Detailed Dashboard** fits within the browser window. KPIs and filters share a workspace with **Charts**, **Data table**, and **Summaries** tabs. Charts automatically show one, two, or four at a time; **Previous**, **Next**, and **Jump to a chart** keep every supported chart accessible. On smaller screens, **Filters** expands the filter controls; press Escape there or click **Filters** again to close them. Tables and long chart contents scroll inside their panels rather than moving the page. The **Data table** tab contains all mapped and calculated columns with 50 rows per page; source columns left unmapped are excluded. Filters apply across all three tabs, and changing tabs preserves their values.
 
 The selected business sets the recommended charts, dashboard heading, terminology, and accent colors. Recommendations follow each business’s preferred three charts and fill missing slots with supported alternatives. **Why these charts?** explains missing data; you can override the choices. If fewer than three meaningful charts are supported, only those are recommended. This version is designed for sales/order data. Payroll logs, inventory-only files, and unrelated business records require additional data models.
 
