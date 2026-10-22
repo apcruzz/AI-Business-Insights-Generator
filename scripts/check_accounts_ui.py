@@ -78,10 +78,15 @@ def main():
 
                 # The alternate overview exposes the same authenticated account dialog.
                 page.locator('#previewNav').click()
-                page.get_by_role('button', name='Manage your account').click()
-                expect(page.locator('#profileUsername')).to_have_value('browser.analyst')
-                page.keyboard.press('Escape')
-                expect(page.get_by_role('button', name='Manage your account')).to_be_focused()
+                for width, height in [(1440, 900), (1024, 768), (390, 568)]:
+                    page.set_viewport_size({'width': width, 'height': height})
+                    assert page.evaluate('document.documentElement.scrollHeight <= innerHeight + 1')
+                    expect(page.get_by_role('button', name='Manage your account')).to_be_in_viewport(ratio=1)
+                    page.get_by_role('button', name='Manage your account').click()
+                    expect(page.locator('#profileUsername')).to_have_value('browser.analyst')
+                    page.keyboard.press('Escape')
+                    expect(page.get_by_role('button', name='Manage your account')).to_be_focused()
+                page.set_viewport_size({'width': 1440, 'height': 900})
                 page.screenshot(path='/tmp/accounts-ui-overview-preview.png', full_page=True)
                 page.get_by_role('link', name='Original overview').click()
                 expect(page.locator('#previewSidebar')).to_be_hidden()

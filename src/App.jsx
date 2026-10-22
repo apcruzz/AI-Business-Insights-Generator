@@ -271,9 +271,21 @@ function Dashboard({openAccount}) {
       {/* Dashboard content stays hidden until an upload is normalized successfully. */}
       <main id="dashboardMain" hidden>
         <div id="overview">
-          <div id="overviewCards" className="cards"></div>
+          <div id="overviewCards" className="cards" tabIndex={0} role="region" aria-label="Overview key performance indicators"></div>
+          <nav id="previewWorkspaceTabs" className="previewWorkspaceTabs" role="tablist" aria-label="Overview preview sections" hidden>
+            <button id="previewChartsTab" type="button" role="tab" aria-selected="true" aria-controls="overviewCharts">Charts</button>
+            <button id="previewHighlightsTab" type="button" role="tab" aria-selected="false" aria-controls="overviewHighlights" tabIndex={-1}>At a glance</button>
+            <button id="previewAssistantTab" type="button" role="tab" aria-selected="false" aria-controls="overviewAssistant" tabIndex={-1}>Assistant</button>
+          </nav>
+          <div id="previewChartControls" className="previewChartControls" hidden>
+            <label htmlFor="previewChartSelect">Chart</label>
+            <select id="previewChartSelect" defaultValue="" aria-label="Overview preview chart"></select>
+            <span id="previewChartPageStatus" className="srOnly" aria-live="polite"></span>
+            <button id="previewPreviousChart" type="button" aria-label="Previous overview chart">←</button>
+            <button id="previewNextChart" type="button" aria-label="Next overview chart">→</button>
+          </div>
           {/* Three empty slots are filled with the charts selected in the chooser. */}
-          <div className="overviewGrid">
+          <div id="overviewCharts" className="overviewGrid">
             <section className="panel overviewChartSlot" data-dashboard-module="salesTrend" id="overviewSlot0">
               <h2>Net sales trend</h2>
               <div id="ovTrend"></div>
@@ -290,7 +302,7 @@ function Dashboard({openAccount}) {
 
           {/* Insights combine computed cards with calculated answers, Ollama, or Groq chat. */}
           <div className="overviewBottom">
-            <section className="panel insightsPanel compactAssistant" aria-labelledby="assistantTitle">
+            <section id="overviewAssistant" className="panel insightsPanel compactAssistant" aria-labelledby="assistantTitle">
               <div className="insightHeader">
                 <div>
                   <h2 id="assistantTitle">Business assistant</h2>
@@ -320,7 +332,7 @@ function Dashboard({openAccount}) {
                 <button type="button" id="newConversation" className="quietButton">New conversation</button>
               </div>
             </section>
-            <section className="panel highlightsPanel" aria-labelledby="highlightsTitle">
+            <section id="overviewHighlights" className="panel highlightsPanel" aria-labelledby="highlightsTitle">
               <h2 id="highlightsTitle">At a glance</h2>
               <p className="previewHighlightsNote">Calculated from your selected data</p>
               <div id="insightCards" className="insightCards"></div>

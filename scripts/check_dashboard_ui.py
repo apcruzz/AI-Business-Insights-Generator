@@ -337,6 +337,12 @@ def check_overview_preview(page, context, expect, origin, source, local_requests
     page.locator('#reset').click()
     page.locator('#previewFilterButton').click()
     expect(page.locator('#dashboardFilters')).to_be_hidden()
+    page.locator('#previewFilterButton').click()
+    page.locator('#chooseCharts').click()
+    expect(page.locator('#dashboardFilters')).to_be_hidden()
+    expect(page.locator('#chartChooser')).to_be_visible()
+    page.keyboard.press('Escape')
+    expect(page.locator('#previewCustomize')).to_be_focused()
 
     # Switching layouts preserves both the pending/finished conversation and chosen mode.
     page.select_option('#localModel', 'groq:openai/gpt-oss-120b')
@@ -359,9 +365,12 @@ def check_overview_preview(page, context, expect, origin, source, local_requests
     page.keyboard.press('Escape')
     expect(page.locator('#previewAiSettings')).to_be_focused()
 
-    for width, height in [(1920, 1080), (1440, 900), (1280, 800), (1024, 768), (768, 1024), (390, 844), (320, 700)]:
+    for width, height in [(1920, 1080), (1440, 900), (1366, 768), (1280, 800), (1280, 600), (1024, 768), (1024, 600), (768, 1024), (390, 844), (390, 568), (320, 700)]:
         page.set_viewport_size({'width': width, 'height': height})
-        assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'), f'Preview overflow at {width}'
+        check_preview_fit(page, expect, width)
+        if width <= 1200:
+            page.locator('#previewAssistantTab').click()
+        expect(page.locator('#askButton')).to_be_in_viewport(ratio=1)
         assert page.locator('.compactAssistant').bounding_box()['width'] < width
         page.screenshot(path=f'/tmp/dashboard-ui-preview-{width}.png', full_page=True)
     page.set_viewport_size({'width': 1440, 'height': 900})
@@ -380,9 +389,27 @@ def check_overview_preview(page, context, expect, origin, source, local_requests
     page.locator('#loadSelectedCharts').click()
     expect(page.locator('#previewSidebarDataset')).to_have_text('Cafe_Demo.csv')
     expect(page.locator('#insightAnswer')).to_have_text('')
+    check_preview_fit(page, expect, 1440)
     page.screenshot(path='/tmp/dashboard-ui-preview-cafe.png', full_page=True)
     assert len(local_requests) == local_count, 'Layout navigation must not connect to Ollama'
+    # Selecting many KPIs keeps every card reachable in its bounded region.
     page.locator('#previewCustomize').click()
+    all_kpis = page.locator('input[name="kpi"]')
+    for choice in all_kpis.all():
+        choice.check()
+    kpi_count = all_kpis.count()
+    page.locator('#loadSelectedCharts').click()
+    expect(page.locator('#overviewCards .card')).to_have_count(kpi_count)
+    page.locator('#overviewCards .card').last.scroll_into_view_if_needed()
+    expect(page.locator('#overviewCards .card').last).to_be_in_viewport(ratio=1)
+    check_preview_fit(page, expect, 1440)
+    page.set_viewport_size({'width': 390, 'height': 844})
+    check_preview_fit(page, expect, 390)
+    page.set_viewport_size({'width': 1440, 'height': 900})
+    expect(page.locator('#previewWorkspaceTabs')).to_be_hidden()
+    page.locator('#previewCustomize').click()
+    for choice in page.locator('input[name="kpi"]').all():
+        choice.uncheck()
     page.locator('input[name="kpi"][value="netSales"]').check()
     page.locator('input[name="kpi"][value="grossMargin"]').check()
     while page.locator('input[name="chartChoice"]:checked').count():
@@ -391,6 +418,7 @@ def check_overview_preview(page, context, expect, origin, source, local_requests
     page.locator('#loadSelectedCharts').click()
     expect(page.locator('#overviewCards .card')).to_have_count(2)
     expect(page.locator('.overviewChartSlot:visible')).to_have_count(1)
+    check_preview_fit(page, expect, 1440)
     page.get_by_role('link', name='Original overview').click()
     expect(page.locator('#previewSidebar')).to_be_hidden()
     expect(page.locator('#overviewCards .card')).to_have_count(2)
@@ -406,6 +434,57 @@ def check_overview_preview(page, context, expect, origin, source, local_requests
     fresh.locator('#loadSelectedCharts').click()
     expect(fresh.locator('#previewSidebar')).to_be_visible()
     fresh.close()
+
+
+def check_preview_fit(page, expect, width):
+    """Verify bounded layout and reachable content, rather than just hiding overflow."""
+    def fits():
+        assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'), f'Preview horizontal overflow at {width}'
+        assert page.evaluate('document.documentElement.scrollHeight <= innerHeight + 1'), f'Preview page scrolls at {width}'
+
+    if width <= 1200:
+        expect(page.locator('#previewWorkspaceTabs')).to_be_visible()
+        page.locator('#previewChartsTab').click()
+        choices = page.locator('#previewChartSelect option').count()
+        for index in range(choices):
+            page.select_option('#previewChartSelect', str(index))
+            expect(page.locator('.overviewChartSlot:visible')).to_have_count(1)
+            expect(page.locator('.overviewChartSlot:visible')).to_be_in_viewport(ratio=1)
+            expect(page.locator('#previewNextChart')).to_be_in_viewport(ratio=1)
+            fits()
+        if choices > 1:
+            page.locator('#previewPreviousChart').click()
+            expect(page.locator('#previewNextChart')).to_be_enabled()
+        page.locator('#previewChartsTab').focus()
+        page.keyboard.press('ArrowRight')
+        expect(page.locator('#overviewHighlights')).to_be_visible()
+        expect(page.locator('#overviewHighlights')).to_be_in_viewport(ratio=1)
+        fits()
+        page.keyboard.press('ArrowRight')
+        expect(page.locator('#overviewAssistant')).to_be_visible()
+        expect(page.locator('#overviewAssistant')).to_be_in_viewport(ratio=1)
+        box = page.locator('#askButton').bounding_box()
+        if box['y'] + box['height'] > page.viewport_size['height']:
+            page.screenshot(path='/tmp/dashboard-ui-preview-fit-failure.png')
+            raise AssertionError(f'Preview Ask button clipped at {page.viewport_size}: {box}')
+        expect(page.locator('#askButton')).to_be_in_viewport(ratio=1)
+        fits()
+    else:
+        expect(page.locator('#previewWorkspaceTabs')).to_be_hidden()
+        for panel in page.locator('.overviewChartSlot:visible, #overviewHighlights, #overviewAssistant').all():
+            expect(panel).to_be_in_viewport(ratio=1)
+        fits()
+    page.locator('#previewFilterButton').click()
+    expect(page.locator('#dashboardFilters')).to_be_visible()
+    fits()
+    if width > 1200:
+        for control in ['#previewChangeDataset', '.previewOriginalLink']:
+            expect(page.locator(control)).to_be_in_viewport(ratio=1)
+    page.locator('#category').focus()
+    page.keyboard.press('Escape')
+    expect(page.locator('#dashboardFilters')).to_be_hidden()
+    expect(page.locator('#previewFilterButton')).to_have_attribute('aria-expanded', 'false')
+    fits()
 
 
 if __name__ == '__main__':
