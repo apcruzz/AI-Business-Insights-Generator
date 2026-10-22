@@ -56,6 +56,9 @@ const pageHashes = {overview: "#business-overview", detail: "#detailed-dashboard
 const pageFromHash = () => Object.keys(pageHashes).find(page => pageHashes[page] === window.location.hash);
 let lastDashboardPage = pageFromHash() || "overview";
 let chooserTrigger = null;
+let previewView = "charts", previewChartIndex = 0;
+const compactPreview = window.matchMedia("(max-width: 1200px)");
+const previewViews = {charts: ["previewChartsTab", "overviewCharts"], highlights: ["previewHighlightsTab", "overviewHighlights"], assistant: ["previewAssistantTab", "overviewAssistant"]};
 function updatePageHash(hash) {
   if (window.location.hash !== hash) window.history.pushState(null, "", hash);
 }
@@ -150,6 +153,7 @@ async function api(path, payload, {signal} = {}) {
   return result;
 }
 function showSetup(updateRoute = true) {
+  closePreviewFilters();
   // Show the upload/mapping screen and hide the dashboard views.
   $("setupPage").hidden = false;
   $("dashboardMain").hidden = true;
@@ -167,6 +171,7 @@ function showSetup(updateRoute = true) {
   if (updateRoute && data.length) updatePageHash("#change-dataset");
 }
 function showPage(page, updateRoute = true) {
+  closePreviewFilters();
   // The overview page uses the compact dashboard layout; detail keeps full charts.
   lastDashboardPage = page;
   if (updateRoute) updatePageHash(pageHashes[page]);
@@ -190,6 +195,7 @@ function showPage(page, updateRoute = true) {
   // Redraw only the layout-dependent markup. Dataset, filters, and chat stay intact.
   if (overview) renderOverviewLayout(filtered());
   else setDetailView(detailView);
+  syncPreviewView();
 }
 // Rank business preferences first, then choose distinct, supported fallback metrics.
 function chartOptions() {
@@ -227,6 +233,7 @@ function applyChartVisibility() {
 function showChartChooser(resetSelection = false) {
   // Edit KPI cards and charts together; drafts apply only when the user loads them.
   if (!data.length) return;
+  closePreviewFilters();
   chooserTrigger = document.body.classList.contains("previewMode") ? $("previewCustomize") : $("chooseCharts");
   const options = chartOptions(),
     optionIds = options.map((option) => option.id);
@@ -470,6 +477,8 @@ function buildDashboard() {
   data = meta.rows;
   detailChartIndex = 0;
   detailView = "charts";
+  previewView = "charts";
+  previewChartIndex = 0;
   overviewKpiIds = [];
   overviewChartIds = chartOptions().slice(0, 3).map((option) => option.id);
   for (const id of ["category", "product"])
@@ -986,15 +995,52 @@ function renderOverviewCharts(rows, products, c) {
   if (!overviewChartIds.length)
     overviewChartIds = options.slice(0, 3).map((option) => option.id);
   const preview = document.body.classList.contains("previewMode");
+  previewChartIndex = Math.max(0, Math.min(previewChartIndex, overviewChartIds.length - 1));
   document.body.dataset.previewChartCount = overviewChartIds.length;
   document.querySelectorAll(".overviewChartSlot").forEach((slot, index) => {
     const id = overviewChartIds[index],
       option = optionById.get(id);
-    slot.hidden = !option;
+    slot.hidden = !option || (preview && compactPreview.matches && index !== previewChartIndex);
     slot.innerHTML = option
-      ? `${preview ? `<div class="previewChartHeader"><span class="previewChartIcon">${overviewIcon(id === "trend" ? "insights" : "charts")}</span><h2>${esc(option.title)}</h2><span class="previewChartType">${esc(CHARTS[id].kind)}</span></div>` : `<h2>${esc(option.title)}</h2>`}<div class="overviewChartContent" data-overview-chart="${esc(id)}">${overviewChartHtml(id, rows, products, c, preview)}</div>`
+      ? `${preview ? `<div class="previewChartHeader"><span class="previewChartIcon">${overviewIcon(id === "trend" ? "insights" : "charts")}</span><h2>${esc(option.title)}</h2><span class="previewChartType">${esc(CHARTS[id].kind)}</span></div>` : `<h2>${esc(option.title)}</h2>`}<div class="overviewChartContent" data-overview-chart="${esc(id)}"${preview ? ` tabindex="0" role="region" aria-label="${esc(option.title)} chart data"` : ""}>${overviewChartHtml(id, rows, products, c, preview)}</div>`
       : "";
   });
+  $("previewChartSelect").innerHTML = overviewChartIds.length
+    ? overviewChartIds.map((id, index) => `<option value="${index}">${index + 1}. ${esc(optionById.get(id).title)}</option>`).join("")
+    : '<option value="0">No optional charts available</option>';
+  $("previewChartSelect").value = String(previewChartIndex);
+  $("previewChartSelect").disabled = !overviewChartIds.length;
+  $("previewPreviousChart").disabled = previewChartIndex === 0;
+  $("previewNextChart").disabled = previewChartIndex >= overviewChartIds.length - 1;
+  $("previewChartPageStatus").textContent = overviewChartIds.length ? `Chart ${previewChartIndex + 1} of ${overviewChartIds.length}` : "No optional charts available";
+  syncPreviewView();
+}
+function syncPreviewView() {
+  const preview = document.body.classList.contains("previewMode"), compact = preview && compactPreview.matches;
+  document.body.dataset.previewView = previewView;
+  $("previewWorkspaceTabs").hidden = !compact;
+  $("previewChartControls").hidden = !compact || previewView !== "charts";
+  for (const [view, [tabId, panelId]] of Object.entries(previewViews)) {
+    const active = view === previewView;
+    $(tabId).setAttribute("aria-selected", String(active));
+    $(tabId).tabIndex = active ? 0 : -1;
+    $(panelId).hidden = compact && !active;
+    if (compact) {
+      $(panelId).setAttribute("role", "tabpanel");
+      $(panelId).setAttribute("aria-labelledby", tabId);
+    } else {
+      $(panelId).removeAttribute("role");
+      if (view === "charts") $(panelId).removeAttribute("aria-labelledby");
+      else $(panelId).setAttribute("aria-labelledby", view === "assistant" ? "assistantTitle" : "highlightsTitle");
+    }
+  }
+}
+function closePreviewFilters() {
+  const filters = $("dashboardFilters");
+  if (typeof filters.hidePopover === "function" && filters.matches(":popover-open")) filters.hidePopover();
+  filters.removeAttribute("popover");
+  document.body.classList.remove("previewFiltersOpen");
+  $("previewFilterButton").setAttribute("aria-expanded", "false");
 }
 function renderOverviewLayout(rows) {
   $("overviewCards").innerHTML = metrics(rows, true);
@@ -2582,15 +2628,46 @@ $("cancelSetup").onclick = () => showPage(lastDashboardPage);
 $("previewCustomize").onclick = () => showChartChooser(false);
 $("previewAiSettings").onclick = () => $("aiSettings").showModal();
 $("previewInsights").onclick = () => {
+  if (compactPreview.matches) { previewView = "highlights"; syncPreviewView(); }
   const panel = document.querySelector(".highlightsPanel");
   panel.setAttribute("tabindex", "-1");
   panel.focus({preventScroll: true});
-  panel.scrollIntoView({block: "nearest", behavior: "auto"});
 };
 $("previewFilterButton").onclick = () => {
-  const open = document.body.classList.toggle("previewFiltersOpen");
-  $("previewFilterButton").setAttribute("aria-expanded", String(open));
+  if (document.body.classList.contains("previewFiltersOpen")) { closePreviewFilters(); return; }
+  const filters = $("dashboardFilters");
+  document.body.classList.add("previewFiltersOpen");
+  $("previewFilterButton").setAttribute("aria-expanded", "true");
+  if (typeof filters.showPopover === "function") {
+    filters.setAttribute("popover", "auto");
+    filters.showPopover();
+  }
 };
+$("dashboardFilters").addEventListener("toggle", event => {
+  if (event.target !== $("dashboardFilters")) return;
+  if (event.newState === "closed" && document.body.classList.contains("previewMode") && !$("dashboardFilters").matches(":popover-open")) {
+    document.body.classList.remove("previewFiltersOpen");
+    $("previewFilterButton").setAttribute("aria-expanded", "false");
+  }
+});
+Object.entries(previewViews).forEach(([view, [tabId]]) => {
+  $(tabId).onclick = () => { previewView = view; syncPreviewView(); };
+  $(tabId).onkeydown = event => {
+    if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+    event.preventDefault();
+    const tabs = Object.values(previewViews).map(([id]) => id), index = tabs.indexOf(tabId);
+    const next = event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1
+      : (index + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length;
+    $(tabs[next]).click(); $(tabs[next]).focus();
+  };
+});
+const changePreviewChart = index => {
+  previewChartIndex = index;
+  renderOverviewLayout(filtered());
+};
+$("previewChartSelect").onchange = () => changePreviewChart(Number($("previewChartSelect").value));
+$("previewPreviousChart").onclick = () => changePreviewChart(previewChartIndex - 1);
+$("previewNextChart").onclick = () => changePreviewChart(previewChartIndex + 1);
 const followPageHash = () => {
   const page = pageFromHash();
   if (page) showPage(page, false);
@@ -2635,6 +2712,9 @@ $("detailToggleFilters").onclick = () => {
   if (open) $("from").disabled ? $("category").focus() : $("from").focus();
 };
 $("dashboardFilters").addEventListener("keydown", event => {
+  if (event.key === "Escape" && document.body.classList.contains("previewFiltersOpen")) {
+    closePreviewFilters(); $("previewFilterButton").focus();
+  }
   if (event.key === "Escape" && document.body.classList.contains("detailFiltersOpen")) {
     closeDetailFilters(); $("detailToggleFilters").focus();
   }
@@ -2663,5 +2743,7 @@ const resizeDetailCharts = () => {
 };
 const detailObserver = new ResizeObserver(resizeDetailCharts);
 detailObserver.observe($("detailCharts"));
-return () => { window.removeEventListener("hashchange", followPageHash); detailObserver.disconnect(); };
+const resizePreview = () => { if (document.body.classList.contains("previewMode")) renderOverviewLayout(filtered()); };
+compactPreview.addEventListener("change", resizePreview);
+return () => { window.removeEventListener("hashchange", followPageHash); detailObserver.disconnect(); compactPreview.removeEventListener("change", resizePreview); };
 }
