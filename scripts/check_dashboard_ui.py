@@ -107,7 +107,7 @@ def main():
                 expect(page.locator('#datasetRowCount')).to_have_text('4 of 4 rows')
                 assert page.locator('#detailPage').evaluate('(el) => el.lastElementChild.id') == 'datasetTablePanel'
                 assert page.locator('#detailCharts .detailChartPanel').count() >= 3
-                assert page.locator('#from').bounding_box()['y'] == page.locator('#category').bounding_box()['y']
+                assert page.locator('#from').bounding_box()['x'] == page.locator('#category').bounding_box()['x']
                 page.screenshot(path='/tmp/dashboard-ui-detail.png', full_page=True)
                 page.locator('#category').select_option('Drinks')
                 expect(page.locator('#datasetRowCount')).to_have_text('3 of 4 rows')
@@ -190,12 +190,20 @@ def main():
                     page.keyboard.press('Escape')
                     page.screenshot(path=f'/tmp/dashboard-ui-{width}.png', full_page=True)
                     page.locator('#detailNav').click()
-                    assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'), f'Detail overflow at {width}'
-                    assert all(box['height'] == (360 if width <= 850 else 390) for box in page.locator('.detailChartPanel').evaluate_all('(els) => els.map(el => ({height: el.getBoundingClientRect().height}))'))
+                    check_detail_workspace(page, expect, width)
                     page.screenshot(path=f'/tmp/dashboard-ui-detail-{width}.png', full_page=True)
                     if width == 390:
+                        page.locator('#detailToggleFilters').click()
                         page.locator('.filters').screenshot(path='/tmp/dashboard-ui-detail-mobile-filters.png')
-                        page.locator('#detailCharts .detailChartPanel').first.screenshot(path='/tmp/dashboard-ui-detail-mobile-chart.png')
+                        page.locator('#detailToggleFilters').click()
+                        page.locator('#detailCharts .detailChartPanel:visible').first.screenshot(path='/tmp/dashboard-ui-detail-mobile-chart.png')
+                    page.locator('#overviewNav').click()
+
+                for width, height in [(1366, 600), (1024, 600), (390, 568), (320, 640)]:
+                    page.set_viewport_size({'width': width, 'height': height})
+                    page.locator('#detailNav').click()
+                    check_detail_workspace(page, expect, width)
+                    page.screenshot(path=f'/tmp/dashboard-ui-detail-{width}x{height}.png')
                     page.locator('#overviewNav').click()
 
                 check_overview_preview(page, context, expect, origin, source, local_requests)
@@ -211,7 +219,10 @@ def main():
                 page.locator('#buildButton').click()
                 page.locator('#loadSelectedCharts').click()
                 page.locator('#detailNav').click()
+                page.locator('#detailDataTab').click()
                 expect(page.locator('#datasetTable tbody tr')).to_have_count(50)
+                assert page.evaluate('document.documentElement.scrollHeight <= innerHeight + 1')
+                page.screenshot(path='/tmp/dashboard-ui-detail-data-table.png')
                 page.locator('#nextDataPage').click()
                 expect(page.locator('#datasetTable tbody tr')).to_have_count(10)
                 expect(page.locator('#datasetPageStatus')).to_contain_text('Page 2 of 2')
@@ -229,7 +240,9 @@ def main():
                 page.locator('#buildButton').click()
                 page.locator('#loadSelectedCharts').click()
                 page.locator('#detailNav').click()
+                page.select_option('#detailChartSelect', 'bookings')
                 expect(page.locator('[data-chart-panel="bookings"]')).to_be_visible()
+                page.select_option('#detailChartSelect', 'utilization')
                 expect(page.locator('[data-chart-panel="utilization"]')).to_be_visible()
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
                 page.screenshot(path='/tmp/dashboard-ui-detail-salon.png', full_page=True)
@@ -241,6 +254,57 @@ def main():
             server.shutdown()
             thread.join(5)
             server.server_close()
+
+
+def check_detail_workspace(page, expect, width):
+    """Every chart, summary, and table stays reachable inside one viewport."""
+    def fits():
+        assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'), f'Detail horizontal overflow at {width}'
+        assert page.evaluate('document.documentElement.scrollHeight <= innerHeight + 1'), f'Detail page scrolls at {width}'
+        expect(page.locator('.detailViewTabs')).to_be_in_viewport()
+
+    page.locator('#detailChartsTab').click()
+    options = page.locator('#detailChartSelect option').evaluate_all('(els) => els.map(el => el.value)')
+    page.select_option('#detailChartSelect', options[0])
+    seen = set()
+    while True:
+        fits()
+        visible = page.locator('#detailCharts .detailChartPanel:visible')
+        seen.update(visible.evaluate_all('(els) => els.map(el => el.dataset.chartPanel)'))
+        for chart in visible.all():
+            expect(chart).to_be_in_viewport(ratio=1)
+        expect(page.locator('#nextChartPage')).to_be_in_viewport(ratio=1)
+        if page.locator('#nextChartPage').is_disabled():
+            break
+        previous = page.locator('#detailChartPageStatus').inner_text()
+        page.locator('#nextChartPage').click()
+        expect(page.locator('#detailChartPageStatus')).not_to_have_text(previous)
+    assert seen == set(options), 'Chart pagination must retain every supported chart'
+    if len(options) > int(page.locator('#detailCharts').get_attribute('data-page-size')):
+        page.locator('#previousChartPage').click()
+        expect(page.locator('#nextChartPage')).to_be_enabled()
+    page.select_option('#detailChartSelect', options[-1])
+    expect(page.locator(f'[data-chart-panel="{options[-1]}"]')).to_be_visible()
+    page.locator('#detailChartsTab').focus()
+    page.keyboard.press('ArrowRight')
+    expect(page.locator('#datasetTablePanel')).to_be_visible()
+    expect(page.locator('#detailDataTab')).to_be_focused()
+    expect(page.locator('.datasetPagination')).to_be_in_viewport(ratio=1)
+    fits()
+    page.keyboard.press('ArrowRight')
+    expect(page.locator('#detailSummariesView')).to_be_visible()
+    expect(page.locator('#detailTables details[open]')).to_be_visible()
+    fits()
+    page.locator('#detailChartsTab').click()
+    page.select_option('#detailChartSelect', options[0])
+    if width <= 900:
+        page.locator('#detailToggleFilters').click()
+        expect(page.locator('#from')).to_be_visible()
+        fits()
+        page.locator('#from').press('Escape')
+        expect(page.locator('#dashboardFilters')).to_be_hidden()
+        expect(page.locator('#detailToggleFilters')).to_be_focused()
+    fits()
 
 
 def check_overview_preview(page, context, expect, origin, source, local_requests):

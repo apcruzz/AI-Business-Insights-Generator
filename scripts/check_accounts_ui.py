@@ -86,6 +86,19 @@ def main():
                 page.get_by_role('link', name='Original overview').click()
                 expect(page.locator('#previewSidebar')).to_be_hidden()
 
+                # Signed-in header controls also fit in the detail workspace.
+                page.locator('#detailNav').click()
+                for width, height in [(1366, 768), (390, 844)]:
+                    page.set_viewport_size({'width': width, 'height': height})
+                    assert page.evaluate('document.documentElement.scrollHeight <= innerHeight + 1')
+                    assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+                    page.locator('#accountButton').click()
+                    expect(page.locator('#accountDialog')).to_be_visible()
+                    page.keyboard.press('Escape')
+                    expect(page.locator('#accountButton')).to_be_focused()
+                page.set_viewport_size({'width': 1440, 'height': 900})
+                page.locator('#overviewNav').click()
+
                 # Profile update rotates the session and reloads without leaving dataset data behind.
                 page.locator('#accountButton').click()
                 expect(page.locator('#profileUsername')).to_have_value('browser.analyst')

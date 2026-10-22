@@ -9,6 +9,7 @@ import "./styles.css";
 // Load setup.css after the base stylesheet so its layout overrides win.
 import "./setup.css";
 import "./overview-preview.css";
+import "./detail-workspace.css";
 
 export default function App() {
   return <AccountAccess>{({openAccount}) => <Dashboard openAccount={openAccount} />}</AccountAccess>;
@@ -392,14 +393,34 @@ function Dashboard({openAccount}) {
           <div className="detailHeading">
             <div>
               <h2>Detailed dashboard</h2>
-              <p className="sub">All supported charts, using your current filters.</p>
+              <p className="sub">Explore every supported chart with your current filters.</p>
             </div>
-            <a href="#datasetTablePanel" className="tableJump">View data table ↓</a>
+            <button id="detailToggleFilters" type="button" aria-expanded="false" aria-controls="dashboardFilters">Filters</button>
           </div>
           <div className="cards" id="cards"></div>
-          <div id="detailCharts" className="businessDetailGrid"></div>
-          <div id="detailTables" className="businessDetailGrid"></div>
-          <section id="datasetTablePanel" className="panel datasetTablePanel" aria-labelledby="datasetTableTitle">
+          <div className="detailViewTabs" role="tablist" aria-label="Detailed dashboard views">
+            <button id="detailChartsTab" type="button" role="tab" aria-selected="true" aria-controls="detailChartsView">Charts</button>
+            <button id="detailDataTab" type="button" role="tab" aria-selected="false" aria-controls="datasetTablePanel" tabIndex={-1}>Data table</button>
+            <button id="detailSummariesTab" type="button" role="tab" aria-selected="false" aria-controls="detailSummariesView" tabIndex={-1}>Summaries</button>
+          </div>
+          <section id="detailChartsView" className="detailChartsView" role="tabpanel" aria-labelledby="detailChartsTab">
+            <div className="detailChartToolbar">
+              <label htmlFor="detailChartSelect">Jump to a chart</label>
+              <select id="detailChartSelect" defaultValue="" aria-label="Jump to a detailed chart"></select>
+            </div>
+            <div id="detailCharts" className="businessDetailGrid"></div>
+            <nav className="detailChartPagination" aria-label="Chart pages">
+              <span id="detailChartPageStatus" aria-live="polite"></span>
+              <div>
+                <button id="previousChartPage" type="button">← Previous</button>
+                <button id="nextChartPage" type="button">Next →</button>
+              </div>
+            </nav>
+          </section>
+          <section id="detailSummariesView" className="detailSummariesView" role="tabpanel" aria-labelledby="detailSummariesTab" hidden>
+            <div id="detailTables" className="businessDetailGrid"></div>
+          </section>
+          <section id="datasetTablePanel" className="panel datasetTablePanel" role="tabpanel" aria-labelledby="detailDataTab" hidden>
             <div className="datasetTableHeader">
               <div>
                 <h2 id="datasetTableTitle">Dataset rows</h2>
