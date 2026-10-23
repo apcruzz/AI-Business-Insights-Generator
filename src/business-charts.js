@@ -88,13 +88,14 @@ export function businessChartData(id, rows, capabilities={}) {
   return result;
 }
 
-export function renderBusinessChart(id, rows, meta, color, money) {
+export function renderBusinessChart(id, rows, meta, color, money, layout = null) {
   const data=businessChartData(id,rows,meta.capabilities);
   if(!data) return null;
   if(!data.items.length) return '<p class="chartNote">No matching records for this chart.</p>';
   const title=chartTitle(id,meta.business);
   const fmt=v=>data.unit==='money'?money(v):`${Number(v.toFixed(1)).toLocaleString()}${data.unit==='percent'?'%':' '+data.unit}`;
   const palette=[color,'#cb6b42','#5689b1','#a77ab0','#b69b3c','#708477'];
+  const font=layout?.fontSize || 12, W=layout?.width || 680;
   let output='';
   if(data.type==='horizontal') {
     const items=data.items.slice(0,12),max=Math.max(...items.map(r=>Math.abs(r[1])),data.unit==='percent'?100:1);
@@ -102,28 +103,43 @@ export function renderBusinessChart(id, rows, meta, color, money) {
     if(data.items.length>12) data.note+=' Showing the top 12 groups.';
   } else if(data.type==='heatmap') {
     const max=Math.max(...data.items.map(r=>r[2]),1),days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-    output=`<svg viewBox="0 0 680 240" role="img" aria-label="${esc(title)}"><title>${esc(title)}</title>`;
-    data.items.forEach(([day,hour,count])=>{const x=55+hour*25,y=25+day*25;output+=`<rect x="${x}" y="${y}" width="23" height="23" rx="3" fill="${color}" opacity="${.08+.92*count/max}"><title>${days[day]} ${hour}:00: ${count} bookings</title></rect>`;});
-    days.forEach((day,i)=>output+=`<text x="5" y="${42+i*25}" font-size="12">${day}</text>`);
-    for(let h=0;h<24;h+=3) output+=`<text x="${55+h*25}" y="222" font-size="12">${h}:00</text>`;
+    const H=layout?.height || 240, left=layout?38:55, top=layout?10:25;
+    const cellW=layout?(W-left-12)/24:25, cellH=layout?(H-top-font-16)/7:25;
+    output=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(title)}"><title>${esc(title)}</title>`;
+    data.items.forEach(([day,hour,count])=>{const x=left+hour*cellW,y=top+day*cellH;output+=`<rect x="${x}" y="${y}" width="${cellW-2}" height="${cellH-2}" rx="3" fill="${color}" opacity="${.08+.92*count/max}"><title>${days[day]} ${hour}:00: ${count} bookings</title></rect>`;});
+    days.forEach((day,i)=>output+=`<text x="5" y="${top+(i+.5)*cellH+font/3}" font-size="${font}">${day}</text>`);
+    for(let h=0;h<24;h+=layout && W<400?6:3) output+=`<text x="${left+h*cellW}" y="${layout?H-5:222}" font-size="${font}">${h}:00</text>`;
     output+='</svg>';
   } else {
     let items=data.items;
     if(!['line','stacked'].includes(data.type) && items.length>12) {items=items.slice(0,12);data.note+=' Showing the top 12 groups.';}
     const stacked=data.type==='stacked',values=items.map(r=>stacked?r.slice(1).reduce((a,b)=>a+b,0):r[1]);
-    const max=Math.max(...values,1),min=Math.min(...values,0),y=v=>220-(v-min)/(max-min)*190;
-    const step=590/items.length,width=data.type==='histogram'?step:Math.min(42,step*.72);
-    output=`<svg viewBox="0 0 680 280" role="img" aria-label="${esc(title)}"><title>${esc(title)}</title>`;
-    for(let i=0;i<5;i++){const v=min+(max-min)*i/4;output+=`<line x1="80" y1="${y(v)}" x2="670" y2="${y(v)}" stroke="#e1e8ec"/><text x="73" y="${y(v)+4}" text-anchor="end" font-size="10">${esc(fmt(v))}</text>`;}
-    if(data.type==='line') output+=`<polyline fill="none" stroke="${color}" stroke-width="3" points="${items.map((r,i)=>`${80+step*(i+.5)},${y(r[1])}`).join(' ')}"/>`;
+    const max=Math.max(...values,1),min=Math.min(...values,0),H=layout?.height || 280;
+    const axisFmt=v=>layout && data.unit==='money' && Math.abs(v)>=10000
+      ? new Intl.NumberFormat(undefined,{style:'currency',currency:meta.currency || 'USD',notation:'compact',maximumFractionDigits:1}).format(v):fmt(v);
+    const ticks=Array.from({length:5},(_,i)=>min+(max-min)*i/4);
+    const left=layout?Math.max(42,...ticks.map(v=>axisFmt(v).length*font*.58+12)):80;
+    const right=W-12,bottom=layout?H-font-18:220,top=layout?12:30;
+    const y=v=>bottom-(v-min)/(max-min)*(bottom-top),step=(right-left)/items.length;
+    const width=data.type==='histogram'?step:Math.min(layout?56:42,step*.72);
+    output=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(title)}"><title>${esc(title)}</title>`;
+    for(const v of ticks) output+=`<line x1="${left}" y1="${y(v)}" x2="${right}" y2="${y(v)}" stroke="#e1e8ec"/><text x="${left-7}" y="${y(v)+4}" text-anchor="end" font-size="${layout?font:10}">${esc(axisFmt(v))}</text>`;
+    if(data.type==='line') output+=`<polyline fill="none" stroke="${color}" stroke-width="3" points="${items.map((r,i)=>`${left+step*(i+.5)},${y(r[1])}`).join(' ')}"/>`;
     items.forEach((r,i)=>{
-      const x=80+step*(i+.5);
-      if(data.type==='line') output+=`<circle cx="${x}" cy="${y(r[1])}" r="3" fill="${color}"><title>${esc(r[0])}: ${esc(fmt(r[1]))}</title></circle>`;
+      const x=left+step*(i+.5);
+      if(data.type==='line') output+=`<circle cx="${x}" cy="${y(r[1])}" r="${layout?4:3}" fill="${color}"><title>${esc(r[0])}: ${esc(fmt(r[1]))}</title></circle>`;
       else {
         let base=0;
         (stacked?r.slice(1):[r[1]]).forEach((v,k)=>{const end=base+v;output+=`<rect x="${x-width/2}" y="${Math.min(y(base),y(end))}" width="${width}" height="${Math.abs(y(base)-y(end))}" fill="${palette[k%palette.length]}"><title>${esc(r[0])}${stacked?' · '+esc(data.series[k]):''}: ${esc(fmt(v))}</title></rect>`;base=end;});
       }
-      if(items.length<=8 || i%Math.ceil(items.length/6)===0) output+=`<text x="${x}" y="241" text-anchor="middle" font-size="10">${esc(String(r[0]).length>18?String(r[0]).slice(0,16)+'…':r[0])}</text>`;
+      const maxLabels=layout?Math.max(1,Math.floor((right-left)/75)):6;
+      const labelStep=Math.ceil(items.length/maxLabels);
+      if((!layout && items.length<=8) || i%labelStep===0) {
+        const label=layout && data.type==='line' && r[0].length===10?r[0].slice(5):String(r[0]);
+        const maxChars=layout?Math.max(3,Math.min(18,Math.floor(step*labelStep/(font*.6)))):18;
+        const shown=label.length>maxChars?label.slice(0,maxChars-1)+'…':label;
+        output+=`<text x="${x}" y="${layout?H-7:241}" text-anchor="middle" font-size="${layout?font:10}"><title>${esc(r[0])}</title>${esc(shown)}</text>`;
+      }
     });
     output+='</svg>';
     if(stacked) output+=`<div class="legendBox">${data.series.map((s,i)=>`<span><i style="background:${palette[i%palette.length]}"></i>${esc(s)}</span>`).join('')}</div>`;

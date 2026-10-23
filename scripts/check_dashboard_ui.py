@@ -318,6 +318,9 @@ def check_overview_preview(page, context, expect, origin, source, local_requests
     page.locator('#previewNav').click()
     expect(page).to_have_url(origin + '/#overview-preview')
     expect(page.locator('#previewSidebar')).to_be_visible()
+    assert page.locator('.previewChartType, .previewEyebrow, .previewDesignBadge').count() == 0
+    assert page.locator('#previewHeader').bounding_box()['height'] <= 76
+    check_control_sizes(page)
     expect(page.locator('#overviewCards .card')).to_have_count(4)
     expect(page.locator('#insightAnswer')).to_have_text(transcript)
     assert page.locator('#upload').is_hidden()
@@ -433,6 +436,18 @@ def check_overview_preview(page, context, expect, origin, source, local_requests
     fresh.locator('#buildButton').click()
     fresh.locator('#loadSelectedCharts').click()
     expect(fresh.locator('#previewSidebar')).to_be_visible()
+    # Exercise line, bar, stacked, donut, histogram, heatmap, and ranking layouts
+    # using fictional samples with realistic category labels and chart notes.
+    for filename in ['Tech_Demo.csv', 'Bakery_Demo.csv', 'Online_Shop_Demo.csv', 'Salon_Demo.csv', 'Repair_Shop_Demo.csv']:
+        fresh.set_viewport_size({'width': 1440, 'height': 900})
+        fresh.locator('#previewChangeDataset').click()
+        fresh.select_option('#sample', filename)
+        fresh.locator('#inspectButton').click()
+        fresh.locator('#buildButton').click()
+        fresh.locator('#loadSelectedCharts').click()
+        for width, height in [(1440, 900), (390, 844)]:
+            fresh.set_viewport_size({'width': width, 'height': height})
+            check_preview_fit(fresh, expect, width)
     fresh.close()
 
 
@@ -451,6 +466,7 @@ def check_preview_fit(page, expect, width):
             expect(page.locator('.overviewChartSlot:visible')).to_have_count(1)
             expect(page.locator('.overviewChartSlot:visible')).to_be_in_viewport(ratio=1)
             expect(page.locator('#previewNextChart')).to_be_in_viewport(ratio=1)
+            check_preview_plots(page, expect)
             fits()
         if choices > 1:
             page.locator('#previewPreviousChart').click()
@@ -473,6 +489,7 @@ def check_preview_fit(page, expect, width):
         expect(page.locator('#previewWorkspaceTabs')).to_be_hidden()
         for panel in page.locator('.overviewChartSlot:visible, #overviewHighlights, #overviewAssistant').all():
             expect(panel).to_be_in_viewport(ratio=1)
+        check_preview_plots(page, expect)
         fits()
     page.locator('#previewFilterButton').click()
     expect(page.locator('#dashboardFilters')).to_be_visible()
@@ -484,7 +501,32 @@ def check_preview_fit(page, expect, width):
     page.keyboard.press('Escape')
     expect(page.locator('#dashboardFilters')).to_be_hidden()
     expect(page.locator('#previewFilterButton')).to_have_attribute('aria-expanded', 'false')
+    check_control_sizes(page)
     fits()
+
+
+def check_control_sizes(page):
+    """Comparable actions have the same text size and control height."""
+    controls = page.locator('button:visible:not(.mappingTool)')
+    sizes = controls.evaluate_all('els => els.map(el => ({font: getComputedStyle(el).fontSize, height: el.getBoundingClientRect().height}))')
+    assert len({item['font'] for item in sizes}) <= 1, sizes
+    assert all(abs(item['height'] - (32 if page.viewport_size['width'] <= 760 else 36)) < 1 for item in sizes), sizes
+
+
+def check_preview_plots(page, expect):
+    """Actual-size chart labels and marks occupy the pane, with no SVG clipping."""
+    for content in page.locator('.overviewChartSlot:visible .overviewChartContent:not([data-overview-chart="category"]):has(> svg)').all():
+        expect(content).to_have_attribute('data-chart-size', re.compile(r'.+'))
+        metrics = content.evaluate('''el => {
+            const svg = el.querySelector(':scope > svg'), box = svg.getBoundingClientRect(), view = svg.viewBox.baseVal;
+            return {scale: box.width / view.width,
+                clipped: [...svg.querySelectorAll('text')].filter(text => {
+                    const b = text.getBBox();
+                    return b.x < -.5 || b.y < -.5 || b.x + b.width > view.width + .5 || b.y + b.height > view.height + .5;
+                }).map(text => text.textContent)};
+        }''')
+        assert abs(metrics['scale'] - 1) < .02, metrics
+        assert not metrics['clipped'], metrics
 
 
 if __name__ == '__main__':

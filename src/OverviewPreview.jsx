@@ -31,7 +31,6 @@ export function OverviewPreview({openAccount}) {
     </aside>
     <div id="previewHeader" className="previewHeader" hidden>
       <div className="previewHeading">
-        <div className="previewEyebrow"><span />OVERVIEW <span className="previewDesignBadge">Design preview</span></div>
         <h1>AI Business Insights</h1>
         <p>Turn your data into a clearer picture of your business.</p>
       </div>

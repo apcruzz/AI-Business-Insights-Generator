@@ -59,6 +59,26 @@ let chooserTrigger = null;
 let previewView = "charts", previewChartIndex = 0;
 const compactPreview = window.matchMedia("(max-width: 1200px)");
 const previewViews = {charts: ["previewChartsTab", "overviewCharts"], highlights: ["previewHighlightsTab", "overviewHighlights"], assistant: ["previewAssistantTab", "overviewAssistant"]};
+const previewChartObserver = new ResizeObserver(entries => {
+  if (!document.body.classList.contains("previewMode")) return;
+  const rows = filtered(), products = group(rows, "Product_Name").sort((a, b) => sum(b[1], "Net_Sales") - sum(a[1], "Net_Sales"));
+  for (const {target: content} of entries) {
+    const svg = content.querySelector(":scope > svg"), id = content.dataset.overviewChart;
+    if (!svg || id === "category" || !content.clientWidth || !content.clientHeight) continue;
+    // Reserve space for the chart's notes and legends; draw at actual CSS pixel
+    // dimensions so labels stay legible without stretching the surrounding card.
+    const footerHeight = [...content.children].filter(child => child !== svg).reduce((height, child) => {
+      const style = getComputedStyle(child);
+      return height + child.getBoundingClientRect().height + parseFloat(style.marginTop) + parseFloat(style.marginBottom);
+    }, 0);
+    const layout = {width: content.clientWidth, height: Math.max(120, content.clientHeight - footerHeight),
+      fontSize: parseFloat(getComputedStyle(content).getPropertyValue("--font-caption"))};
+    const size = `${layout.width}:${layout.height}:${layout.fontSize}`;
+    if (content.dataset.chartSize === size) continue;
+    content.dataset.chartSize = size;
+    content.innerHTML = overviewChartHtml(id, rows, products, meta.capabilities, true, layout);
+  }
+});
 function updatePageHash(hash) {
   if (window.location.hash !== hash) window.history.pushState(null, "", hash);
 }
@@ -543,14 +563,15 @@ function filtered() {
       (!$("period").value || period(r.Hour) === $("period").value),
   );
 }
-function chart(items, dual = false, color = businessProfile(meta.business).color) {
+function chart(items, dual = false, color = businessProfile(meta.business).color, layout = null) {
   // Generic SVG bar chart used by trend and weekday charts.
   if (!items.length) return note("No matching sales.");
-  const W = 680,
-    H = 270,
-    L = 70,
-    B = 220,
-    T = 22,
+  const W = layout?.width || 680,
+    H = layout?.height || 270,
+    font = layout?.fontSize || 13,
+    L = layout ? 64 : 70,
+    B = layout ? H - font - 15 : 220,
+    T = layout ? 12 : 22,
     values = items.flatMap((x) => (dual ? [x[1], x[2]] : [x[1]])),
     max = Math.max(...values, 1),
     min = Math.min(...values, 0),
@@ -563,7 +584,7 @@ function chart(items, dual = false, color = businessProfile(meta.business).color
   for (let i = 0; i < 5; i++) {
     const v = min + (range * i) / 4,
       y = Y(v);
-    svg += `<line x1="${L}" y1="${y}" x2="665" y2="${y}" stroke="#e1e8ec"/><text x="61" y="${y + 4}" text-anchor="end" fill="#657686" font-size="13">${esc(axisMoney(v))}</text>`;
+    svg += `<line x1="${L}" y1="${y}" x2="${W - 15}" y2="${y}" stroke="#e1e8ec"/><text x="${L - 9}" y="${y + 4}" text-anchor="end" fill="#657686" font-size="${font}">${esc(axisMoney(v))}</text>`;
   }
   items.forEach((x, i) => {
     const cx = L + step * (i + 0.5),
@@ -573,8 +594,9 @@ function chart(items, dual = false, color = businessProfile(meta.business).color
         h = Math.abs(zero - y);
       svg += `<rect x="${cx - bw / 2 + (k - 1) * w}" y="${Math.min(y, zero)}" width="${w}" height="${h}" fill="${k === 1 ? color : "#438dcc"}" rx="2"><title>${esc(x[0])}: ${k === 1 ? "Net sales" : "Gross profit"} ${esc(money(x[k]))}</title></rect>`;
     }
-    if (items.length <= 12 || i % Math.ceil(items.length / 10) === 0)
-      svg += `<text x="${cx}" y="245" text-anchor="middle" font-size="12" fill="#657686">${esc(x[0])}</text>`;
+    const labelStep = layout ? Math.max(1, Math.ceil(items.length / Math.max(1, Math.floor((W - L) / 65)))) : Math.ceil(items.length / 10);
+    if ((!layout && items.length <= 12) || i % labelStep === 0)
+      svg += `<text x="${cx}" y="${layout ? H - 7 : 245}" text-anchor="middle" font-size="${layout ? font : 12}" fill="#657686">${esc(x[0])}</text>`;
   });
   return svg + "</svg>";
 }
@@ -634,7 +656,7 @@ function categoryPie(rows, preview = false) {
   }
   let angle = -Math.PI / 2,
     svg =
-      '<svg viewBox="0 0 320 300" role="img" aria-label="Category net sales share">';
+      `<svg viewBox="${preview ? "34 24 252 252" : "0 0 320 300"}" role="img" aria-label="Category net sales share">`;
   groups.forEach(([c, n], i) => {
     const share = n / total,
       next = angle + share * 2 * Math.PI,
@@ -874,7 +896,7 @@ function metrics(rows, overview = false) {
 	    .join("");
 }
 // Sum selected revenue for each weekday in Monday-to-Sunday display order.
-function weekdayChart(rows, c, color) {
+function weekdayChart(rows, c, color, layout) {
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   return c.Date
     ? chart(
@@ -888,7 +910,7 @@ function weekdayChart(rows, c, color) {
             ),
             "Net_Sales",
           ),
-        ]), false, color,
+        ]), false, color, layout,
       )
     : note("Map a date column to compare weekdays.");
 }
@@ -957,13 +979,13 @@ function staffChart(rows, c) {
   );
 }
 // Compare sales per recorded date for each uploaded weather label; no weather lookup occurs.
-function weatherChart(rows, c, color) {
+function weatherChart(rows, c, color, layout) {
   return c.weather && c.Date
     ? chart(
         group(rows, "Weather").map(([weather, items]) => [
           weather,
           sum(items, "Net_Sales") / new Set(items.map((row) => row.Date)).size,
-        ]), false, color,
+        ]), false, color, layout,
       ) +
         note(
           "Average per recorded day; coverage and other factors can affect this comparison.",
@@ -971,21 +993,22 @@ function weatherChart(rows, c, color) {
     : note("Map date and weather columns to compare sales by weather.");
 }
 // Dispatch a selected chart ID to the same chart builders used in the detail view.
-function overviewChartHtml(id, rows, products, c, preview = false) {
-  const specialized = renderBusinessChart(id, rows, meta, preview ? (id === "trend" ? "#5489ff" : "#9285ed") : businessProfile(meta.business).color, money);
+function overviewChartHtml(id, rows, products, c, preview = false, layout = null) {
+  const specialized = renderBusinessChart(id, rows, meta, preview ? (id === "trend" ? "#5489ff" : "#9285ed") : businessProfile(meta.business).color, money, layout);
   if (specialized !== null) return specialized;
   if (id === "trend") return trend(rows);
   if (id === "category") return categoryPie(rows, preview);
   if (id === "products") return topProductsChart(products, c);
-  if (id === "weekday") return weekdayChart(rows, c, preview ? "#9c90f7" : undefined);
+  if (id === "weekday") return weekdayChart(rows, c, preview ? "#9c90f7" : undefined, layout);
   if (id === "hour") return hourStack(rows);
   if (id === "profitability") return profitabilityChart(products, c);
-  if (id === "weather") return weatherChart(rows, c, preview ? "#9c90f7" : undefined);
+  if (id === "weather") return weatherChart(rows, c, preview ? "#9c90f7" : undefined, layout);
   if (id === "staff") return staffChart(rows, c);
   return note("Choose a chart to show here.");
 }
 function renderOverviewCharts(rows, products, c) {
   // Fill the three Business Overview slots with the user's selected charts.
+  previewChartObserver.disconnect();
   const options = chartOptions(),
     optionById = new Map(options.map((option) => [option.id, option])),
     availableIds = new Set(options.map((option) => option.id));
@@ -1002,8 +1025,10 @@ function renderOverviewCharts(rows, products, c) {
       option = optionById.get(id);
     slot.hidden = !option || (preview && compactPreview.matches && index !== previewChartIndex);
     slot.innerHTML = option
-      ? `${preview ? `<div class="previewChartHeader"><span class="previewChartIcon">${overviewIcon(id === "trend" ? "insights" : "charts")}</span><h2>${esc(option.title)}</h2><span class="previewChartType">${esc(CHARTS[id].kind)}</span></div>` : `<h2>${esc(option.title)}</h2>`}<div class="overviewChartContent" data-overview-chart="${esc(id)}"${preview ? ` tabindex="0" role="region" aria-label="${esc(option.title)} chart data"` : ""}>${overviewChartHtml(id, rows, products, c, preview)}</div>`
+      ? `${preview ? `<div class="previewChartHeader"><span class="previewChartIcon">${overviewIcon(id === "trend" ? "insights" : "charts")}</span><h2>${esc(option.title)}</h2></div>` : `<h2>${esc(option.title)}</h2>`}<div class="overviewChartContent" data-overview-chart="${esc(id)}"${preview ? ` tabindex="0" role="region" aria-label="${esc(option.title)} chart data"` : ""}>${overviewChartHtml(id, rows, products, c, preview)}</div>`
       : "";
+    const content = slot.querySelector(".overviewChartContent");
+    if (preview && content) previewChartObserver.observe(content);
   });
   $("previewChartSelect").innerHTML = overviewChartIds.length
     ? overviewChartIds.map((id, index) => `<option value="${index}">${index + 1}. ${esc(optionById.get(id).title)}</option>`).join("")
@@ -2745,5 +2770,5 @@ const detailObserver = new ResizeObserver(resizeDetailCharts);
 detailObserver.observe($("detailCharts"));
 const resizePreview = () => { if (document.body.classList.contains("previewMode")) renderOverviewLayout(filtered()); };
 compactPreview.addEventListener("change", resizePreview);
-return () => { window.removeEventListener("hashchange", followPageHash); detailObserver.disconnect(); compactPreview.removeEventListener("change", resizePreview); };
+return () => { window.removeEventListener("hashchange", followPageHash); detailObserver.disconnect(); previewChartObserver.disconnect(); compactPreview.removeEventListener("change", resizePreview); };
 }

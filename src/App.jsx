@@ -10,6 +10,7 @@ import "./styles.css";
 import "./setup.css";
 import "./overview-preview.css";
 import "./detail-workspace.css";
+import "./ui.css";
 
 export default function App() {
   return <AccountAccess>{({openAccount}) => <Dashboard openAccount={openAccount} />}</AccountAccess>;
@@ -391,7 +392,7 @@ function Dashboard({openAccount}) {
           </label>
           <div className="filterActions">
             <button id="reset" type="button">Reset filters</button>
-            <button id="chooseCharts" type="button" aria-haspopup="dialog">Customize overview</button>
+            <button id="chooseCharts" type="button" aria-haspopup="dialog">Customize</button>
           </div>
           <details>
             <summary>Data notes</summary>

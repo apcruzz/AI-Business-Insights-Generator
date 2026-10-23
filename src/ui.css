@@ -1,0 +1,55 @@
+/* One type and control scale for setup, both overviews, detail, and accounts.
+   Text roles stay distinct; actions share a height even inside compact panes. */
+:root {
+  --font-caption: 12px;
+  --font-body: 14px;
+  --font-section: 16px;
+  --font-title: 18px;
+  --font-heading: 24px;
+  --font-metric: 28px;
+  --control-height: 36px;
+  --control-padding: 12px;
+  --control-radius: 8px;
+}
+body { font-size: var(--font-body); }
+small { font-size: var(--font-caption); }
+
+/* These shared size rules intentionally override older per-page controls.
+   Colors, states, and layout still belong to each page/component stylesheet. */
+body button,
+body input:not([type="checkbox"]):not([type="radio"]),
+body select {
+  font-family: inherit;
+  font-size: var(--font-body) !important;
+  line-height: 1.25 !important;
+  min-height: var(--control-height) !important;
+  height: var(--control-height) !important;
+  padding: 0 var(--control-padding) !important;
+  border-radius: var(--control-radius);
+}
+body button { font-weight: 600; }
+body .iconButton, body .previewAccountButton,
+body #previewPreviousChart, body #previewNextChart {
+  width: var(--control-height);
+  min-width: var(--control-height);
+  padding: 0 !important;
+}
+body .iconButton { font-size: var(--font-heading) !important; }
+body .mappingTool {
+  height: auto !important;
+  padding: 12px var(--control-padding) !important;
+  line-height: 1.5 !important;
+}
+body .previewNavigation a, body .previewNavigation button, body .previewOriginalLink {
+  min-height: var(--control-height) !important;
+  padding: 6px var(--control-padding) !important;
+  font-size: var(--font-body) !important;
+  line-height: 1.25 !important;
+}
+
+@media (max-width: 760px) {
+  :root { --font-body: 13px; --font-caption: 11px; --control-height: 32px; --control-padding: 10px; }
+  body.previewMode .previewNavigation { flex-wrap: nowrap; }
+  body.previewMode .previewNavigation a { padding-inline: 8px !important; }
+  body.previewMode .previewOriginalLink { padding-block: 6px !important; }
+}
