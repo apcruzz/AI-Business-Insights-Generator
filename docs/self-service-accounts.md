@@ -90,6 +90,12 @@ valid database fails startup; it never falls back to demo authentication.
 
 ## Use and manage an account
 
+Open the account icon or choose **Account** in the hamburger menu beside it.
+Account settings use a full page at `/#account`, with the same header and panel
+design as the dashboards. You can switch pages or use browser Back without
+discarding the current dataset or conversation. Saving account changes still
+clears temporary data as described below.
+
 - **Create account** registers and signs in. Display name is optional; username
   and password are required. No demo password or shared application token is used.
 - **Account → Profile** shows your username/display name. Changing them requires

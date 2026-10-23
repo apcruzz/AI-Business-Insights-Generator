@@ -5,18 +5,20 @@ import { useEffect } from "react";
 import { initDashboard } from "./dashboard.js";
 import { AccountAccess } from "./AccountAccess.jsx";
 import { OverviewPreview } from "./OverviewPreview.jsx";
+import { HeaderNavigation } from "./HeaderNavigation.jsx";
 import "./styles.css";
 // Load setup.css after the base stylesheet so its layout overrides win.
 import "./setup.css";
 import "./overview-preview.css";
 import "./detail-workspace.css";
 import "./ui.css";
+import "./workspace-header.css";
 
 export default function App() {
-  return <AccountAccess>{({openAccount}) => <Dashboard openAccount={openAccount} />}</AccountAccess>;
+  return <AccountAccess>{({accountPage, user}) => <Dashboard accountPage={accountPage} user={user} />}</AccountAccess>;
 }
 
-function Dashboard({openAccount}) {
+function Dashboard({accountPage, user}) {
   // Run the DOM controller after React has mounted the elements it needs.
   useEffect(() => {
     return initDashboard();
@@ -25,33 +27,21 @@ function Dashboard({openAccount}) {
   return (
     <>
       {/* Navigation and dataset labels are updated by showPage() and build(). */}
-      <OverviewPreview openAccount={openAccount} />
+      <OverviewPreview user={user} />
       <header className="dashboardHeader">
-        <div>
+        <div className="dashboardIdentity">
           <small>
             <span id="businessName">BUSINESS INSIGHTS</span>
           </small>
           <h1 id="dashboardTitle">Your business at a glance</h1>
         </div>
-        <small>
+        <small className="headerDataset">
           <span id="datasetName">Choose your business and dataset</span>
         </small>
-        <nav className="topnav" aria-label="Dashboard pages">
-          <button id="overviewNav" type="button" aria-current="page">
-            Business Overview
-          </button>
-          <button id="detailNav" type="button">
-            Detailed Dashboard
-          </button>
-          <button id="previewNav" type="button">
-            Overview preview
-          </button>
-          <button id="setupNav" type="button">
-            Change dataset
-          </button>
-          {openAccount && <button id="accountButton" type="button" onClick={openAccount} aria-haspopup="dialog">Account</button>}
-        </nav>
+        <HeaderNavigation user={user} />
       </header>
+
+      <section id="accountPage" className="accountPage" aria-labelledby="accountTitle" hidden>{accountPage}</section>
 
       {/* Upload setup: inspect sends the chosen file or sample to /api/profile. */}
       <section className="setup" id="setupPage">
@@ -408,32 +398,20 @@ function Dashboard({openAccount}) {
               <h2>Detailed dashboard</h2>
               <p className="sub">Explore every supported chart with your current filters.</p>
             </div>
-            <button id="detailToggleFilters" type="button" aria-expanded="false" aria-controls="dashboardFilters">Filters</button>
+            <a className="tableJump" href="#datasetTablePanel">Dataset rows ↓</a>
           </div>
           <div className="cards" id="cards"></div>
-          <div className="detailViewTabs" role="tablist" aria-label="Detailed dashboard views">
-            <button id="detailChartsTab" type="button" role="tab" aria-selected="true" aria-controls="detailChartsView">Charts</button>
-            <button id="detailDataTab" type="button" role="tab" aria-selected="false" aria-controls="datasetTablePanel" tabIndex={-1}>Data table</button>
-            <button id="detailSummariesTab" type="button" role="tab" aria-selected="false" aria-controls="detailSummariesView" tabIndex={-1}>Summaries</button>
-          </div>
-          <section id="detailChartsView" className="detailChartsView" role="tabpanel" aria-labelledby="detailChartsTab">
+          <section id="detailChartsView" className="detailChartsView" aria-label="All supported charts">
             <div className="detailChartToolbar">
               <label htmlFor="detailChartSelect">Jump to a chart</label>
               <select id="detailChartSelect" defaultValue="" aria-label="Jump to a detailed chart"></select>
             </div>
             <div id="detailCharts" className="businessDetailGrid"></div>
-            <nav className="detailChartPagination" aria-label="Chart pages">
-              <span id="detailChartPageStatus" aria-live="polite"></span>
-              <div>
-                <button id="previousChartPage" type="button">← Previous</button>
-                <button id="nextChartPage" type="button">Next →</button>
-              </div>
-            </nav>
           </section>
-          <section id="detailSummariesView" className="detailSummariesView" role="tabpanel" aria-labelledby="detailSummariesTab" hidden>
+          <section id="detailSummariesView" className="detailSummariesView" aria-label="Sales summaries">
             <div id="detailTables" className="businessDetailGrid"></div>
           </section>
-          <section id="datasetTablePanel" className="panel datasetTablePanel" role="tabpanel" aria-labelledby="detailDataTab" hidden>
+          <section id="datasetTablePanel" className="panel datasetTablePanel" aria-labelledby="datasetTableTitle">
             <div className="datasetTableHeader">
               <div>
                 <h2 id="datasetTableTitle">Dataset rows</h2>

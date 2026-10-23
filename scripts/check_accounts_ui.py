@@ -10,6 +10,7 @@ import subprocess
 import tempfile
 import threading
 from unittest.mock import patch
+from scripts.ui_helpers import navigate, check_header, check_menu
 
 
 def main():
@@ -76,33 +77,36 @@ def main():
                 page.screenshot(path='/tmp/accounts-ui-dashboard.png', full_page=True)
                 assert not local_requests
 
-                # The alternate overview exposes the same authenticated account dialog.
-                page.locator('#previewNav').click()
+                # Account is a normal route. Navigation preserves the dataset and chat.
+                transcript = page.locator('#insightAnswer').inner_text()
+                navigate(page, 'previewNav')
                 for width, height in [(1440, 900), (1024, 768), (390, 568)]:
                     page.set_viewport_size({'width': width, 'height': height})
-                    assert page.evaluate('document.documentElement.scrollHeight <= innerHeight + 1')
-                    expect(page.get_by_role('button', name='Manage your account')).to_be_in_viewport(ratio=1)
-                    page.get_by_role('button', name='Manage your account').click()
+                    check_header(page)
+                    expect(page.locator('#previewAccountButton')).to_be_in_viewport(ratio=1)
+                    page.locator('#previewAccountButton').click()
+                    expect(page).to_have_url(origin + '/#account')
+                    expect(page.locator('#accountPage')).to_be_visible()
                     expect(page.locator('#profileUsername')).to_have_value('browser.analyst')
-                    page.keyboard.press('Escape')
-                    expect(page.get_by_role('button', name='Manage your account')).to_be_focused()
+                    check_menu(page, expect)
+                    assert page.locator('#accountDialog').count() == 0
+                    check_header(page)
+                    page.go_back()
+                    expect(page.locator('#previewSidebar')).to_be_visible()
+                    expect(page.locator('#insightAnswer')).to_have_text(transcript)
                 page.set_viewport_size({'width': 1440, 'height': 900})
                 page.screenshot(path='/tmp/accounts-ui-overview-preview.png', full_page=True)
-                page.get_by_role('link', name='Original overview').click()
-                expect(page.locator('#previewSidebar')).to_be_hidden()
-
-                # Signed-in header controls also fit in the detail workspace.
-                page.locator('#detailNav').click()
+                navigate(page, 'detailNav')
                 for width, height in [(1366, 768), (390, 844)]:
                     page.set_viewport_size({'width': width, 'height': height})
-                    assert page.evaluate('document.documentElement.scrollHeight <= innerHeight + 1')
-                    assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+                    check_header(page)
                     page.locator('#accountButton').click()
-                    expect(page.locator('#accountDialog')).to_be_visible()
-                    page.keyboard.press('Escape')
-                    expect(page.locator('#accountButton')).to_be_focused()
+                    expect(page.locator('#accountPage')).to_be_visible()
+                    check_header(page)
+                    navigate(page, 'detailNav')
+                    expect(page.locator('#datasetTable tbody tr')).not_to_have_count(0)
                 page.set_viewport_size({'width': 1440, 'height': 900})
-                page.locator('#overviewNav').click()
+                navigate(page, 'overviewNav')
 
                 # Profile update rotates the session and reloads without leaving dataset data behind.
                 page.locator('#accountButton').click()
@@ -113,19 +117,20 @@ def main():
                 expect(page.get_by_role('alert')).to_have_text('Current password is incorrect.')
                 page.locator('#profileCurrentPassword').fill(password)
                 page.screenshot(path='/tmp/accounts-ui-settings.png', full_page=True)
-                page.locator('#profileForm button').click()
-                expect(page.locator('#inspectButton')).to_be_visible()
+                with page.expect_navigation(wait_until='load'):
+                    page.locator('#profileForm button').click()
+                expect(page.locator('#accountPage')).to_be_visible()
                 expect(page.locator('#dashboardMain')).to_be_hidden()
-                page.locator('#accountButton').click()
                 expect(page.locator('#profileDisplayName')).to_have_value('<b>Fictional name</b>')
-                assert page.locator('#accountDialog b').count() == 0
+                assert page.locator('#accountPage b').count() == 0
 
                 new_password = 'fictional-updated-password'
                 page.locator('#passwordCurrent').fill(password)
                 page.locator('#passwordNew').fill(new_password)
                 page.locator('#passwordConfirm').fill(new_password)
-                page.locator('#passwordForm button').click()
-                expect(page.locator('#inspectButton')).to_be_visible()
+                with page.expect_navigation(wait_until='load'):
+                    page.locator('#passwordForm button').click()
+                expect(page.locator('#accountPage')).to_be_visible()
                 page.locator('#accountButton').click()
                 page.locator('#signOutButton').click()
                 expect(page.locator('#authTitle')).to_have_text('Welcome back')
@@ -137,16 +142,21 @@ def main():
                 expect(page.get_by_role('alert')).to_have_text('Username or password is incorrect.')
                 page.locator('#authPassword').fill(new_password)
                 page.locator('#authSubmit').click()
-                expect(page.locator('#inspectButton')).to_be_visible()
+                expect(page.locator('#accountPage')).to_be_visible()
 
                 for width, height in [(1366, 768), (1024, 768), (390, 844)]:
                     page.set_viewport_size({'width': width, 'height': height})
-                    assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'), f'Workspace overflow at {width}'
                     page.locator('#accountButton').click()
-                    assert page.locator('#accountDialog').bounding_box()['width'] <= width
-                    page.screenshot(path=f'/tmp/accounts-ui-settings-{width}.png')
-                    page.keyboard.press('Escape')
-                    expect(page.locator('#accountButton')).to_be_focused()
+                    expect(page.locator('#accountPage')).to_be_visible()
+                    check_header(page)
+                    assert page.locator('#accountPage').bounding_box()['width'] <= width
+                    page.screenshot(path=f'/tmp/accounts-ui-settings-{width}.png', full_page=True)
+                    page.reload()
+                    expect(page.locator('#profileUsername')).to_have_value('browser.analyst')
+                    check_header(page)
+                    navigate(page, 'setupNav')
+                    expect(page.locator('#inspectButton')).to_be_visible()
+                    check_header(page)
 
                 page.locator('#accountButton').click()
                 page.locator('#deleteCurrentPassword').fill(new_password)
@@ -161,7 +171,7 @@ def main():
                 page.screenshot(path='/tmp/accounts-ui-sign-in-mobile.png', full_page=True)
                 assert not errors, errors
                 assert not local_requests
-                print('PASS: registration/password validation, sign-in, dashboard/sample/calculated answers, profile update, password change, sign-out, deletion, responsive account dialog, no token storage or implicit Ollama access.')
+                print('PASS: registration/password validation, sign-in, dashboard/sample/calculated answers, profile update, password change, sign-out, deletion, persistent account page and fixed headers, no token storage or implicit Ollama access.')
                 browser.close()
         finally:
             server.shutdown()
