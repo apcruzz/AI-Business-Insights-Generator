@@ -1,0 +1,73 @@
+/* A single header height across every workspace route, including small screens. */
+:root { --workspace-header-height: 72px; }
+body .dashboardHeader, body.overviewMode .dashboardHeader, body .previewHeader {
+  height: var(--workspace-header-height);
+  min-height: var(--workspace-header-height);
+  max-height: var(--workspace-header-height);
+  flex: 0 0 var(--workspace-header-height);
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 10px 24px;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+body .dashboardIdentity { min-width: 0; flex: 1; }
+body .dashboardHeader h1, body.overviewMode .dashboardHeader h1 { margin: 0; font-size: var(--font-heading); line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+body .dashboardHeader small { font-size: var(--font-caption); }
+body .dashboardHeader .headerDataset { flex: 0 1 auto; margin-left: auto; order: 2; }
+body .dashboardHeader #datasetName { max-width: 240px; }
+.headerNavigation { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; order: 3; }
+.headerAccountLink, body .pageMenuButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-height);
+  height: var(--control-height);
+  min-width: var(--control-height);
+  padding: 0 !important;
+  border: 1px solid rgb(255 255 255 / 30%);
+  border-radius: 8px;
+  background: rgb(255 255 255 / 8%);
+  color: white;
+}
+.headerAccountLink svg { display: block; width: 20px; height: 20px; }
+body .pageMenuButton svg { width: 20px; height: 20px; flex-shrink: 0; }
+.headerAccountLink:hover, body .pageMenuButton:hover { background: rgb(255 255 255 / 18%); }
+.headerAccountLink:focus-visible, body .pageMenuButton:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+.previewHeader .headerAccountLink, body.previewMode .previewHeader .pageMenuButton { background: white; border-color: var(--line); color: #5966b2; }
+.pageMenu {
+  position: fixed;
+  inset: calc(var(--workspace-header-height) - 4px) 20px auto auto;
+  margin: 0;
+  padding: 8px;
+  width: min(270px, calc(100vw - 24px));
+  max-height: calc(100dvh - var(--workspace-header-height) - 20px);
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: white;
+  color: var(--ink);
+  box-shadow: 0 12px 40px rgb(24 49 58 / 18%);
+}
+.pageMenu:not(:popover-open) { display: none; }
+.pageMenuLabel { padding: 7px 12px; margin: 0 0 4px; color: var(--muted); font-size: var(--font-caption); letter-spacing: 1px; }
+.pageMenu a { display: flex; align-items: center; min-height: 40px; padding: 9px 12px; border-radius: 7px; color: var(--ink); text-decoration: none; font-size: var(--font-body); }
+.pageMenu a:hover, .pageMenu a:focus-visible { background: var(--business-tint); outline: 2px solid var(--business-accent); outline-offset: -2px; }
+.pageMenu a[aria-current="page"] { background: var(--business-tint); color: var(--business-accent); font-weight: 650; }
+body.previewMode .previewHeader { background: #f7f8fc; }
+@media (min-width: 1000px) and (min-height: 650px) {
+  body.overviewMode #dashboardMain { height: calc(100dvh - var(--workspace-header-height)); }
+}
+@media (max-width: 760px) {
+  body .dashboardHeader, body.overviewMode .dashboardHeader, body .previewHeader { padding: 10px 12px; gap: 12px; }
+  body .dashboardHeader h1, body.overviewMode .dashboardHeader h1 { font-size: var(--font-title); }
+  body .dashboardHeader .headerDataset { display: none; }
+  body .dashboardHeader #businessName { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  body .previewHeader { justify-content: flex-end; }
+  .pageMenu { right: 12px; }
+  body.previewMode .previewHeaderActions { gap: 6px; }
+}

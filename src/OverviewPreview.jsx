@@ -1,11 +1,12 @@
 import { overviewIcon } from "./overview-icons.js";
+import { HeaderNavigation } from "./HeaderNavigation.jsx";
 
 function Icon({name}) {
   // The markup is a fixed local icon; uploaded content never enters this HTML.
   return <span className="previewIcon" dangerouslySetInnerHTML={{__html: overviewIcon(name)}} />;
 }
 
-export function OverviewPreview({openAccount}) {
+export function OverviewPreview({user}) {
   return <>
     <aside id="previewSidebar" className="previewSidebar" aria-label="Preview workspace" hidden>
       <a className="previewBrand" href="#overview-preview" aria-label="AI Business Insights overview">
@@ -37,7 +38,7 @@ export function OverviewPreview({openAccount}) {
       <div className="previewHeaderActions">
         <button id="previewFilterButton" type="button" aria-expanded="false" aria-controls="dashboardFilters"><Icon name="filter" />Filters<span id="previewFilterCount" hidden /></button>
         <button id="previewCustomize" type="button" aria-haspopup="dialog"><Icon name="settings" />Customize</button>
-        {openAccount && <button className="previewAccountButton" type="button" onClick={openAccount} aria-haspopup="dialog" aria-label="Manage your account"><Icon name="account" /></button>}
+        <HeaderNavigation preview user={user} />
       </div>
     </div>
   </>;

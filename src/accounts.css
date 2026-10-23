@@ -30,24 +30,27 @@
 .authPrimary:hover { background: #066452; border-color: #066452; }
 .authError { color: #a32136; background: #fff0f1; border: 1px solid #f0c8cf; border-radius: 8px; padding: 10px 12px; margin: 0; font-size: var(--font-caption); overflow-wrap: anywhere; }
 .authFootnote { font-size: var(--font-caption); color: #75867f; line-height: 1.6; margin: 20px 0 0; }
-.accountDialog { width: min(520px, calc(100% - 32px)); max-height: calc(100dvh - 40px); padding: 0; border: 1px solid var(--line); border-radius: 18px; background: white; color: var(--ink); box-shadow: 0 24px 80px rgb(15 23 42 / 22%); }
-.accountDialog::backdrop { background: rgb(15 30 37 / 42%); backdrop-filter: blur(3px); }
-.accountDialogLayout { display: flex; flex-direction: column; max-height: calc(100dvh - 42px); }
-.accountDialogBody { overflow: auto; min-height: 0; padding: 20px 24px; }
-.accountChangeNotice { padding: 12px; margin: 0 0 18px; border-radius: 8px; background: #f0f6f3; color: #536f62; font-size: var(--font-caption); line-height: 1.6; }
-.accountSection { padding: 18px 0; }
-.accountSection + .accountSection { border-top: 1px solid var(--line); }
-.accountSection h3 { font-size: var(--font-section); margin: 0 0 14px; }
-.accountDanger h3 { color: #a32136; }
-.accountDanger > p { color: #62777d; font-size: var(--font-caption); line-height: 1.6; }
+.accountPage { width: min(1100px, calc(100% - 48px)); margin: 28px auto; }
+.accountPageHeading { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 20px; }
+.accountPageHeading h1 { font-size: var(--font-heading); margin: 0 0 4px; }
+.accountPageHeading .sub { margin: 0; }
+.accountUsername { padding: 7px 12px; border-radius: 8px; background: var(--business-tint); color: var(--business-accent); overflow-wrap: anywhere; }
+.accountChangeNotice { padding: 14px 16px; margin: 0 0 20px; border: 1px solid var(--line); border-radius: 10px; background: var(--business-tint); color: var(--muted); font-size: var(--font-body); line-height: 1.6; }
+.accountPageGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 20px; }
+.accountSection { padding: 24px; min-width: 0; }
+.accountSection h2, .accountInfo h2 { font-size: var(--font-section); margin: 0 0 18px; }
+.accountPage .authPrimary { background: var(--business-accent); border-color: var(--business-accent); }
+.accountDanger { grid-column: 1 / -1; }
+.accountDanger h2 { color: #a32136; }
+.accountDanger > p { color: var(--muted); font-size: var(--font-body); line-height: 1.6; }
 .accountForm .confirmDeletion { display: flex; align-items: flex-start; gap: 10px; color: #6d4650; line-height: 1.6; }
 .confirmDeletion input { width: 16px; height: 16px; flex: 0 0 auto; margin: 2px 0 0; accent-color: #a32136; }
 .dangerButton { font-size: var(--font-body); color: #a32136; border-color: #e3b4be; background: #fff4f6; }
 .dangerButton:hover { background: #ffe8ed; }
-.accountDialogFooter { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 16px 24px; flex-shrink: 0; border-top: 1px solid var(--line); }
-.accountDialogFooter small { font-size: var(--font-caption); color: #62777d; }
-.accountDialogFooter button { font-size: var(--font-caption); }
-@media (max-width: 1300px) { header:has(#accountButton) > small { display: none; } }
+.accountPageFooter { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 20px 0; }
+.accountPageFooter small { font-size: var(--font-caption); color: var(--muted); }
+.accountInfo p { color: var(--muted); }
+.accountInfo a { color: var(--business-accent); }
 @media (max-width: 750px) {
   .authPage { grid-template-columns: minmax(0, 1fr); max-width: 500px; gap: 24px; padding: 28px 18px; }
   .authIntroduction h1 { font-size: 34px; margin-bottom: 10px; letter-spacing: -1px; }
@@ -55,6 +58,8 @@
   .authIntroduction > p:not(.authEyebrow) { font-size: var(--font-body); margin-bottom: 0; }
   .authFeatures { display: none; }
   .authCard { padding: 24px; }
-  .accountDialogBody { padding: 16px 18px; }
-  .accountDialogFooter { padding: 14px 18px; }
+  .accountPage { width: calc(100% - 24px); margin: 20px auto; }
+  .accountPageGrid { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .accountPageHeading { flex-wrap: wrap; }
+  .accountSection { padding: 18px; }
 }

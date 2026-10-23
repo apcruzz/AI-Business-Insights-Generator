@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import "./accounts.css";
 
 async function accountRequest(path, {method = "GET", body, token} = {}) {
@@ -22,7 +22,6 @@ async function accountRequest(path, {method = "GET", body, token} = {}) {
 export function AccountAccess({children}) {
   const [session, setSession] = useState(null);
   const [error, setError] = useState("");
-  const [accountOpen, setAccountOpen] = useState(false);
   const load = async () => {
     setError("");
     try { setSession(await accountRequest("/api/auth/session")); }
@@ -37,9 +36,10 @@ export function AccountAccess({children}) {
   if (!session) return <main className="authPage"><section className="authCard"><p className="authEyebrow">BUSINESS INSIGHTS</p><h1>{error ? "Connection interrupted" : "Opening your workspace…"}</h1>{error && <><p className="authError" role="alert">{error}</p><button className="authPrimary" onClick={load}>Try again</button></>}</section></main>;
   if (!session.authenticated) return <SignIn session={session} onSignedIn={() => window.location.reload()} />;
   const accounts = session.authMode === "accounts";
-  return <>{children({openAccount: accounts ? () => setAccountOpen(true) : null})}
-    {accounts && accountOpen && <AccountDialog session={session} onClose={() => setAccountOpen(false)} />}
-  </>;
+  return children({user: session.user, accountPage: accounts ? <AccountPage session={session} /> : <>
+    <div className="accountPageHeading"><h1 id="accountTitle" tabIndex={-1}>Your account</h1><p className="sub">Your current workspace</p></div>
+    <section className="panel accountInfo"><h2>{session.authMode === "demo" ? "Team demo access" : "Local workspace"}</h2><p>{session.authMode === "demo" ? "This demonstration uses team credentials managed by the service owner." : "You are running locally. Account registration is available on a hosted service configured for user accounts."}</p><p>Your uploaded dataset and conversations remain temporary. Keep your original file.</p><a href="#change-dataset">Choose a dataset →</a></section>
+  </>});
 }
 
 function SignIn({session, onSignedIn}) {
@@ -88,12 +88,10 @@ function SignIn({session, onSignedIn}) {
   </main>;
 }
 
-function AccountDialog({session, onClose}) {
-  const dialog = useRef(null);
+function AccountPage({session}) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [deleteConfirmed, setDeleteConfirmed] = useState(false);
-  useEffect(() => { dialog.current.showModal(); }, []);
   const perform = async (path, method, body) => {
     setBusy(true);
     setError("");
@@ -113,13 +111,12 @@ function AccountDialog({session, onClose}) {
     delete values.confirmPassword;
     perform("/api/account", "PATCH", values);
   };
-  return <dialog id="accountDialog" className="accountDialog" ref={dialog} aria-labelledby="accountTitle" onClose={onClose}>
-    <div className="accountDialogLayout">
-      <div className="chooserHeader"><div><h2 id="accountTitle">Your account</h2><p className="sub">Signed in as {session.user.username}</p></div><button className="iconButton" type="button" aria-label="Close account settings" onClick={() => dialog.current.close()}>×</button></div>
-      <div className="accountDialogBody">
+  return <>
+      <div className="accountPageHeading"><div><h1 id="accountTitle" tabIndex={-1}>Your account</h1><p className="sub">Manage your profile, password, and access.</p></div><span className="accountUsername">{session.user.username}</span></div>
         <p className="accountChangeNotice">Saving changes signs out other devices and clears your temporary dashboard. Your account will stay registered.</p>
         {error && <p className="authError" role="alert">{error}</p>}
-        <section className="accountSection"><h3>Profile</h3>
+      <div className="accountPageGrid">
+        <section className="panel accountSection"><h2>Profile</h2>
           <form className="accountForm" id="profileForm" method="post" onSubmit={update}>
             <label htmlFor="profileDisplayName">Display name<input id="profileDisplayName" name="displayName" defaultValue={session.user.displayName} required maxLength={80} autoComplete="nickname" /></label>
             <label htmlFor="profileUsername">Username<input id="profileUsername" name="username" defaultValue={session.user.username} required minLength={3} maxLength={32} autoComplete="username" autoCapitalize="none" spellCheck="false" /></label>
@@ -127,7 +124,7 @@ function AccountDialog({session, onClose}) {
             <button className="authPrimary" disabled={busy}>Save profile</button>
           </form>
         </section>
-        <section className="accountSection"><h3>Change password</h3>
+        <section className="panel accountSection"><h2>Change password</h2>
           <form className="accountForm" id="passwordForm" method="post" onSubmit={event => update(event, true)}>
             <label htmlFor="passwordCurrent">Current password<input id="passwordCurrent" name="currentPassword" type="password" required maxLength={256} autoComplete="current-password" /></label>
             <label htmlFor="passwordNew">New password<input id="passwordNew" name="newPassword" type="password" required minLength={16} maxLength={256} autoComplete="new-password" /></label>
@@ -135,7 +132,7 @@ function AccountDialog({session, onClose}) {
             <button className="authPrimary" disabled={busy}>Update password</button>
           </form>
         </section>
-        <section className="accountSection accountDanger"><h3>Delete account</h3><p>This permanently removes your account, signs out every device, and clears your temporary datasets and conversations. Creating the same username later will create a new account.</p>
+        <section className="panel accountSection accountDanger"><h2>Delete account</h2><p>This permanently removes your account, signs out every device, and clears your temporary datasets and conversations. Creating the same username later will create a new account.</p>
           <form className="accountForm" id="deleteAccountForm" method="post" onSubmit={event => {event.preventDefault(); if (deleteConfirmed) perform("/api/account", "DELETE", Object.fromEntries(new FormData(event.currentTarget)));}}>
             <label htmlFor="deleteCurrentPassword">Current password<input id="deleteCurrentPassword" name="currentPassword" type="password" required maxLength={256} autoComplete="current-password" /></label>
             <label className="confirmDeletion"><input id="confirmAccountDeletion" type="checkbox" checked={deleteConfirmed} onChange={event => setDeleteConfirmed(event.target.checked)} />I understand this permanently deletes my account.</label>
@@ -143,7 +140,6 @@ function AccountDialog({session, onClose}) {
           </form>
         </section>
       </div>
-      <div className="accountDialogFooter"><small>Joined {new Date(session.user.createdAt).toLocaleDateString()}</small><button id="signOutButton" type="button" disabled={busy} onClick={() => perform("/api/auth/logout", "POST", {})}>Sign out</button></div>
-    </div>
-  </dialog>;
+      <div className="accountPageFooter"><small>Joined {new Date(session.user.createdAt).toLocaleDateString()}</small><button id="signOutButton" type="button" disabled={busy} onClick={() => perform("/api/auth/logout", "POST", {})}>Sign out</button></div>
+  </>;
 }

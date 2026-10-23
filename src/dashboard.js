@@ -43,8 +43,6 @@ let data = [],
   overviewChartIds = [],
   overviewKpiIds = [],
   datasetTablePage = 0,
-  detailChartIndex = 0,
-  detailView = "charts",
   aiOptions = answerOptions({}),
   modelsLoaded = false,
   groqConfigured = false,
@@ -177,18 +175,36 @@ function showSetup(updateRoute = true) {
   // Show the upload/mapping screen and hide the dashboard views.
   $("setupPage").hidden = false;
   $("dashboardMain").hidden = true;
+  $("accountPage").hidden = true;
   document.body.classList.remove("overviewMode");
   document.body.classList.remove("detailMode");
   document.body.classList.remove("previewMode");
-  document.body.classList.remove("detailFiltersOpen");
-  $("detailToggleFilters").setAttribute("aria-expanded", "false");
+  document.body.classList.remove("accountMode");
   $("previewSidebar").hidden = true;
   $("previewHeader").hidden = true;
   document.querySelector(".dashboardHeader").hidden = false;
-  ["overviewNav", "detailNav", "previewNav"].forEach(id => $(id).setAttribute("aria-current", "false"));
-  $("setupNav").setAttribute("aria-current", "page");
+  markNavigation("#change-dataset");
   $("cancelSetup").hidden = !data.length;
-  if (updateRoute && data.length) updatePageHash("#change-dataset");
+  if (updateRoute) updatePageHash("#change-dataset");
+}
+function markNavigation(hash) {
+  document.querySelectorAll(".pageMenu a").forEach(link => {
+    if (link.getAttribute("href") === hash) link.setAttribute("aria-current", "page");
+    else link.removeAttribute("aria-current");
+  });
+}
+function showAccount(updateRoute = true) {
+  closePreviewFilters();
+  if (updateRoute) updatePageHash("#account");
+  $("setupPage").hidden = true;
+  $("dashboardMain").hidden = true;
+  $("accountPage").hidden = false;
+  $("previewSidebar").hidden = true;
+  $("previewHeader").hidden = true;
+  document.querySelector(".dashboardHeader").hidden = false;
+  document.body.classList.remove("overviewMode", "detailMode", "previewMode");
+  document.body.classList.add("accountMode");
+  markNavigation("#account");
 }
 function showPage(page, updateRoute = true) {
   closePreviewFilters();
@@ -199,6 +215,8 @@ function showPage(page, updateRoute = true) {
   applyBusinessTheme(meta.business);
   const preview = page === "preview", overview = page !== "detail";
   $("setupPage").hidden = true;
+  $("accountPage").hidden = true;
+  document.body.classList.remove("accountMode");
   $("dashboardMain").hidden = false;
   $("overview").hidden = !overview;
   $("detailPage").hidden = overview;
@@ -208,13 +226,9 @@ function showPage(page, updateRoute = true) {
   $("previewSidebar").hidden = !preview;
   $("previewHeader").hidden = !preview;
   document.querySelector(".dashboardHeader").hidden = preview;
-  $("overviewNav").setAttribute("aria-current", page === "overview" ? "page" : "false");
-  $("detailNav").setAttribute("aria-current", overview ? "false" : "page");
-  $("previewNav").setAttribute("aria-current", preview ? "page" : "false");
-  $("setupNav").setAttribute("aria-current", "false");
+  markNavigation(pageHashes[page]);
   // Redraw only the layout-dependent markup. Dataset, filters, and chat stay intact.
   if (overview) renderOverviewLayout(filtered());
-  else setDetailView(detailView);
   syncPreviewView();
 }
 // Rank business preferences first, then choose distinct, supported fallback metrics.
@@ -495,8 +509,6 @@ function buildDashboard() {
   if (!analyzedData) return;
   meta = analyzedData;
   data = meta.rows;
-  detailChartIndex = 0;
-  detailView = "charts";
   previewView = "charts";
   previewChartIndex = 0;
   overviewKpiIds = [];
@@ -1072,46 +1084,6 @@ function renderOverviewLayout(rows) {
   const products = group(rows, "Product_Name").sort((a, b) => sum(b[1], "Net_Sales") - sum(a[1], "Net_Sales"));
   renderOverviewCharts(rows, products, meta.capabilities);
 }
-const detailViews = {charts: ["detailChartsTab", "detailChartsView"], data: ["detailDataTab", "datasetTablePanel"], summaries: ["detailSummariesTab", "detailSummariesView"]};
-function setDetailView(view) {
-  detailView = view;
-  for (const [name, [tabId, panelId]] of Object.entries(detailViews)) {
-    const active = name === view;
-    $(tabId).setAttribute("aria-selected", String(active));
-    $(tabId).tabIndex = active ? 0 : -1;
-    $(panelId).hidden = !active;
-  }
-  if (view === "charts") renderDetailChartPage();
-  if (view === "summaries" && !$("detailTables").querySelector("details[open]")) {
-    const first = $("detailTables").querySelector("details");
-    if (first) first.open = true;
-  }
-}
-function renderDetailChartPage() {
-  // Keep chart tiles readable: show one, two, or four to fit the available pane.
-  const container = $("detailCharts"), panels = [...container.querySelectorAll(".detailChartPanel")];
-  const columns = container.clientWidth >= 600 ? 2 : 1;
-  const rows = container.clientHeight >= 440 ? 2 : 1;
-  const pageSize = columns * rows;
-  const target = Math.max(0, Math.min(detailChartIndex, panels.length - 1));
-  const page = Math.floor(target / pageSize), start = page * pageSize;
-  const end = Math.min(start + pageSize, panels.length);
-  container.style.gridTemplateColumns = `repeat(${columns}, minmax(0, 1fr))`;
-  container.style.gridTemplateRows = `repeat(${Math.min(rows, Math.ceil((end - start) / columns)) || 1}, minmax(0, 1fr))`;
-  panels.forEach((panel, index) => { panel.hidden = index < start || index >= end; });
-  container.dataset.pageSize = pageSize;
-  container.dataset.pageStart = start;
-  $("previousChartPage").disabled = start === 0;
-  $("nextChartPage").disabled = end === panels.length;
-  $("detailChartPageStatus").textContent = panels.length
-    ? `Charts ${start + 1}–${end} of ${panels.length} · Page ${page + 1} of ${Math.ceil(panels.length / pageSize)}`
-    : "No charts are available from the mapped columns.";
-  if (panels.length) $("detailChartSelect").value = panels[target].dataset.chartPanel;
-}
-function closeDetailFilters() {
-  document.body.classList.remove("detailFiltersOpen");
-  $("detailToggleFilters").setAttribute("aria-expanded", "false");
-}
 function renderDatasetTable() {
   // Paginate the complete filtered dataset so large uploads do not create a huge DOM.
   const pageSize = 50;
@@ -1160,13 +1132,12 @@ function render() {
     : '<option value="">No supported charts</option>';
   $("detailChartSelect").disabled = !detailOptions.length;
   // Retain the detailed source summaries alongside the new business charts.
-  $("detailTables").innerHTML = (c.product ? `<details class="panel"><summary>${esc(businessProfile(meta.business).item)} totals</summary><div class="scroll"><table><thead><tr><th>Item</th><th>Units</th><th>Net sales</th><th>Gross profit</th><th>Margin</th></tr></thead><tbody>${products.map(([name, items]) => {
+  $("detailTables").innerHTML = (c.product ? `<details class="panel" open><summary>${esc(businessProfile(meta.business).item)} totals</summary><div class="scroll"><table><thead><tr><th>Item</th><th>Units</th><th>Net sales</th><th>Gross profit</th><th>Margin</th></tr></thead><tbody>${products.map(([name, items]) => {
     const sales = sum(items, "Net_Sales"), profit = sum(items, "Gross_Profit");
     return `<tr><td>${esc(name)}</td><td>${c.Quantity ? sum(items, "Quantity") : "—"}</td><td>${esc(money(sales))}</td><td>${c.Gross_Profit ? esc(money(profit)) : "—"}</td><td>${c.Gross_Profit && sales > 0 ? pct(profit / sales * 100) : "—"}</td></tr>`;
-  }).join("")}</tbody></table></div></details>` : "") + (c.employee ? `<details class="panel"><summary>Staff sales totals</summary><div class="scroll"><table><thead><tr><th>Employee</th><th>Gross sales</th><th>Discounts</th><th>Net sales</th><th>Gross profit</th><th>Margin</th></tr></thead><tbody>${staffTable(rows, c)}</tbody></table></div></details>` : "");
+  }).join("")}</tbody></table></div></details>` : "") + (c.employee ? `<details class="panel" open><summary>Staff sales totals</summary><div class="scroll"><table><thead><tr><th>Employee</th><th>Gross sales</th><th>Discounts</th><th>Net sales</th><th>Gross profit</th><th>Margin</th></tr></thead><tbody>${staffTable(rows, c)}</tbody></table></div></details>` : "");
   applyChartVisibility();
   if (!$("detailTables").childElementCount) $("detailTables").innerHTML = note("Map a product or employee column to show sales summaries.");
-  setDetailView(detailView);
   renderDatasetTable();
   renderInsights(rows);
   resetConversation();
@@ -2644,10 +2615,6 @@ $("sample").onchange = () => {
   applyBusinessTheme($("business").value);
 };
 $("business").onchange = () => applyBusinessTheme($("business").value);
-$("overviewNav").onclick = () => showPage("overview");
-$("detailNav").onclick = () => showPage("detail");
-$("previewNav").onclick = () => showPage("preview");
-$("setupNav").onclick = () => showSetup();
 $("previewChangeDataset").onclick = () => showSetup();
 $("cancelSetup").onclick = () => showPage(lastDashboardPage);
 $("previewCustomize").onclick = () => showChartChooser(false);
@@ -2697,7 +2664,16 @@ const followPageHash = () => {
   const page = pageFromHash();
   if (page) showPage(page, false);
   else if (window.location.hash === "#change-dataset") showSetup(false);
-  else if (window.location.hash === "#datasetTablePanel") { showPage("detail"); setDetailView("data"); }
+  else if (window.location.hash === "#account") showAccount(false);
+  else if (window.location.hash === "#datasetTablePanel") {
+    showPage("detail", false);
+    $("datasetTablePanel").scrollIntoView({block: "start"});
+    return;
+  }
+  window.scrollTo(0, 0);
+  const heading = window.location.hash === "#account" ? $("accountTitle") : $("dashboardTitle");
+  heading.tabIndex = -1;
+  heading.focus({preventScroll: true});
 };
 window.addEventListener("hashchange", followPageHash);
 ["from", "to", "category", "product", "weekday", "period"].forEach((id) =>
@@ -2706,42 +2682,13 @@ window.addEventListener("hashchange", followPageHash);
 $("reset").onclick = resetFilters;
 $("previousDataPage").onclick = () => { datasetTablePage--; renderDatasetTable(); };
 $("nextDataPage").onclick = () => { datasetTablePage++; renderDatasetTable(); };
-$("previousChartPage").onclick = () => {
-  detailChartIndex = Number($("detailCharts").dataset.pageStart) - Number($("detailCharts").dataset.pageSize);
-  renderDetailChartPage();
-};
-$("nextChartPage").onclick = () => {
-  detailChartIndex = Number($("detailCharts").dataset.pageStart) + Number($("detailCharts").dataset.pageSize);
-  renderDetailChartPage();
-};
 $("detailChartSelect").onchange = () => {
-  detailChartIndex = chartOptions().findIndex(option => option.id === $("detailChartSelect").value);
-  renderDetailChartPage();
-};
-const detailTabIds = Object.values(detailViews).map(([tabId]) => tabId);
-Object.entries(detailViews).forEach(([view, [tabId]]) => {
-  $(tabId).onclick = () => { closeDetailFilters(); setDetailView(view); };
-  $(tabId).onkeydown = event => {
-    if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
-    event.preventDefault();
-    const index = detailTabIds.indexOf(tabId);
-    const next = event.key === "Home" ? 0 : event.key === "End" ? detailTabIds.length - 1
-      : (index + (event.key === "ArrowRight" ? 1 : -1) + detailTabIds.length) % detailTabIds.length;
-    $(detailTabIds[next]).click();
-    $(detailTabIds[next]).focus();
-  };
-});
-$("detailToggleFilters").onclick = () => {
-  const open = document.body.classList.toggle("detailFiltersOpen");
-  $("detailToggleFilters").setAttribute("aria-expanded", String(open));
-  if (open) $("from").disabled ? $("category").focus() : $("from").focus();
+  const panel = [...$("detailCharts").children].find(panel => panel.dataset.chartPanel === $("detailChartSelect").value);
+  if (panel) { panel.tabIndex = -1; panel.focus({preventScroll: true}); panel.scrollIntoView({block: "start"}); }
 };
 $("dashboardFilters").addEventListener("keydown", event => {
   if (event.key === "Escape" && document.body.classList.contains("previewFiltersOpen")) {
     closePreviewFilters(); $("previewFilterButton").focus();
-  }
-  if (event.key === "Escape" && document.body.classList.contains("detailFiltersOpen")) {
-    closeDetailFilters(); $("detailToggleFilters").focus();
   }
 });
 $("chooseCharts").onclick = () => showChartChooser(false);
@@ -2761,14 +2708,10 @@ $("insightForm").onsubmit = (e) => {
   ask($("insightQuestion").value);
 };
 showSetup(false);
+if (window.location.hash === "#account") showAccount(false);
 applyBusinessTheme($("business").value);
 refreshModels().catch(() => {});
-const resizeDetailCharts = () => {
-  if (document.body.classList.contains("detailMode") && detailView === "charts") renderDetailChartPage();
-};
-const detailObserver = new ResizeObserver(resizeDetailCharts);
-detailObserver.observe($("detailCharts"));
 const resizePreview = () => { if (document.body.classList.contains("previewMode")) renderOverviewLayout(filtered()); };
 compactPreview.addEventListener("change", resizePreview);
-return () => { window.removeEventListener("hashchange", followPageHash); detailObserver.disconnect(); previewChartObserver.disconnect(); compactPreview.removeEventListener("change", resizePreview); };
+return () => { window.removeEventListener("hashchange", followPageHash); previewChartObserver.disconnect(); compactPreview.removeEventListener("change", resizePreview); };
 }
