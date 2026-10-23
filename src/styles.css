@@ -26,7 +26,7 @@
         color: #b9c6d6;
       }
       h1 {
-        font-size: 26px;
+        font-size: var(--font-heading);
         margin: 2px 0;
       }
       main {
@@ -35,7 +35,7 @@
         padding: 28px 24px;
       }
       h2 {
-        font-size: 19px;
+        font-size: var(--font-title);
         margin: 0 0 6px;
       }
       /* Lay out shared filter controls. */
@@ -47,7 +47,7 @@
         margin-bottom: 24px;
       }
       .filters label {
-        font-size: 14px;
+        font-size: var(--font-body);
         display: grid;
         gap: 5px;
       }
@@ -81,17 +81,17 @@
         padding: 22px;
       }
       .card .label {
-        font-size: 14px;
+        font-size: var(--font-body);
         color: #536274;
       }
       .value {
-        font-size: 29px;
+        font-size: var(--font-metric);
         font-weight: 700;
         margin: 8px 0;
         letter-spacing: -0.5px;
       }
       .hint {
-        font-size: 13px;
+        font-size: var(--font-body);
         color: #66758a;
       }
       .card:first-child {
@@ -105,7 +105,7 @@
         margin-top: 20px;
       }
       .sub {
-        font-size: 14px;
+        font-size: var(--font-body);
         color: #627185;
         margin: 0 0 18px;
       }
@@ -121,7 +121,7 @@
       table {
         width: 100%;
         border-collapse: collapse;
-        font-size: 14px;
+        font-size: var(--font-body);
       }
       th {
         text-align: left;
@@ -144,7 +144,7 @@
       .barhead {
         display: flex;
         justify-content: space-between;
-        font-size: 14px;
+        font-size: var(--font-body);
         gap: 15px;
       }
       .track {
@@ -164,11 +164,11 @@
         border-left: 3px solid #dc9b32;
         margin-top: 22px;
         padding: 16px 20px;
-        font-size: 14px;
+        font-size: var(--font-body);
       }
       /* Identify chart series with colored legend markers. */
       .legend {
-        font-size: 14px;
+        font-size: var(--font-body);
         color: #627185;
       }
       .legend span {
@@ -185,7 +185,7 @@
       }
       /* Style closing notes, scroll containers, and empty states. */
       footer {
-        font-size: 13px;
+        font-size: var(--font-body);
         color: #66758a;
         margin: 22px 0;
       }
@@ -222,7 +222,7 @@
           padding: 16px;
         }
         .value {
-          font-size: 25px;
+          font-size: var(--font-heading);
         }
         .filters {
           gap: 10px;
@@ -294,7 +294,7 @@
         border-top: 4px solid #008d79;
       }
       body.overviewMode .value {
-        font-size: 25px;
+        font-size: var(--font-heading);
       }
       /* Position chart panels within the overview grid. */
       .overviewGrid {
@@ -361,11 +361,11 @@
           height: 58px;
         }
         body.overviewMode header h1 {
-          font-size: 20px;
+          font-size: var(--font-title);
           margin: 0;
         }
         body.overviewMode header small {
-          font-size: 12px;
+          font-size: var(--font-caption);
         }
         body.overviewMode .topnav {
           height: 48px;
@@ -373,7 +373,7 @@
           align-items: center;
         }
         body.overviewMode .topnav button {
-          font-size: 14px;
+          font-size: var(--font-body);
           padding: 6px 16px;
         }
         body.overviewMode main {
@@ -394,23 +394,23 @@
           min-width: 0;
         }
         body.overviewMode .filters label {
-          font-size: 14px;
+          font-size: var(--font-body);
           gap: 2px;
         }
         body.overviewMode .filters input,
         body.overviewMode .filters select {
           width: 100%;
           min-width: 0;
-          font-size: 14px;
+          font-size: var(--font-body);
           padding: 5px 7px;
           height: 32px;
         }
         body.overviewMode .filters button {
-          font-size: 14px;
+          font-size: var(--font-body);
           padding: 5px 7px;
         }
         body.overviewMode #count {
-          font-size: 12px;
+          font-size: var(--font-caption);
           margin-top: auto;
         }
         body.overviewMode #overview {
@@ -431,15 +431,15 @@
           min-width: 0;
         }
         body.overviewMode .card .label {
-          font-size: 14px;
+          font-size: var(--font-body);
         }
         body.overviewMode .card .value {
-          font-size: clamp(20px, 1.65vw, 29px);
+          font-size: var(--font-metric);
           margin: 2px 0;
           line-height: 1.3;
         }
         body.overviewMode .card .hint {
-          font-size: 12px;
+          font-size: var(--font-caption);
           line-height: 1.25;
         }
         body.overviewMode .overviewGrid {
@@ -475,12 +475,12 @@
           grid-column: span 3;
         }
         body.overviewMode .panel h2 {
-          font-size: 15px;
+          font-size: var(--font-section);
           margin-bottom: 6px;
           line-height: 1.2;
         }
         body.overviewMode .panel .sub {
-          font-size: 12px;
+          font-size: var(--font-caption);
           margin: 0 0 4px;
           line-height: 1.2;
         }
@@ -515,7 +515,7 @@
           width: 100%;
         }
         body.overviewMode #ovCategory .barhead {
-          font-size: 12px;
+          font-size: var(--font-caption);
           margin: 0 !important;
           flex-wrap: wrap;
           gap: 0 4px;
@@ -531,7 +531,7 @@
           margin: 0;
         }
         body.overviewMode #ovTop .barhead {
-          font-size: 13px;
+          font-size: var(--font-body);
           line-height: 1.2;
         }
         body.overviewMode #ovTop .track {
@@ -549,7 +549,7 @@
           margin: 0;
         }
         body.overviewMode #ovPayment .barhead {
-          font-size: 12px;
+          font-size: var(--font-caption);
           flex-wrap: wrap;
           gap: 0 4px;
         }
@@ -558,7 +558,7 @@
           margin: 3px 0;
         }
         body.overviewMode #ovPayment .hint {
-          font-size: 11px;
+          font-size: var(--font-caption);
         }
         body.overviewMode main > .note,
         body.overviewMode main > footer {
@@ -583,7 +583,7 @@
       }
       header > small {
         order: 3;
-        font-size: 12px;
+        font-size: var(--font-caption);
       }
       header .topnav button {
         white-space: nowrap;
@@ -619,10 +619,10 @@
           margin-left: 0;
         }
         header h1 {
-          font-size: 20px;
+          font-size: var(--font-title);
         }
         header .topnav button {
-          font-size: 13px;
+          font-size: var(--font-body);
           padding: 7px 10px;
         }
         header > small {
@@ -644,7 +644,7 @@
         padding: 10px;
       }
       .insightsPanel label {
-        font-size: 14px;
+        font-size: var(--font-body);
         font-weight: 600;
         color: #087968;
       }
@@ -656,12 +656,12 @@
       .askRow input {
         flex: 1;
         min-width: 0;
-        font-size: 14px;
+        font-size: var(--font-body);
       }
       .askRow button {
         background: #008d79;
         color: white;
-        font-size: 14px;
+        font-size: var(--font-body);
       }
       .insightCards {
         display: grid;
@@ -673,7 +673,7 @@
         border-radius: 8px;
         padding: 10px;
         background: white;
-        font-size: 13px;
+        font-size: var(--font-body);
       }
       .insightCards strong,
       .insightCards small {
@@ -683,7 +683,7 @@
         margin: 5px 0;
       }
       .insightsPanel #insightAnswer {
-        font-size: 13px;
+        font-size: var(--font-body);
         margin: 6px 0;
         line-height: 1.35;
       }
@@ -707,12 +707,12 @@
           padding: 8px 12px;
         }
         body.overviewMode .insightsPanel h2 {
-          font-size: 15px;
+          font-size: var(--font-section);
           margin: 0 0 2px;
         }
         body.overviewMode .insightsPanel .sub {
           margin: 0 0 4px;
-          font-size: 12px;
+          font-size: var(--font-caption);
         }
         body.overviewMode .insightsPanel form {
           padding: 5px 8px;
@@ -726,7 +726,7 @@
         }
         body.overviewMode .insightCards article {
           padding: 6px 8px;
-          font-size: 12px;
+          font-size: var(--font-caption);
           line-height: 1.25;
         }
         body.overviewMode .insightCards p {
@@ -756,7 +756,7 @@
         }
         body.overviewMode .insightCards article {
           padding: 10px;
-          font-size: 13px;
+          font-size: var(--font-body);
         }
         body.overviewMode .insightsPanel {
           padding: 12px;
@@ -799,11 +799,11 @@
           grid-template-columns: repeat(3, minmax(0, 1fr));
         }
         body.overviewMode .insightCards article {
-          font-size: 12px;
+          font-size: var(--font-caption);
           padding: 7px;
         }
         body.overviewMode .insightsPanel label {
-          font-size: 13px;
+          font-size: var(--font-body);
         }
         body.overviewMode .insightsPanel #insightAnswer {
           max-height: 65px;
@@ -838,7 +838,7 @@
         }
         body.overviewMode .overviewBottom .insightCards article {
           padding: 12px;
-          font-size: 13px;
+          font-size: var(--font-body);
           line-height: 1.4;
         }
         body.overviewMode .overviewBottom .insightsPanel form {
@@ -851,7 +851,7 @@
 
 .browserOllamaPanel { padding: 12px; margin: 8px 0; border: 1px solid var(--line, #dedee5); border-radius: 10px; }
 .browserOllamaActions { display: flex; flex-wrap: wrap; gap: 8px; }
-.browserOllamaPanel p { font-size: 12px; line-height: 1.5; margin: 8px 0; }
-.ollamaSetup summary { cursor: pointer; font-size: 12px; font-weight: 600; }
-.ollamaSetup pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 11px; padding: 8px; background: #f4f5f8; color: #202332; border-radius: 5px; }
+.browserOllamaPanel p { font-size: var(--font-caption); line-height: 1.5; margin: 8px 0; }
+.ollamaSetup summary { cursor: pointer; font-size: var(--font-caption); font-weight: 600; }
+.ollamaSetup pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: var(--font-caption); padding: 8px; background: #f4f5f8; color: #202332; border-radius: 5px; }
 .ollamaSetup code { overflow-wrap: anywhere; }
