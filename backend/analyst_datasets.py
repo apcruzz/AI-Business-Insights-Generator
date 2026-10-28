@@ -68,12 +68,14 @@ class DatasetCache:
         with self._lock:
             self._expire()
             entry = self._items.get(key) if isinstance(key, str) else None
+            # Knowing a dataset ID is insufficient: the authenticated request must own that cache entry.
             if entry is None or entry.owner != OWNER.get():
                 raise ValueError('The AI dataset expired or the server restarted. Build the dashboard again to reload it.')
             self._items.move_to_end(key)
             return entry
 
     def discard_owner(self, prefix):
+        # Prefixes let logout clear one browser, while account deletion clears every session for that user.
         with self._lock:
             for key, entry in list(self._items.items()):
                 if entry.owner.startswith(prefix):

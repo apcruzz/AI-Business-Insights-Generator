@@ -41,6 +41,7 @@ def enrich_business_data(result, mapped, parse_date, dayfirst, warnings):
             warnings.append(f"Blank or invalid {field} values are excluded from related operational calculations.")
 
     def present(field):
+        # A mapped column is usable only if every row supplies a nonblank value for this capability.
         return field in mapped and result[field].notna().all() and result[field].astype(str).str.strip().ne("").all()
 
     def events_valid(id_field, fields):
@@ -54,12 +55,14 @@ def enrich_business_data(result, mapped, parse_date, dayfirst, warnings):
         return True
 
     caps['channel'] = present('Sales_Channel')
+    # Waste is a line-level amount; repeated daily totals would overstate losses when summed.
     caps['waste'] = 'Waste_Cost' in mapped and present('Product_Name') and (result['Waste_Cost'] >= 0).all()
     if 'Waste_Cost' in mapped:
         warnings.append("Waste cost is summed per source row. Map line-level waste amounts, not a daily total repeated across sales lines.")
         if not caps['waste']:
             warnings.append("Waste charts require product names and nonnegative waste costs.")
 
+    # Prefer supplied outcome labels; otherwise compare validated promised and actual timestamps.
     if 'Delivery_Status' in mapped:
         labels = result['Delivery_Status'].str.lower().str.strip().str.replace(r'[-_]', ' ', regex=True)
         result['Delivery_Outcome'] = labels.map({'on time':'On time', 'ontime':'On time', 'early':'On time', 'late':'Late'})
@@ -71,6 +74,7 @@ def enrich_business_data(result, mapped, parse_date, dayfirst, warnings):
     if caps['delivery']:
         warnings.append("Delivery charts count each delivery ID once. Pending, blank, or unrecognized outcomes are excluded; delivery timestamps should use the same precision.")
 
+    # Derive the grouping keys once so browser heatmaps and capacity calculations use the same dates.
     if 'Appointment_Start' in result:
         result['Appointment_Day'] = result['Appointment_Start'].map(lambda v: v[:10] if v else None)
         result['Appointment_Hour'] = result['Appointment_Start'].map(lambda v: int(v[11:13]) if v else None)
@@ -78,6 +82,7 @@ def enrich_business_data(result, mapped, parse_date, dayfirst, warnings):
     caps['bookings'] = events_valid('Appointment_ID', booking_fields) and result['Appointment_Start'].notna().any()
     caps['utilization'] = False
     if caps['bookings'] and all(present(f) for f in ('Employee_Name', 'Appointment_Minutes', 'Available_Minutes', 'Appointment_Start')):
+        # Availability is repeated on appointment lines but must agree within each employee-day.
         capacity = result.groupby(['Employee_Name', 'Appointment_Day'])['Available_Minutes']
         caps['utilization'] = bool((result['Appointment_Minutes'] >= 0).all() and (result['Available_Minutes'] > 0).all() and (capacity.nunique() == 1).all())
         if not caps['utilization']:
@@ -86,6 +91,7 @@ def enrich_business_data(result, mapped, parse_date, dayfirst, warnings):
         warnings.append("Bookings count appointment IDs once, excluding cancelled/canceled/no-show appointments. Utilization is booked minutes divided by supplied daily availability for represented staff-days; it is not measured working time.")
 
     caps['jobStatus'] = events_valid('Job_ID', ['Job_Status']) and present('Job_Status')
+    # Incomplete jobs have no duration; reversed timestamps are excluded rather than becoming negative hours.
     if {'Job_Opened', 'Job_Completed'} <= set(mapped):
         durations = []
         for opened, completed in zip(result['Job_Opened'], result['Job_Completed']):

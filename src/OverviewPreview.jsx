@@ -7,6 +7,7 @@ function Icon({name}) {
 }
 
 export function OverviewPreview({user}) {
+  // This component supplies navigation chrome only; dashboard.js reuses the existing charts and chat.
   return <>
     <aside id="previewSidebar" className="previewSidebar" aria-label="Preview workspace" hidden>
       <a className="previewBrand" href="#overview-preview" aria-label="AI Business Insights overview">
@@ -30,6 +31,7 @@ export function OverviewPreview({user}) {
         <a className="previewOriginalLink" href="#business-overview"><Icon name="back" />Original overview</a>
       </div>
     </aside>
+    {/* Stable IDs let the controller open the same filters and customization dialogs as the original view. */}
     <div id="previewHeader" className="previewHeader" hidden>
       <div className="previewHeading">
         <h1>AI Business Insights</h1>

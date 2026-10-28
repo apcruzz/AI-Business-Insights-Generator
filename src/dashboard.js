@@ -57,6 +57,7 @@ let chooserTrigger = null;
 let previewView = "charts", previewChartIndex = 0;
 const compactPreview = window.matchMedia("(max-width: 1200px)");
 const previewViews = {charts: ["previewChartsTab", "overviewCharts"], highlights: ["previewHighlightsTab", "overviewHighlights"], assistant: ["previewAssistantTab", "overviewAssistant"]};
+// Resize only the plot markup, leaving card dimensions, selected models, and conversations intact.
 const previewChartObserver = new ResizeObserver(entries => {
   if (!document.body.classList.contains("previewMode")) return;
   const rows = filtered(), products = group(rows, "Product_Name").sort((a, b) => sum(b[1], "Net_Sales") - sum(a[1], "Net_Sales"));
@@ -78,6 +79,7 @@ const previewChartObserver = new ResizeObserver(entries => {
   }
 });
 function updatePageHash(hash) {
+  // Programmatic navigation already renders its page; pushState avoids a second hashchange render.
   if (window.location.hash !== hash) window.history.pushState(null, "", hash);
 }
 
@@ -188,12 +190,14 @@ function showSetup(updateRoute = true) {
   if (updateRoute) updatePageHash("#change-dataset");
 }
 function markNavigation(hash) {
+  // Both header menus remain mounted, so mark their matching links together for accessibility.
   document.querySelectorAll(".pageMenu a").forEach(link => {
     if (link.getAttribute("href") === hash) link.setAttribute("aria-current", "page");
     else link.removeAttribute("aria-current");
   });
 }
 function showAccount(updateRoute = true) {
+  // Hide other views without clearing their state; only saving account changes triggers a full reload.
   closePreviewFilters();
   if (updateRoute) updatePageHash("#account");
   $("setupPage").hidden = true;
@@ -240,6 +244,7 @@ function chartOptions() {
     recommended:plan.recommended.includes(id)}));
 }
 function applyBusinessTheme(name) {
+  // A profile changes presentation and terminology, while every business keeps the same data pipeline.
   const p = businessProfile(name);
   document.documentElement.style.setProperty("--business-accent", p.color);
   document.documentElement.style.setProperty("--business-tint", p.tint);
@@ -329,6 +334,7 @@ function loadSelectedCharts() {
   $("setupStatus").textContent = "Dashboard ready.";
 }
 function selectRecommendedCharts() {
+  // Reset the dialog's draft checkboxes to supported defaults without committing them immediately.
   const recommended = new Set(chartOptions().slice(0, 3).map((option) => option.id));
   document.querySelectorAll('input[name="chartChoice"]').forEach((input) => {
     input.checked = recommended.has(input.value);
@@ -1053,6 +1059,7 @@ function renderOverviewCharts(rows, products, c) {
   syncPreviewView();
 }
 function syncPreviewView() {
+  // Compact tabs and desktop columns share the same DOM panels; update roles as well as visibility.
   const preview = document.body.classList.contains("previewMode"), compact = preview && compactPreview.matches;
   document.body.dataset.previewView = previewView;
   $("previewWorkspaceTabs").hidden = !compact;
@@ -1073,6 +1080,7 @@ function syncPreviewView() {
   }
 }
 function closePreviewFilters() {
+  // Remove popover behavior before another page uses these same filters in its normal layout.
   const filters = $("dashboardFilters");
   if (typeof filters.hidePopover === "function" && filters.matches(":popover-open")) filters.hidePopover();
   filters.removeAttribute("popover");
@@ -1080,6 +1088,7 @@ function closePreviewFilters() {
   $("previewFilterButton").setAttribute("aria-expanded", "false");
 }
 function renderOverviewLayout(rows) {
+  // A layout switch redraws presentation only; render() handles actual filter/data changes and chat reset.
   $("overviewCards").innerHTML = metrics(rows, true);
   const products = group(rows, "Product_Name").sort((a, b) => sum(b[1], "Net_Sales") - sum(a[1], "Net_Sales"));
   renderOverviewCharts(rows, products, meta.capabilities);
@@ -2495,6 +2504,7 @@ async function ask(question) {
   }
 }
 function updateAnswerModeNotice() {
+  // Explain where inference runs before a question is sent; changing this text makes no provider call.
   const option = aiOptions.find(item => item.value === $("localModel").value);
   $("aiDataNotice").textContent = answerModeNotice(option, groqConfigured, hosted);
   $("localModel").title = $("aiDataNotice").textContent;
@@ -2506,6 +2516,7 @@ function updateAnswerModeNotice() {
   $("insightMode").textContent = "Calculated insights · " + (option?.model ? option.label : "AI optional");
 }
 function applyAIOptions(current = $("localModel").value, initial = false) {
+  // Merge server discovery with explicitly connected browser models, keeping provider-qualified IDs.
   const options = [...(backendModels.options || []), ...browserOllama.models.map(model => ({
     provider: "browser_ollama", model, label: `${model} · Local Ollama (this browser)`, available: true,
   }))];
@@ -2517,10 +2528,12 @@ function applyAIOptions(current = $("localModel").value, initial = false) {
     return element;
   }));
   $("localModel").value = value;
+  // A removed or changed model must not inherit a transcript that belonged to a different provider.
   if (current !== value) { revision++; resetConversation(); }
   updateAnswerModeNotice();
 }
 async function connectBrowserOllama() {
+  // This explicit action is the point where the page may first ask to access the visitor's loopback service.
   $("connectBrowserOllama").disabled = true;
   $("disconnectBrowserOllama").disabled = false;
   $("browserOllamaStatus").textContent = "Connecting to Ollama on this computer. Allow Chrome’s Local Network Access prompt if shown…";
@@ -2583,6 +2596,7 @@ $("sheet").onchange = () => {
   inspect();
 };
 function setMappingTool(buttonId, panelId, expanded) {
+  // Keep the disclosure's visual state and screen-reader state synchronized with the same boolean.
   $(buttonId).setAttribute("aria-expanded", String(expanded));
   $(panelId).hidden = !expanded;
 }
@@ -2661,6 +2675,7 @@ $("previewChartSelect").onchange = () => changePreviewChart(Number($("previewCha
 $("previewPreviousChart").onclick = () => changePreviewChart(previewChartIndex - 1);
 $("previewNextChart").onclick = () => changePreviewChart(previewChartIndex + 1);
 const followPageHash = () => {
+  // Native menu links and browser Back/Forward enter here; a reload still needs a fresh dataset upload.
   const page = pageFromHash();
   if (page) showPage(page, false);
   else if (window.location.hash === "#change-dataset") showSetup(false);
@@ -2683,6 +2698,7 @@ $("reset").onclick = resetFilters;
 $("previousDataPage").onclick = () => { datasetTablePage--; renderDatasetTable(); };
 $("nextDataPage").onclick = () => { datasetTablePage++; renderDatasetTable(); };
 $("detailChartSelect").onchange = () => {
+  // All detailed charts are already present; jump to the chosen card instead of hiding other charts.
   const panel = [...$("detailCharts").children].find(panel => panel.dataset.chartPanel === $("detailChartSelect").value);
   if (panel) { panel.tabIndex = -1; panel.focus({preventScroll: true}); panel.scrollIntoView({block: "start"}); }
 };
@@ -2708,10 +2724,12 @@ $("insightForm").onsubmit = (e) => {
   ask($("insightQuestion").value);
 };
 showSetup(false);
+// Account settings can be opened directly before any temporary dataset has been loaded.
 if (window.location.hash === "#account") showAccount(false);
 applyBusinessTheme($("business").value);
 refreshModels().catch(() => {});
 const resizePreview = () => { if (document.body.classList.contains("previewMode")) renderOverviewLayout(filtered()); };
 compactPreview.addEventListener("change", resizePreview);
+// React can unmount this controller: detach observers/listeners to avoid duplicate work after remounting.
 return () => { window.removeEventListener("hashchange", followPageHash); previewChartObserver.disconnect(); compactPreview.removeEventListener("change", resizePreview); };
 }

@@ -26,6 +26,7 @@ class AccountUnavailable(RuntimeError):
 
 
 def username(value):
+    # Store one canonical spelling so casing and surrounding spaces cannot create duplicate logins.
     if not isinstance(value, str) or not USERNAME.fullmatch(value.strip().lower()):
         raise ValueError('Use a username of 3–32 letters, numbers, dots, underscores or hyphens, starting with a letter or number.')
     return value.strip().lower()
@@ -44,11 +45,13 @@ def password(value):
 
 
 def public_user(row):
+    # Explicitly select browser-visible fields; never serialize password hashes or session secrets.
     return {'id': row['id'], 'username': row['username'], 'displayName': row['display_name'],
             'createdAt': datetime.fromtimestamp(row['created_at'], timezone.utc).isoformat()}
 
 
 def token_hash(value):
+    # The cookie contains a random bearer token; a database leak should reveal only its digest.
     return hashlib.sha256(value.encode()).hexdigest()
 
 
@@ -70,6 +73,7 @@ class AccountStore:
 
     @contextmanager
     def transaction(self):
+        # Use a fresh connection per operation and always commit, roll back, and close it here.
         connection = None
         try:
             if self.sqlite_path:
@@ -109,6 +113,7 @@ class AccountStore:
         return connection.execute(sql if self.sqlite_path else sql.replace('?', '%s'), params)
 
     def initialize(self):
+        # These tables hold identities and revocable sessions, not uploaded sales records.
         try:
             with self.transaction() as connection:
                 self.execute(connection, '''CREATE TABLE IF NOT EXISTS dashboard_users (
@@ -124,6 +129,7 @@ class AccountStore:
             raise RuntimeError('Cannot initialize account storage. Check DATABASE_URL and database connectivity.') from None
 
     def register(self, payload):
+        # An immutable ID keeps dataset ownership stable even when the username changes later.
         name = username(payload.get('username'))
         supplied_name = payload.get('displayName')
         label = display_name(name if supplied_name is None or supplied_name == '' else supplied_name)
@@ -146,6 +152,7 @@ class AccountStore:
         return row if row and valid else None
 
     def create_session(self, user, old_token=None):
+        # Rotate both browser credentials after sign-in; neither token is derived from a username.
         raw, csrf, now = secrets.token_urlsafe(32), secrets.token_urlsafe(32), int(time.time())
         with self.transaction() as connection:
             # A concurrent password change/deletion cannot issue a session for stale credentials.
@@ -157,6 +164,7 @@ class AccountStore:
             if old_token:
                 self.execute(connection, 'DELETE FROM dashboard_sessions WHERE token_hash = ?', (token_hash(old_token),))
             sessions = self.execute(connection, 'SELECT token_hash FROM dashboard_sessions WHERE user_id = ? ORDER BY created_at DESC, token_hash', (user['id'],)).fetchall()
+            # Keep nine existing sessions before inserting the new one: ten active sessions at most.
             for entry in sessions[9:]:
                 self.execute(connection, 'DELETE FROM dashboard_sessions WHERE token_hash = ?', (entry['token_hash'],))
             self.execute(connection, 'INSERT INTO dashboard_sessions (token_hash, user_id, csrf, created_at, expires_at) VALUES (?, ?, ?, ?, ?)',
@@ -164,6 +172,7 @@ class AccountStore:
         return raw, csrf
 
     def session(self, raw):
+        # Reject malformed cookies before querying storage, then require a session that has not expired.
         if not isinstance(raw, str) or not re.fullmatch(r'[A-Za-z0-9_-]{43}', raw):
             return None
         with self.transaction() as connection:
@@ -177,6 +186,7 @@ class AccountStore:
             self.execute(connection, 'DELETE FROM dashboard_sessions WHERE token_hash = ?', (token_hash(raw),))
 
     def update(self, user, payload):
+        # Profile edits need the current password too; possessing a session alone is insufficient.
         if not check_password_hash(user['password_hash'], payload.get('currentPassword') if isinstance(payload.get('currentPassword'), str) and len(payload['currentPassword']) <= 256 else ''):
             raise ValueError('Current password is incorrect.')
         name = username(payload.get('username', user['username']))
@@ -192,6 +202,7 @@ class AccountStore:
         return {**user, 'username': name, 'display_name': label, 'password_hash': hashed}
 
     def delete(self, user, supplied_password):
+        # The password predicate detects concurrent credential changes; the foreign key removes sessions.
         if not isinstance(supplied_password, str) or len(supplied_password) > 256 or not check_password_hash(user['password_hash'], supplied_password):
             raise ValueError('Current password is incorrect.')
         with self.transaction() as connection:

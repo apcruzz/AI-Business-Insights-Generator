@@ -96,6 +96,7 @@ class AnalystRun:
         self.base = {'conversationId': self.token, 'mode': client.mode, 'provider': client.provider,
                      'model': client.model, 'datasetId': self.dataset_id, 'selectedRows': len(frame), 'filters': self.filters}
         recent = {}
+        # Reuse distinct verified calculations from this exact conversation scope, with a bounded history.
         for turn in history:
             for item in turn['evidence']:
                 signature = json.dumps(item, sort_keys=True)
@@ -121,6 +122,7 @@ class AnalystRun:
             self.result = {**self.base, 'answer': 'No sales match the current filters.', 'status': 'empty', 'evidence': []}
             return
         if self.advice and not explicit_source:
+            # Seed broad advice with actual product/time aggregates before asking the model to recommend actions.
             dimensions = [name for name in ('Product_Name', 'Date', 'Category', 'Hour') if name in frame.columns][:2]
             for name in dimensions:
                 dimension = "strftime('%Y-%m', Date)" if name == 'Date' else '"' + name + '"'
@@ -195,11 +197,13 @@ class AnalystRun:
             self.incomplete()
             return None
         while len(json.dumps(self.messages)) > 30000 and len(self.messages) > 4:
+            # Drop older exchanges first while retaining the system instructions and current dataset context.
             del self.messages[2:4]
         return {'model': self.client.model, 'messages': self.messages, 'format': ACTION_SCHEMA,
                 'stream': False, 'options': {'temperature': 0, 'num_predict': 1200, 'num_ctx': 8192}}
 
     def accept(self, raw):
+        # Model output is untrusted text: validate its shape before allowing a query or displaying an answer.
         DATASETS.get(self.dataset_id)
         if self.result is not None or time.monotonic() >= self.deadline:
             raise ValueError('This analysis ended or expired. Ask the question again.')
@@ -218,6 +222,7 @@ class AnalystRun:
             return
         self.messages.append({'role': 'assistant', 'content': raw})
         if action['action'] == 'query':
+            # A query action only requests a calculation; QueryTool independently enforces the SQL restrictions.
             if self.queries >= 4:
                 self.correction('Query limit reached. Answer only from the results already returned, or state that the question could not be verified.')
                 return
@@ -242,6 +247,7 @@ class AnalystRun:
         if not supported_numbers(answer, self.evidence, self.question, {'filters': self.filters, 'selectedRows': self.base['selectedRows']}):
             self.correction('Your answer contains numbers absent from the tool results. Remove unsupported figures or run a query. Do not invent a total, percentage or forecast.')
             return
+        # Only accepted answers enter conversation memory; rejected prose is fed back for correction instead.
         CONVERSATIONS.append(self.token, self.question, answer, self.evidence[-4:])
         self.result = {**self.base, 'answer': answer, 'status': 'unavailable' if action['action'] == 'unavailable' else 'answered', 'evidence': self.evidence}
 

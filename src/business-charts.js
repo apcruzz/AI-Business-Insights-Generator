@@ -4,6 +4,7 @@ import {esc, group, sum} from './dashboard-utils.js';
 import {chartTitle} from './business-config.js';
 const totalBy = (rows, field, metric='Net_Sales') => group(rows,field).map(([name, r])=>[name,sum(r,metric)]).sort((a,b)=>b[1]-a[1]);
 const unique = (rows, id) => [...new Map(rows.map(r=>[r[id],r])).values()];
+// A booking may appear on several sales lines; cancellations/no-shows do not consume booked capacity here.
 const activeBookings = rows => unique(rows,'Appointment_ID').filter(r=>r.Appointment_Start && !['cancelled','canceled','no show','no-show'].includes((r.Appointment_Status || '').toLowerCase().trim()));
 
 export function businessChartData(id, rows, capabilities={}) {
@@ -12,6 +13,7 @@ export function businessChartData(id, rows, capabilities={}) {
   if (!rows.length) return result;
   switch(id) {
     case 'trend': {
+      // Long date ranges use months; absent dates stay absent rather than becoming invented zero-sales days.
       const monthly = new Set(rows.map(r=>r.Date)).size > 90;
       result.type='line';
       result.items=totalBy(rows.map(r=>({...r, period:monthly?r.Date.slice(0,7):r.Date})),'period').sort((a,b)=>a[0].localeCompare(b[0]));
@@ -27,6 +29,7 @@ export function businessChartData(id, rows, capabilities={}) {
       result.note=capabilities.Quantity?'Ranked by net units sold, including recorded returns.':'Quantity was not provided; ranked by net revenue.'; break;
     case 'productProfit': result.type='horizontal'; result.items=totalBy(rows,'Product_Name','Gross_Profit'); break;
     case 'profitability':
+      // Weighted margin uses summed profit / summed revenue, not the average of individual line margins.
       result.type='horizontal'; result.unit='percent';
       result.items=group(rows,'Product_Name').filter(([,r])=>sum(r,'Net_Sales')>0).map(([n,r])=>[n,sum(r,'Gross_Profit')/sum(r,'Net_Sales')*100]).sort((a,b)=>b[1]-a[1]);
       result.note='Gross profit ÷ net sales; products with nonpositive net sales are excluded.'; break;
@@ -37,6 +40,7 @@ export function businessChartData(id, rows, capabilities={}) {
       result.items=group(unique(rows,'Job_ID').filter(r=>r.Turnaround_Hours!==null && r.Turnaround_Hours!==undefined),'Product_Name').map(([n,r])=>[n,sum(r,'Turnaround_Hours')/r.length]).sort((a,b)=>b[1]-a[1]);
       result.note='Average elapsed hours per completed job; incomplete or invalid timestamps are excluded.'; break;
     case 'orderValue': {
+      // First combine all selected lines of each order, then count those order totals into value ranges.
       result.type='histogram';result.unit='orders';
       const values=group(rows,'Order_Key').map(([,r])=>sum(r,'Net_Sales'));
       const min=Math.min(...values), max=Math.max(...values), bins=min===max?1:Math.min(8,Math.ceil(Math.sqrt(values.length))), width=(max-min)/bins;
@@ -46,6 +50,7 @@ export function businessChartData(id, rows, capabilities={}) {
       result.note='Each matching order counts once. Values sum only selected sales lines; product filters may show partial orders. Bins include their lower boundary; only the last includes its upper boundary.';break;
     }
     case 'delivery': {
+      // Count shipments once per validated ID even when several purchased items share that shipment.
       result.type='stacked';result.unit='deliveries';result.series=['On time','Late'];
       const events=unique(rows,'Delivery_ID').filter(r=>r.Delivery_Outcome);
       result.items=group(events.map(r=>({...r,month:(r.Delivery_Due || r.Delivered_At || r.Date)?.slice(0,7) || 'All deliveries'})),'month').sort((a,b)=>a[0].localeCompare(b[0])).map(([n,r])=>[n,r.filter(x=>x.Delivery_Outcome==='On time').length,r.filter(x=>x.Delivery_Outcome==='Late').length]);
@@ -53,6 +58,7 @@ export function businessChartData(id, rows, capabilities={}) {
     }
     case 'hour':
     case 'unitsHour': {
+      // Keep the largest product series readable and group the remainder without dropping their totals.
       const metric=id==='unitsHour'?'Quantity':'Net_Sales';
       result.type='stacked';result.unit=id==='unitsHour'?'units':'money';
       const ranked=totalBy(rows,'Product_Name',metric), names=ranked.slice(0,5).map(x=>x[0]);
@@ -74,6 +80,7 @@ export function businessChartData(id, rows, capabilities={}) {
       result.note='Unique appointments by start weekday and hour. Cancelled and no-show bookings are excluded.';break;
     }
     case 'utilization': {
+      // Daily availability repeats on booking rows, so sum capacity once per represented employee-day.
       result.type='horizontal';result.unit='percent';
       const events=activeBookings(rows);
       result.items=group(rows,'Employee_Name').map(([name,r])=>{
@@ -89,6 +96,7 @@ export function businessChartData(id, rows, capabilities={}) {
 }
 
 export function renderBusinessChart(id, rows, meta, color, money, layout = null) {
+  // Optional pixel dimensions let preview plots fill their cards while keeping text at a readable size.
   const data=businessChartData(id,rows,meta.capabilities);
   if(!data) return null;
   if(!data.items.length) return '<p class="chartNote">No matching records for this chart.</p>';
@@ -98,6 +106,7 @@ export function renderBusinessChart(id, rows, meta, color, money, layout = null)
   const font=layout?.fontSize || 12, W=layout?.width || 680;
   let output='';
   if(data.type==='horizontal') {
+    // Scale by magnitude so refunds and losses can retain their sign in labels while sharing one track.
     const items=data.items.slice(0,12),max=Math.max(...items.map(r=>Math.abs(r[1])),data.unit==='percent'?100:1);
     output=items.map(([name,value])=>`<div class="barrow"><div class="barhead"><span>${esc(name)}</span><strong>${esc(fmt(value))}</strong></div><div class="track"><div class="fill" style="width:${Math.abs(value)/max*100}%;background:${value<0?'#b34242':color}"></div></div></div>`).join('');
     if(data.items.length>12) data.note+=' Showing the top 12 groups.';
@@ -117,6 +126,7 @@ export function renderBusinessChart(id, rows, meta, color, money, layout = null)
     const max=Math.max(...values,1),min=Math.min(...values,0),H=layout?.height || 280;
     const axisFmt=v=>layout && data.unit==='money' && Math.abs(v)>=10000
       ? new Intl.NumberFormat(undefined,{style:'currency',currency:meta.currency || 'USD',notation:'compact',maximumFractionDigits:1}).format(v):fmt(v);
+    // Reserve room for tick labels before positioning marks; negative values share the same zero baseline.
     const ticks=Array.from({length:5},(_,i)=>min+(max-min)*i/4);
     const left=layout?Math.max(42,...ticks.map(v=>axisFmt(v).length*font*.58+12)):80;
     const right=W-12,bottom=layout?H-font-18:220,top=layout?12:30;
@@ -133,6 +143,7 @@ export function renderBusinessChart(id, rows, meta, color, money, layout = null)
         (stacked?r.slice(1):[r[1]]).forEach((v,k)=>{const end=base+v;output+=`<rect x="${x-width/2}" y="${Math.min(y(base),y(end))}" width="${width}" height="${Math.abs(y(base)-y(end))}" fill="${palette[k%palette.length]}"><title>${esc(r[0])}${stacked?' · '+esc(data.series[k]):''}: ${esc(fmt(v))}</title></rect>`;base=end;});
       }
       const maxLabels=layout?Math.max(1,Math.floor((right-left)/75)):6;
+      // Thin crowded axis labels only; every data point and its full hover value remain in the chart.
       const labelStep=Math.ceil(items.length/maxLabels);
       if((!layout && items.length<=8) || i%labelStep===0) {
         const label=layout && data.type==='line' && r[0].length===10?r[0].slice(5):String(r[0]);
