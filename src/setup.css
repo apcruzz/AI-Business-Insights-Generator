@@ -328,6 +328,38 @@ body.overviewMode #overviewCards {
 .overviewChartSlot {
   min-width: 0;
 }
+.overviewChartHeader,
+.detailChartHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.overviewChartHeader { margin-bottom: 12px; }
+.overviewChartHeader h2 { min-width: 0; margin: 0; }
+.chartPanelToolbar { flex: 0 0 auto; }
+.chartTypeSelect {
+  min-height: 32px;
+  padding: 5px 28px 5px 9px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.chartTypeSelect:focus-visible { outline: 2px solid var(--business-accent); outline-offset: 2px; }
+.chartVariantLegend {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px 10px;
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.chartVariantLegend span { display: flex; align-items: center; gap: 6px; min-width: 0; overflow-wrap: anywhere; }
+.chartVariantLegend i { display: inline-block; flex: 0 0 9px; width: 9px; height: 9px; border-radius: 50%; }
 body.overviewMode .overviewChartSlot {
   display: flex;
   flex-direction: column;
@@ -350,16 +382,31 @@ body.overviewMode .overviewChartContent[data-overview-chart="hour"] {
   flex-direction: column;
   justify-content: center;
 }
-body.overviewMode .overviewChartContent[data-overview-chart="category"] {
+body.overviewMode .overviewChartContent[data-overview-chart="category"][data-chart-type="auto"],
+body.overviewMode .overviewChartContent[data-chart-type="pie"],
+body.overviewMode .overviewChartContent[data-chart-type="doughnut"] {
   display: grid;
-  grid-template-columns: minmax(100px, 1fr) minmax(110px, 1fr);
+  grid-template-columns: minmax(0, 1.35fr) minmax(110px, 1fr);
   align-items: center;
-  gap: 2px 8px;
+  gap: 8px 16px;
 }
-body.overviewMode .overviewChartContent[data-overview-chart="category"] svg {
+body.overviewMode .overviewChartContent[data-overview-chart="category"][data-chart-type="auto"] svg,
+body.overviewMode .overviewChartContent[data-chart-type="pie"] svg,
+body.overviewMode .overviewChartContent[data-chart-type="doughnut"] svg {
   min-width: 0;
+  width: 100%;
+  height: 100%;
+  max-height: none;
 }
-body.overviewMode .overviewChartContent[data-overview-chart="category"]
+body.overviewMode .overviewChartContent[data-chart-type="pie"] .chartVariantLegend,
+body.overviewMode .overviewChartContent[data-chart-type="doughnut"] .chartVariantLegend,
+#detailCharts .businessDetailChart[data-chart-type="pie"] .chartVariantLegend,
+#detailCharts .businessDetailChart[data-chart-type="doughnut"] .chartVariantLegend {
+  grid-template-columns: minmax(0, 1fr);
+  align-content: center;
+  margin-top: 0;
+}
+body.overviewMode .overviewChartContent[data-overview-chart="category"][data-chart-type="auto"]
   .categoryLegendList {
   display: flex;
   flex-direction: column;
@@ -968,7 +1015,18 @@ body.detailMode .filters > details[open] { grid-column: 1 / -1; width: 100%; }
 .detailChartHeader .sub { margin: 0; font-size: 11px; }
 #detailCharts .businessDetailChart { flex: 1; min-height: 0; max-height: none; overflow: auto; overscroll-behavior: contain; }
 #detailCharts .businessDetailChart svg { max-height: 100%; }
-#detailCharts .businessDetailChart[data-detail-chart="category"] { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: 16px; }
+#detailCharts .businessDetailChart[data-detail-chart="category"][data-chart-type="auto"],
+#detailCharts .businessDetailChart[data-chart-type="pie"],
+#detailCharts .businessDetailChart[data-chart-type="doughnut"] { display: grid; grid-template-columns: minmax(180px, 1.25fr) minmax(140px, 1fr); align-items: center; gap: 16px; }
+#detailCharts .businessDetailChart[data-chart-type="bar"],
+#detailCharts .businessDetailChart[data-chart-type="line"],
+body.overviewMode .overviewChartContent[data-chart-type="bar"],
+body.overviewMode .overviewChartContent[data-chart-type="line"] { display: flex; align-items: stretch; justify-content: stretch; overflow: hidden; }
+#detailCharts .businessDetailChart[data-chart-type="bar"] svg,
+#detailCharts .businessDetailChart[data-chart-type="line"] svg,
+body.overviewMode .overviewChartContent[data-chart-type="bar"] svg,
+body.overviewMode .overviewChartContent[data-chart-type="line"] svg { flex: 1 1 auto; width: 100%; height: 100%; max-height: none; min-height: 0; }
+body.overviewMode .overviewChartContent[data-chart-type="auto"] svg { flex: 1 1 auto; width: 100%; height: 100%; max-height: none; min-height: 0; }
 #detailCharts .businessDetailChart .barhead { font-size: 13px; overflow-wrap: anywhere; }
 #detailTables { align-items: start; }
 #detailTables > details { min-width: 0; }

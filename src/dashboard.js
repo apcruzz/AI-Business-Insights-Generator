@@ -1,7 +1,7 @@
 import {BrowserOllama, runBrowserAnalyst} from "./browser-ollama.js";
 import {SAMPLE_DATASETS} from "./sample-datasets.js";
 import {BUSINESS_FIELDS, CHARTS, businessProfile, chartPlan, chartTitle} from "./business-config.js";
-import {renderBusinessChart} from "./business-charts.js";
+import {businessChartData, renderBusinessChart} from "./business-charts.js";
 import {answerOptions, chooseAnswerMode, answerModeNotice} from "./ai-options.js";
 // Frontend controller: upload -> map columns -> normalize via API -> filter/render -> ask questions.
 import {
@@ -40,6 +40,7 @@ let data = [],
   conversationTurns = [],
   revision = 0,
   overviewChartIds = [],
+  chartTypeById = {},
   overviewKpiIds = [],
   datasetTablePage = 0,
   aiOptions = answerOptions({}),
@@ -927,6 +928,64 @@ function overviewChartHtml(id, rows, products, c) {
   if (id === "staff") return staffChart(rows, c);
   return note("Choose a chart to show here.");
 }
+const chartTypeOptions = ["auto", "bar", "line", "pie", "doughnut"];
+function variantItems(id, rows, products, c) {
+  const result = businessChartData(id, rows, c);
+  if (result?.items?.length) {
+    if (result.type === "heatmap") {
+      const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+      return {...result, items: days.map((day, index) => [day, result.items.filter(item => item[0] === index).reduce((total, item) => total + item[2], 0)])};
+    }
+    if (result.items.some(item => item.length > 2)) return {...result, items: result.items.map(item => [item[0], item.slice(1).reduce((total, value) => total + Number(value || 0), 0)])};
+    return result;
+  }
+  let items = [];
+  if (id === "category") items = group(rows, "Category").map(([name, r]) => [name, sum(r, "Net_Sales")]);
+  else if (id === "weekday") items = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((name, day) => [name, sum(rows.filter(r => (new Date(r.Date + "T12:00:00Z").getUTCDay() + 6) % 7 === day), "Net_Sales")]);
+  else if (id === "weather") items = group(rows, "Weather").map(([name, r]) => [name, sum(r, "Net_Sales") / new Set(r.map(x => x.Date)).size]);
+  else if (id === "staff") items = group(rows, "Employee_Name").map(([name, r]) => [name, sum(r, "Net_Sales")]).sort((a,b) => b[1]-a[1]);
+  else if (id === "hour") items = group(rows, "Hour").map(([name, r]) => [`${name}:00`, sum(r, "Net_Sales")]).sort((a,b) => Number.parseInt(a[0])-Number.parseInt(b[0]));
+  else if (id === "products") items = products.map(([name, r]) => [name, sum(r, c.Quantity ? "Quantity" : "Net_Sales")]);
+  else if (id === "profitability") items = products.filter(([,r]) => sum(r,"Net_Sales") > 0).map(([name,r]) => [name, sum(r,"Gross_Profit")/sum(r,"Net_Sales")*100]);
+  return items.length ? {items, unit: id === "products" && c.Quantity ? "units" : id === "profitability" ? "percent" : "money"} : null;
+}
+function renderChartVariant(id, rows, products, c, type) {
+  if (type === "auto") return overviewChartHtml(id, rows, products, c);
+  const data = variantItems(id, rows, products, c);
+  if (!data?.items?.length) return note("This chart type has no matching values.");
+  const items = data.items.slice(0, 12), color = businessProfile(meta.business).color;
+  const fmt = value => data.unit === "money" ? money(value) : `${Number(value.toFixed(1)).toLocaleString()}${data.unit === "percent" ? "%" : ` ${data.unit || ""}`}`;
+  if ((type === "pie" || type === "doughnut") && items.some(x => x[1] < 0)) return note("Pie charts need nonnegative values. Choose another chart type.");
+  const total = items.reduce((n, x) => n + Math.max(0, x[1]), 0);
+  if ((type === "pie" || type === "doughnut") && !total) return note("This chart has no positive values to show as a share.");
+  const palette = [color,"#cb6b42","#5689b1","#a77ab0","#b69b3c","#708477","#438dcc","#d17c9a","#6c8b45","#a47c48","#6171a8","#7e858b"];
+  if (type === "pie" || type === "doughnut") {
+    let angle = -Math.PI / 2;
+    const slices = items.map(([name,value], i) => {
+      const next = angle + Math.max(0,value) / total * Math.PI * 2;
+      const point = a => [150 + 105*Math.cos(a), 120 + 105*Math.sin(a)];
+      const [x1,y1]=point(angle), [x2,y2]=point(next), large=next-angle > Math.PI ? 1 : 0;
+      const path = `M 150 120 L ${x1} ${y1} A 105 105 0 ${large} 1 ${x2} ${y2} Z`;
+      angle=next;
+      return `<path d="${path}" fill="${palette[i%palette.length]}"><title>${esc(name)}: ${esc(fmt(value))} (${(value/total*100).toFixed(1)}%)</title></path>`;
+    }).join("");
+    const hole = type === "doughnut" ? '<circle cx="150" cy="120" r="55" fill="white"/>' : "";
+    // The legend is a separate DOM element, so keep the SVG viewBox tight around
+    // the circular plot. A wide 620px viewBox made the pie occupy less than half
+    // of its available chart area when users changed chart types.
+    return `<svg viewBox="0 0 300 240" role="img" aria-label="${esc(chartTitle(id,meta.business))} ${type} chart"><title>${esc(chartTitle(id,meta.business))}</title>${slices}${hole}</svg><div class="chartVariantLegend">${items.map(([n,v],i)=>`<span><i style="background:${palette[i%palette.length]}"></i>${esc(n)} · ${esc(fmt(v))}</span>`).join("")}</div>`;
+  }
+  const max=Math.max(...items.map(x=>Math.abs(x[1])),1), min=Math.min(0,...items.map(x=>x[1])), range=Math.max(max-min,1), step=580/items.length, y=v=>205-(v-min)/range*165;
+  let svg=`<svg viewBox="0 0 620 250" role="img" aria-label="${esc(chartTitle(id,meta.business))} ${type} chart"><title>${esc(chartTitle(id,meta.business))}</title>`;
+  for(let i=0;i<5;i++){const v=min+(max-min)*i/4;svg+=`<line x1="55" y1="${y(v)}" x2="610" y2="${y(v)}" stroke="#e1e8ec"/><text x="50" y="${y(v)+4}" text-anchor="end" font-size="10">${esc(fmt(v))}</text>`;}
+  if(type === "line") svg+=`<polyline fill="none" stroke="${color}" stroke-width="3" points="${items.map((r,i)=>`${55+step*(i+.5)},${y(r[1])}`).join(" ")}"/>`;
+  items.forEach(([name,value],i)=>{const x=55+step*(i+.5); if(type === "line") svg+=`<circle cx="${x}" cy="${y(value)}" r="4" fill="${color}"><title>${esc(name)}: ${esc(fmt(value))}</title></circle>`; else svg+=`<rect x="${x-Math.min(34,step*.34)}" y="${Math.min(y(value),y(0))}" width="${Math.min(68,step*.68)}" height="${Math.max(1,Math.abs(y(value)-y(0)))}" rx="3" fill="${color}"><title>${esc(name)}: ${esc(fmt(value))}</title></rect>`; if(items.length<=8 || i%Math.ceil(items.length/6)===0) svg+=`<text x="${x}" y="230" text-anchor="middle" font-size="10">${esc(String(name).slice(0,16))}</text>`;});
+  return svg+"</svg>";
+}
+function chartPanelContent(id, rows, products, c, scope) {
+  const type = chartTypeById[id] || "auto";
+  return `<div class="chartPanelToolbar"><label class="srOnly" for="chart-type-${esc(scope)}-${esc(id)}">Chart type for ${esc(chartTitle(id,meta.business))}</label><select class="chartTypeSelect" id="chart-type-${esc(scope)}-${esc(id)}" data-chart-type="${esc(id)}" aria-label="Chart type for ${esc(chartTitle(id,meta.business))}">${chartTypeOptions.map(option=>`<option value="${option}" ${option===type?"selected":""}>${option === "auto" ? "Recommended" : option[0].toUpperCase()+option.slice(1)}</option>`).join("")}</select></div>`;
+}
 function renderOverviewCharts(rows, products, c) {
   // Fill the three Business Overview slots with the user's selected charts.
   const options = chartOptions(),
@@ -942,7 +1001,7 @@ function renderOverviewCharts(rows, products, c) {
       option = optionById.get(id);
     slot.hidden = !option;
     slot.innerHTML = option
-      ? `<h2>${esc(option.title)}</h2><div class="overviewChartContent" data-overview-chart="${esc(id)}">${overviewChartHtml(id, rows, products, c)}</div>`
+      ? `<div class="overviewChartHeader"><h2>${esc(option.title)}</h2>${chartPanelContent(id, rows, products, c, "overview")}</div><div class="overviewChartContent" data-overview-chart="${esc(id)}" data-chart-type="${esc(chartTypeById[id] || "auto")}">${renderChartVariant(id, rows, products, c, chartTypeById[id] || "auto")}</div>`
       : "";
   });
 }
@@ -981,7 +1040,7 @@ function render() {
   renderOverviewCharts(rows, products, c);
   // Render remaining charts through the same dispatcher as Overview.
   $("detailCharts").innerHTML = chartOptions().map(option =>
-    `<section class="panel detailChartPanel" data-chart-panel="${esc(option.id)}"><div class="detailChartHeader"><h2>${esc(option.title)}</h2><p class="sub">${esc(CHARTS[option.id].kind)}</p></div><div class="businessDetailChart" data-detail-chart="${esc(option.id)}">${overviewChartHtml(option.id, rows, products, c)}</div></section>`).join("") || '<p class="chartNote">No optional charts are available from these columns.</p>';
+    `<section class="panel detailChartPanel" data-chart-panel="${esc(option.id)}"><div class="detailChartHeader"><div><h2>${esc(option.title)}</h2><p class="sub">${esc(CHARTS[option.id].kind)}</p></div>${chartPanelContent(option.id, rows, products, c, "detail")}</div><div class="businessDetailChart" data-detail-chart="${esc(option.id)}" data-chart-type="${esc(chartTypeById[option.id] || "auto")}">${renderChartVariant(option.id, rows, products, c, chartTypeById[option.id] || "auto")}</div></section>`).join("") || '<p class="chartNote">No optional charts are available from these columns.</p>';
   // Retain the detailed source summaries alongside the new business charts.
   $("detailTables").innerHTML = (c.product ? `<details class="panel"><summary>${esc(businessProfile(meta.business).item)} totals</summary><div class="scroll"><table><thead><tr><th>Item</th><th>Units</th><th>Net sales</th><th>Gross profit</th><th>Margin</th></tr></thead><tbody>${products.map(([name, items]) => {
     const sales = sum(items, "Net_Sales"), profit = sum(items, "Gross_Profit");
@@ -2476,6 +2535,11 @@ $("reset").onclick = resetFilters;
 $("previousDataPage").onclick = () => { datasetTablePage--; renderDatasetTable(); };
 $("nextDataPage").onclick = () => { datasetTablePage++; renderDatasetTable(); };
 $("chooseCharts").onclick = () => showChartChooser(false);
+document.addEventListener("change", event => {
+  if (!event.target.matches(".chartTypeSelect")) return;
+  chartTypeById[event.target.dataset.chartType] = event.target.value;
+  render();
+});
 $("closeChartChooser").onclick = () => $("chartChooser").close();
 $("chartChooser").addEventListener("close", () => $("chooseCharts").focus());
 $("selectRecommendedCharts").onclick = selectRecommendedCharts;
