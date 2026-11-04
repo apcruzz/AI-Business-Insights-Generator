@@ -350,16 +350,16 @@ body.overviewMode .overviewChartContent[data-overview-chart="hour"] {
   flex-direction: column;
   justify-content: center;
 }
-body.overviewMode .overviewChartContent[data-overview-chart="category"] {
+body.overviewMode .overviewChartContent[data-overview-chart="category"][data-chart-type="auto"] {
   display: grid;
   grid-template-columns: minmax(100px, 1fr) minmax(110px, 1fr);
   align-items: center;
   gap: 2px 8px;
 }
-body.overviewMode .overviewChartContent[data-overview-chart="category"] svg {
+body.overviewMode .overviewChartContent[data-overview-chart="category"][data-chart-type="auto"] svg {
   min-width: 0;
 }
-body.overviewMode .overviewChartContent[data-overview-chart="category"]
+body.overviewMode .overviewChartContent[data-overview-chart="category"][data-chart-type="auto"]
   .categoryLegendList {
   display: flex;
   flex-direction: column;
@@ -968,7 +968,7 @@ body.detailMode .filters > details[open] { grid-column: 1 / -1; width: 100%; }
 .detailChartHeader .sub { margin: 0; font-size: var(--font-caption); }
 #detailCharts .businessDetailChart { flex: 1; min-height: 0; max-height: none; overflow: auto; overscroll-behavior: contain; }
 #detailCharts .businessDetailChart svg { max-height: 100%; }
-#detailCharts .businessDetailChart[data-detail-chart="category"] { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: 16px; }
+#detailCharts .businessDetailChart[data-detail-chart="category"][data-chart-type="auto"] { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: 16px; }
 #detailCharts .businessDetailChart .barhead { font-size: var(--font-body); overflow-wrap: anywhere; }
 #detailTables { align-items: start; }
 #detailTables > details { min-width: 0; }

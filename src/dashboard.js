@@ -2,6 +2,7 @@ import {BrowserOllama, runBrowserAnalyst} from "./browser-ollama.js";
 import {SAMPLE_DATASETS} from "./sample-datasets.js";
 import {BUSINESS_FIELDS, CHARTS, businessProfile, chartPlan, chartTitle} from "./business-config.js";
 import {renderBusinessChart} from "./business-charts.js";
+import {CHART_TYPES, chartTypeLabel, renderChartVariant} from "./chart-variants.js";
 import {answerOptions, chooseAnswerMode, answerModeNotice} from "./ai-options.js";
 import {overviewIcon} from "./overview-icons.js";
 // Frontend controller: upload -> map columns -> normalize via API -> filter/render -> ask questions.
@@ -42,6 +43,7 @@ let data = [],
   revision = 0,
   overviewChartIds = [],
   overviewKpiIds = [],
+  chartTypeById = {},
   datasetTablePage = 0,
   aiOptions = answerOptions({}),
   modelsLoaded = false,
@@ -62,7 +64,8 @@ const previewChartObserver = new ResizeObserver(entries => {
   const rows = filtered(), products = group(rows, "Product_Name").sort((a, b) => sum(b[1], "Net_Sales") - sum(a[1], "Net_Sales"));
   for (const {target: content} of entries) {
     const svg = content.querySelector(":scope > svg"), id = content.dataset.overviewChart;
-    if (!svg || id === "category" || !content.clientWidth || !content.clientHeight) continue;
+    const type = chartTypeById[id] || "auto";
+    if (!svg || ["pie", "doughnut"].includes(type) || (id === "category" && type === "auto") || !content.clientWidth || !content.clientHeight) continue;
     // Reserve space for the chart's notes and legends; draw at actual CSS pixel
     // dimensions so labels stay legible without stretching the surrounding card.
     const footerHeight = [...content.children].filter(child => child !== svg).reduce((height, child) => {
@@ -74,7 +77,7 @@ const previewChartObserver = new ResizeObserver(entries => {
     const size = `${layout.width}:${layout.height}:${layout.fontSize}`;
     if (content.dataset.chartSize === size) continue;
     content.dataset.chartSize = size;
-    content.innerHTML = overviewChartHtml(id, rows, products, meta.capabilities, true, layout);
+    content.innerHTML = chartPlot(id, rows, products, meta.capabilities, true, layout);
   }
 });
 function updatePageHash(hash) {
@@ -512,6 +515,7 @@ function buildDashboard() {
   previewView = "charts";
   previewChartIndex = 0;
   overviewKpiIds = [];
+  chartTypeById = {};
   overviewChartIds = chartOptions().slice(0, 3).map((option) => option.id);
   for (const id of ["category", "product"])
     sourceOptions(
@@ -1018,6 +1022,15 @@ function overviewChartHtml(id, rows, products, c, preview = false, layout = null
   if (id === "staff") return staffChart(rows, c);
   return note("Choose a chart to show here.");
 }
+// Presentation changes reuse the validated metrics without rerunning analysis or clearing chat.
+function chartPlot(id, rows, products, c, preview = false, layout = null) {
+  const color = preview ? (id === "trend" ? "#5489ff" : "#9285ed") : businessProfile(meta.business).color;
+  return renderChartVariant(id, rows, meta, color, money, chartTypeById[id] || "auto", layout)
+    ?? overviewChartHtml(id, rows, products, c, preview, layout);
+}
+function chartTypeControl(id, scope) {
+  return `<select class="chartTypeSelect" id="chart-type-${scope}-${esc(id)}" data-chart-type="${esc(id)}" aria-label="Chart type for ${esc(chartTitle(id, meta.business))}">${CHART_TYPES.map(type => `<option value="${type}"${(chartTypeById[id] || "auto") === type ? " selected" : ""}>${chartTypeLabel(type)}</option>`).join("")}</select>`;
+}
 function renderOverviewCharts(rows, products, c) {
   // Fill the three Business Overview slots with the user's selected charts.
   previewChartObserver.disconnect();
@@ -1037,7 +1050,7 @@ function renderOverviewCharts(rows, products, c) {
       option = optionById.get(id);
     slot.hidden = !option || (preview && compactPreview.matches && index !== previewChartIndex);
     slot.innerHTML = option
-      ? `${preview ? `<div class="previewChartHeader"><span class="previewChartIcon">${overviewIcon(id === "trend" ? "insights" : "charts")}</span><h2>${esc(option.title)}</h2></div>` : `<h2>${esc(option.title)}</h2>`}<div class="overviewChartContent" data-overview-chart="${esc(id)}"${preview ? ` tabindex="0" role="region" aria-label="${esc(option.title)} chart data"` : ""}>${overviewChartHtml(id, rows, products, c, preview)}</div>`
+      ? `<div class="${preview ? "previewChartHeader" : "overviewChartHeader"}">${preview ? `<span class="previewChartIcon">${overviewIcon(id === "trend" ? "insights" : "charts")}</span>` : ""}<h2>${esc(option.title)}</h2>${chartTypeControl(id, "overview")}</div><div class="overviewChartContent" data-overview-chart="${esc(id)}" data-chart-type="${chartTypeById[id] || "auto"}"${preview ? ` tabindex="0" role="region" aria-label="${esc(option.title)} chart data"` : ""}>${chartPlot(id, rows, products, c, preview)}</div>`
       : "";
     const content = slot.querySelector(".overviewChartContent");
     if (preview && content) previewChartObserver.observe(content);
@@ -1101,6 +1114,10 @@ function renderDatasetTable() {
   $("nextDataPage").disabled = datasetTablePage >= pages - 1;
   $("datasetTable").parentElement.scrollTop = 0;
 }
+function renderDetailedCharts(rows, products, c) {
+  $("detailCharts").innerHTML = chartOptions().map(option =>
+    `<section class="panel detailChartPanel" data-chart-panel="${esc(option.id)}"><div class="detailChartHeader"><div><h2>${esc(option.title)}</h2><p class="sub">${esc(!chartTypeById[option.id] || chartTypeById[option.id] === "auto" ? CHARTS[option.id].kind : chartTypeLabel(chartTypeById[option.id]) + " chart")}</p></div>${chartTypeControl(option.id, "detail")}</div><div class="businessDetailChart" data-detail-chart="${esc(option.id)}" data-chart-type="${chartTypeById[option.id] || "auto"}">${chartPlot(option.id, rows, products, c)}</div></section>`).join("") || '<p class="chartNote">No optional charts are available from these columns.</p>';
+}
 function render() {
   // Recalculate every chart/table whenever filters or data change.
   if (!data.length) return;
@@ -1124,8 +1141,7 @@ function render() {
   );
   renderOverviewCharts(rows, products, c);
   // Render remaining charts through the same dispatcher as Overview.
-  $("detailCharts").innerHTML = chartOptions().map(option =>
-    `<section class="panel detailChartPanel" data-chart-panel="${esc(option.id)}"><div class="detailChartHeader"><h2>${esc(option.title)}</h2><p class="sub">${esc(CHARTS[option.id].kind)}</p></div><div class="businessDetailChart" data-detail-chart="${esc(option.id)}">${overviewChartHtml(option.id, rows, products, c)}</div></section>`).join("") || '<p class="chartNote">No optional charts are available from these columns.</p>';
+  renderDetailedCharts(rows, products, c);
   const detailOptions = chartOptions();
   $("detailChartSelect").innerHTML = detailOptions.length
     ? detailOptions.map(option => `<option value="${esc(option.id)}">${esc(option.title)}</option>`).join("")
@@ -2713,5 +2729,16 @@ applyBusinessTheme($("business").value);
 refreshModels().catch(() => {});
 const resizePreview = () => { if (document.body.classList.contains("previewMode")) renderOverviewLayout(filtered()); };
 compactPreview.addEventListener("change", resizePreview);
-return () => { window.removeEventListener("hashchange", followPageHash); previewChartObserver.disconnect(); compactPreview.removeEventListener("change", resizePreview); };
+const changeChartType = event => {
+  const control = event.target.closest(".chartTypeSelect");
+  if (!control || !CHART_TYPES.includes(control.value) || !chartOptions().some(option => option.id === control.dataset.chartType)) return;
+  chartTypeById[control.dataset.chartType] = control.value;
+  const rows = filtered(), products = group(rows, "Product_Name").sort((a, b) => sum(b[1], "Net_Sales") - sum(a[1], "Net_Sales"));
+  // Only redraw charts: filters, table pagination, pending AI answers, and conversation stay intact.
+  renderOverviewCharts(rows, products, meta.capabilities);
+  renderDetailedCharts(rows, products, meta.capabilities);
+  $(control.id)?.focus({preventScroll: true});
+};
+$("dashboardMain").addEventListener("change", changeChartType);
+return () => { window.removeEventListener("hashchange", followPageHash); previewChartObserver.disconnect(); compactPreview.removeEventListener("change", resizePreview); $("dashboardMain").removeEventListener("change", changeChartType); };
 }

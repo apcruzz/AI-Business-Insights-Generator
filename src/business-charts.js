@@ -91,8 +91,12 @@ export function businessChartData(id, rows, capabilities={}) {
 export function renderBusinessChart(id, rows, meta, color, money, layout = null) {
   const data=businessChartData(id,rows,meta.capabilities);
   if(!data) return null;
+  return renderChartData(data, chartTitle(id,meta.business), color, money, meta.currency, layout);
+}
+
+// The recommended charts and user-selected variants share scaling, units, and label layout.
+export function renderChartData(data, title, color, money, currency, layout = null) {
   if(!data.items.length) return '<p class="chartNote">No matching records for this chart.</p>';
-  const title=chartTitle(id,meta.business);
   const fmt=v=>data.unit==='money'?money(v):`${Number(v.toFixed(1)).toLocaleString()}${data.unit==='percent'?'%':' '+data.unit}`;
   const palette=[color,'#cb6b42','#5689b1','#a77ab0','#b69b3c','#708477'];
   const font=layout?.fontSize || 12, W=layout?.width || 680;
@@ -116,7 +120,7 @@ export function renderBusinessChart(id, rows, meta, color, money, layout = null)
     const stacked=data.type==='stacked',values=items.map(r=>stacked?r.slice(1).reduce((a,b)=>a+b,0):r[1]);
     const max=Math.max(...values,1),min=Math.min(...values,0),H=layout?.height || 280;
     const axisFmt=v=>layout && data.unit==='money' && Math.abs(v)>=10000
-      ? new Intl.NumberFormat(undefined,{style:'currency',currency:meta.currency || 'USD',notation:'compact',maximumFractionDigits:1}).format(v):fmt(v);
+      ? new Intl.NumberFormat(undefined,{style:'currency',currency:currency || 'USD',notation:'compact',maximumFractionDigits:1}).format(v):fmt(v);
     const ticks=Array.from({length:5},(_,i)=>min+(max-min)*i/4);
     const left=layout?Math.max(42,...ticks.map(v=>axisFmt(v).length*font*.58+12)):80;
     const right=W-12,bottom=layout?H-font-18:220,top=layout?12:30;
@@ -143,7 +147,7 @@ export function renderBusinessChart(id, rows, meta, color, money, layout = null)
     });
     output+='</svg>';
     if(stacked) output+=`<div class="legendBox">${data.series.map((s,i)=>`<span><i style="background:${palette[i%palette.length]}"></i>${esc(s)}</span>`).join('')}</div>`;
-    if(data.type==='histogram') output+=`<p class="chartNote">Horizontal axis: order value (${esc(meta.currency)}). Vertical axis: number of orders.</p>`;
+    if(data.type==='histogram') output+=`<p class="chartNote">Horizontal axis: order value (${esc(currency)}). Vertical axis: number of orders.</p>`;
   }
   return output+(data.note?`<p class="chartNote">${esc(data.note)}</p>`:'');
 }

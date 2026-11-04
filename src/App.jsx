@@ -13,6 +13,7 @@ import "./overview-preview.css";
 import "./detail-workspace.css";
 import "./ui.css";
 import "./workspace-header.css";
+import "./chart-options.css";
 
 export default function App() {
   return <AccountAccess>{({accountPage, user}) => <Dashboard accountPage={accountPage} user={user} />}</AccountAccess>;
