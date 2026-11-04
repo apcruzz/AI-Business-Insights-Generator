@@ -163,6 +163,8 @@ def main():
                 expect(page.locator('#analystEvidence table')).to_be_visible()
                 assert page.locator('.compactAssistant').bounding_box()['height'] == original_height
 
+                check_chart_type_options(page, expect)
+
                 page.locator('#openAiSettings').click()
                 expect(page.locator('#aiDataNotice')).to_contain_text('sent to Groq')
                 page.locator('.ollamaSetup > summary').click()
@@ -228,6 +230,9 @@ def main():
                 expect(page.locator('#datasetTable tbody tr')).to_have_count(10)
                 expect(page.locator('#datasetPageStatus')).to_contain_text('Page 2 of 2')
                 expect(page.locator('#nextDataPage')).to_be_disabled()
+                page.select_option('#chart-type-detail-trend', 'bar')
+                expect(page.locator('#datasetPageStatus')).to_contain_text('Page 2 of 2')
+                expect(page.locator('#datasetTable tbody tr')).to_have_count(10)
                 page.locator('#product').select_option('Tea')
                 expect(page.locator('#datasetTable tbody tr')).to_have_count(30)
                 expect(page.locator('#datasetPageStatus')).to_contain_text('Page 1 of 1')
@@ -255,6 +260,59 @@ def main():
             server.shutdown()
             thread.join(5)
             server.server_close()
+
+
+def check_chart_type_options(page, expect):
+    """PR #12 works across current layouts without losing filters, AI mode, or chat."""
+    page.select_option('#category', 'Drinks')
+    page.locator('#insightQuestion').fill('Summarize these filtered sales')
+    page.locator('#askButton').click()
+    expect(page.locator('#insightAnswer')).to_contain_text('mock-ui-only')
+    transcript = page.locator('#insightAnswer').inner_text()
+    kpis = page.locator('#overviewCards').inner_text()
+    control = '#chart-type-overview-category'
+    for chart_type in ['bar', 'line', 'pie', 'doughnut']:
+        page.select_option(control, chart_type)
+        expect(page.locator(control)).to_be_focused()
+        expect(page.locator('[data-overview-chart="category"]')).to_have_attribute('data-chart-type', chart_type)
+        expect(page.locator('#insightAnswer')).to_have_text(transcript)
+        assert page.locator('#localModel').input_value() == 'groq:openai/gpt-oss-120b'
+        assert page.locator('#overviewCards').inner_text() == kpis
+        assert page.locator('#category').input_value() == 'Drinks'
+    navigate(page, 'detailNav')
+    assert page.locator('#chart-type-detail-category').input_value() == 'doughnut'
+    page.select_option('#chart-type-detail-category', 'line')
+    expect(page.locator('[data-detail-chart="category"] > svg polyline')).to_have_count(1)
+    navigate(page, 'previewNav')
+    assert page.locator(control).input_value() == 'line'
+    for width, height in [(1440, 900), (1024, 768), (390, 844), (320, 640)]:
+        page.set_viewport_size({'width': width, 'height': height})
+        if width <= 1200:
+            page.locator('#previewChartsTab').click()
+            category = page.locator('#previewChartSelect option').evaluate_all('(options) => options.find(option => /categor/i.test(option.textContent)).value')
+            page.select_option('#previewChartSelect', category)
+        card = page.locator('.overviewChartSlot:has([data-overview-chart="category"])')
+        original_height = card.bounding_box()['height']
+        for chart_type in ['pie', 'doughnut', 'bar', 'line']:
+            page.select_option(control, chart_type)
+            expect(page.locator(control)).to_be_in_viewport(ratio=1)
+            expect(page.locator(control)).to_be_focused()
+            assert abs(card.bounding_box()['height'] - original_height) < 1
+            assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+            assert page.evaluate('document.documentElement.scrollHeight <= innerHeight + 1')
+            if chart_type in ['bar', 'line']:
+                check_preview_plots(page, expect)
+            else:
+                plot = page.locator('[data-overview-chart="category"] > svg')
+                expect(plot).to_be_in_viewport(ratio=1)
+                assert plot.bounding_box()['height'] > 60
+        expect(page.locator('#insightAnswer')).to_have_text(transcript)
+        page.screenshot(path=f'/tmp/dashboard-ui-chart-options-{width}.png')
+    page.set_viewport_size({'width': 1440, 'height': 900})
+    page.select_option(control, 'auto')
+    navigate(page, 'overviewNav')
+    assert page.locator(control).input_value() == 'auto'
+    page.locator('#reset').click()
 
 
 def check_detail_workspace(page, expect, width):
@@ -492,7 +550,7 @@ def check_control_sizes(page):
 
 def check_preview_plots(page, expect):
     """Actual-size chart labels and marks occupy the pane, with no SVG clipping."""
-    for content in page.locator('.overviewChartSlot:visible .overviewChartContent:not([data-overview-chart="category"]):has(> svg)').all():
+    for content in page.locator('.overviewChartSlot:visible .overviewChartContent:not([data-chart-type="pie"]):not([data-chart-type="doughnut"]):not([data-overview-chart="category"][data-chart-type="auto"]):has(> svg)').all():
         expect(content).to_have_attribute('data-chart-size', re.compile(r'.+'))
         metrics = content.evaluate('''el => {
             const svg = el.querySelector(':scope > svg'), box = svg.getBoundingClientRect(), view = svg.viewBox.baseVal;
