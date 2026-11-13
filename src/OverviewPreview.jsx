@@ -8,15 +8,17 @@ function Icon({name}) {
 
 export function OverviewPreview({user}) {
   return <>
-    <aside id="previewSidebar" className="previewSidebar" aria-label="Preview workspace" hidden>
+    <aside id="previewSidebar" className="previewSidebar" aria-label="Workspace navigation" hidden>
       <a className="previewBrand" href="#overview-preview" aria-label="AI Business Insights overview">
         <span className="previewBrandMark" aria-hidden="true"><i /><i /><i /></span>
         <span>AI Business<br /> Insights</span>
       </a>
       <p className="previewNavLabel">WORKSPACE</p>
-      <nav className="previewNavigation" aria-label="Preview dashboard navigation">
-        <a href="#overview-preview" aria-current="page"><Icon name="dashboard" />Overview</a>
+      <nav className="previewNavigation" aria-label="Dashboard navigation">
+        <a href="#business-overview"><Icon name="dashboard" />Business overview</a>
+        <a href="#overview-preview"><Icon name="insights" />Overview preview</a>
         <a href="#detailed-dashboard"><Icon name="charts" />Detailed dashboard</a>
+        <a href="#account"><Icon name="account" />Account</a>
         <button id="previewInsights" type="button"><Icon name="insights" />At a glance</button>
         <button id="previewAiSettings" type="button" aria-haspopup="dialog"><Icon name="sparkles" />AI settings</button>
       </nav>
@@ -26,7 +28,7 @@ export function OverviewPreview({user}) {
           <strong id="previewSidebarDataset">Choose a dataset</strong>
           <p>Your data, in perspective.<br />Keep your original file.</p>
         </div>
-        <button id="previewChangeDataset" type="button"><Icon name="upload" />Change dataset</button>
+        <button id="previewChangeDataset" data-workspace-page="#change-dataset" type="button"><Icon name="upload" />Change dataset</button>
         <a className="previewOriginalLink" href="#business-overview"><Icon name="back" />Original overview</a>
       </div>
     </aside>

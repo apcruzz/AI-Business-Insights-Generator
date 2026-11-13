@@ -10,7 +10,7 @@ import subprocess
 import tempfile
 import threading
 from unittest.mock import patch
-from scripts.ui_helpers import navigate, check_header, check_menu
+from scripts.ui_helpers import navigate, check_header, check_menu, check_form_alignment
 
 
 def main():
@@ -51,6 +51,11 @@ def main():
                 expect(page.locator('#authTitle')).to_have_text('Welcome back')
                 assert page.locator('#dashboardMain').count() == 0
                 assert not local_requests
+                for width, height in [(1440, 900), (390, 568), (320, 640)]:
+                    page.set_viewport_size({'width': width, 'height': height})
+                    check_form_alignment(page, '.authCard')
+                    page.screenshot(path=f'/tmp/accounts-ui-sign-in-{width}.png', full_page=True)
+                page.set_viewport_size({'width': 1440, 'height': 900})
                 page.screenshot(path='/tmp/accounts-ui-sign-in.png', full_page=True)
                 page.get_by_role('button', name='Create account', exact=True).click()
                 page.locator('#registerDisplayName').fill('Fictional Analyst')
@@ -60,6 +65,11 @@ def main():
                 page.locator('#authSubmit').click()
                 expect(page.get_by_role('alert')).to_have_text('Passwords do not match.')
                 page.locator('#confirmRegistrationPassword').fill(password)
+                for width, height in [(1440, 900), (390, 568), (320, 640)]:
+                    page.set_viewport_size({'width': width, 'height': height})
+                    check_form_alignment(page, '.authCard')
+                    page.screenshot(path=f'/tmp/accounts-ui-register-{width}.png', full_page=True)
+                page.set_viewport_size({'width': 1440, 'height': 900})
                 page.screenshot(path='/tmp/accounts-ui-register.png', full_page=True)
                 page.locator('#authSubmit').click()
                 expect(page.locator('#inspectButton')).to_be_visible()
@@ -144,11 +154,12 @@ def main():
                 page.locator('#authSubmit').click()
                 expect(page.locator('#accountPage')).to_be_visible()
 
-                for width, height in [(1366, 768), (1024, 768), (390, 844)]:
+                for width, height in [(1366, 768), (1024, 768), (390, 844), (320, 640)]:
                     page.set_viewport_size({'width': width, 'height': height})
                     page.locator('#accountButton').click()
                     expect(page.locator('#accountPage')).to_be_visible()
                     check_header(page)
+                    check_form_alignment(page, '#accountPage')
                     assert page.locator('#accountPage').bounding_box()['width'] <= width
                     page.screenshot(path=f'/tmp/accounts-ui-settings-{width}.png', full_page=True)
                     page.reload()
