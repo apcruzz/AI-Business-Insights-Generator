@@ -1,5 +1,5 @@
-/* Overview preview is the visual foundation for every route. Layout rules stay
-   scoped so the detailed report scrolls and the preview keeps its viewport fit. */
+/* Business overview is the visual foundation for every route. Layout rules stay
+   scoped so the detailed report scrolls and the overview keeps its viewport fit. */
 :root {
   --ink: #1c2540;
   --muted: #758198;
@@ -36,6 +36,18 @@ body.workspaceMode .previewSidebar {
   width: var(--preview-sidebar-width); padding: 27px 16px 18px; overflow-y: auto;
   border-right: 1px solid var(--line); background: rgb(255 255 255 / 88%);
 }
+/* The midpoint handle stays outside the sidebar so it can restore navigation.
+   Collapsing releases its full width; charts resize through their observer. */
+body.workspaceMode .sidebarToggle {
+  position: fixed; top: 50dvh; left: calc(var(--preview-sidebar-width) - 18px);
+  transform: translateY(-50%); z-index: 26; display: grid; place-items: center;
+  width: 36px; padding: 0 !important; border-radius: 50%; background: white; color: #5966b2;
+  box-shadow: 0 2px 8px rgb(46 61 94 / 10%);
+}
+body.workspaceMode.sidebarCollapsed { margin-left: 0; }
+body.workspaceMode.sidebarCollapsed .previewSidebar { visibility: hidden; transform: translateX(-100%); }
+body.workspaceMode.sidebarCollapsed .sidebarToggle { left: 0; border-radius: 0 10px 10px 0; }
+body.workspaceMode.sidebarCollapsed .sidebarToggle svg { transform: rotate(180deg); }
 body.workspaceMode .previewNavigation :is(a, button) { gap: 10px; line-height: 1.4 !important; height: auto !important; min-height: var(--control-height) !important; white-space: normal; }
 body.workspaceMode .previewNavigation .previewIcon { align-self: center; }
 body.workspaceMode .previewNavigation a[aria-current="page"] { background: #edf0ff; color: #505dc2; }
@@ -179,6 +191,7 @@ body.workspaceMode .aiSettingsContent pre { background: #f0f2fa; color: #53617c;
   body.overviewMode .overviewBottom .compactAssistant { height: 320px; }
 }
 @media (max-width: 760px) {
+  body.workspaceMode .sidebarToggle { display: none; }
   body.workspaceMode { margin-left: 0; }
   body.workspaceMode .previewSidebar { position: static; width: 100%; flex: 0 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 10px 12px; border-right: 0; border-bottom: 1px solid var(--line); overflow: visible; }
   body.workspaceMode .previewBrand { padding: 0; font-size: var(--font-body); gap: 10px; }

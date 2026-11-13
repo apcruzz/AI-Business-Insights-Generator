@@ -1,4 +1,4 @@
-/* Alternative overview only. The original overview, setup, and detail styles stay scoped away. */
+/* Viewport layout for Business overview; setup and detail keep their own layouts. */
 .previewHighlightsNote { display: none; }
 .previewWorkspaceTabs, .previewChartControls { display: none; }
 .previewIcon { display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; }

@@ -53,12 +53,30 @@ let data = [],
   backendModels = {};
 const browserOllama = new BrowserOllama();
 let localAnalysisController = null;
-const pageHashes = {overview: "#business-overview", detail: "#detailed-dashboard", preview: "#overview-preview"};
-const pageFromHash = () => Object.keys(pageHashes).find(page => pageHashes[page] === window.location.hash);
+const pageHashes = {overview: "#business-overview", detail: "#detailed-dashboard"};
+const pageFromHash = () => {
+  // Keep bookmarks to the former preview working, with one canonical overview URL.
+  if (window.location.hash === "#overview-preview") window.history.replaceState(null, "", pageHashes.overview);
+  return Object.keys(pageHashes).find(page => pageHashes[page] === window.location.hash);
+};
 let lastDashboardPage = pageFromHash() || "overview";
 let chooserTrigger = null;
 let previewView = "charts", previewChartIndex = 0;
 const compactPreview = window.matchMedia("(max-width: 1200px)");
+const mobileSidebar = window.matchMedia("(max-width: 760px)");
+let sidebarCollapsed = false;
+function syncSidebar() {
+  // Only the desktop sidebar takes horizontal space. Phones keep the compact
+  // dataset bar, and the preference survives page changes within this workspace.
+  const collapsed = sidebarCollapsed && !mobileSidebar.matches;
+  document.body.classList.toggle("sidebarCollapsed", collapsed);
+  $("previewSidebar").inert = collapsed;
+  $("previewSidebar").setAttribute("aria-hidden", String(collapsed));
+  $("sidebarToggle").setAttribute("aria-expanded", String(!collapsed));
+  const label = collapsed ? "Expand sidebar" : "Collapse sidebar";
+  $("sidebarToggle").setAttribute("aria-label", label);
+  $("sidebarToggle").title = label;
+}
 const previewViews = {charts: ["previewChartsTab", "overviewCharts"], highlights: ["previewHighlightsTab", "overviewHighlights"], assistant: ["previewAssistantTab", "overviewAssistant"]};
 const previewChartObserver = new ResizeObserver(entries => {
   if (!document.body.classList.contains("previewMode")) return;
@@ -193,14 +211,12 @@ function showSetup(updateRoute = true) {
   window.scrollTo(0, 0);
 }
 function markNavigation(hash) {
-  document.querySelectorAll(".pageMenu a, .previewNavigation a, .previewOriginalLink, [data-workspace-page]").forEach(link => {
+  document.querySelectorAll(".pageMenu a, .previewNavigation a, [data-workspace-page]").forEach(link => {
     if ((link.getAttribute("href") || link.dataset.workspacePage) === hash) link.setAttribute("aria-current", "page");
     else link.removeAttribute("aria-current");
   });
-  const titles = {"#business-overview": "Business overview", "#detailed-dashboard": "Detailed dashboard", "#overview-preview": "Overview preview", "#change-dataset": "Change dataset", "#account": "Your account"};
+  const titles = {"#business-overview": "Business overview", "#detailed-dashboard": "Detailed dashboard", "#change-dataset": "Change dataset", "#account": "Your account"};
   $("dashboardTitle").textContent = titles[hash] || "AI Business Insights";
-  // Controls remain discoverable, but cannot focus a hidden, empty dashboard.
-  $("previewInsights").disabled = !data.length;
 }
 function showAccount(updateRoute = true) {
   closePreviewFilters();
@@ -223,19 +239,19 @@ function showPage(page, updateRoute = true) {
   if (updateRoute) updatePageHash(pageHashes[page]);
   if (!data.length) return showSetup(false);
   applyBusinessTheme(meta.business);
-  const preview = page === "preview", overview = page !== "detail";
+  const overview = page === "overview";
   $("setupPage").hidden = true;
   $("accountPage").hidden = true;
   document.body.classList.remove("accountMode");
   $("dashboardMain").hidden = false;
   $("overview").hidden = !overview;
   $("detailPage").hidden = overview;
-  document.body.classList.toggle("overviewMode", page === "overview");
+  document.body.classList.remove("overviewMode");
   document.body.classList.toggle("detailMode", !overview);
-  document.body.classList.toggle("previewMode", preview);
+  document.body.classList.toggle("previewMode", overview);
   $("previewSidebar").hidden = false;
-  $("previewHeader").hidden = !preview;
-  document.querySelector(".dashboardHeader").hidden = preview;
+  $("previewHeader").hidden = !overview;
+  document.querySelector(".dashboardHeader").hidden = overview;
   markNavigation(pageHashes[page]);
   // Redraw only the layout-dependent markup. Dataset, filters, and chat stay intact.
   if (overview) renderOverviewLayout(filtered());
@@ -556,7 +572,7 @@ function buildDashboard() {
     .join("");
   $("dataNotes").textContent = meta.warnings.join(" ");
   setDefaultFilterValues();
-  showPage(lastDashboardPage === "preview" ? "preview" : "overview");
+  showPage("overview");
   render();
   showChartChooser(true);
   $("setupStatus").textContent = "Choose KPI cards and charts for your overview.";
@@ -2644,15 +2660,7 @@ $("previewChangeDataset").onclick = () => showSetup();
 $("cancelSetup").onclick = () => showPage(lastDashboardPage);
 $("previewCustomize").onclick = () => showChartChooser(false);
 $("previewAiSettings").onclick = () => $("aiSettings").showModal();
-$("previewInsights").onclick = () => {
-  if (!data.length) return;
-  if (!document.body.classList.contains("overviewMode") && !document.body.classList.contains("previewMode")) showPage("preview");
-  if (compactPreview.matches && document.body.classList.contains("previewMode")) { previewView = "highlights"; syncPreviewView(); }
-  const panel = document.querySelector(".highlightsPanel");
-  panel.setAttribute("tabindex", "-1");
-  panel.focus({preventScroll: true});
-  if (!document.body.classList.contains("previewMode")) panel.scrollIntoView({block: "nearest"});
-};
+$("sidebarToggle").onclick = () => { sidebarCollapsed = !sidebarCollapsed; syncSidebar(); };
 $("previewFilterButton").onclick = () => {
   if (document.body.classList.contains("previewFiltersOpen")) { closePreviewFilters(); return; }
   const filters = $("dashboardFilters");
@@ -2699,7 +2707,8 @@ const followPageHash = () => {
     return;
   }
   window.scrollTo(0, 0);
-  const heading = window.location.hash === "#account" ? $("accountTitle") : $("dashboardTitle");
+  const heading = window.location.hash === "#account" ? $("accountTitle")
+    : document.body.classList.contains("previewMode") ? $("businessOverviewTitle") : $("dashboardTitle");
   heading.tabIndex = -1;
   heading.focus({preventScroll: true});
 };
@@ -2736,6 +2745,8 @@ $("insightForm").onsubmit = (e) => {
   ask($("insightQuestion").value);
 };
 showSetup(false);
+syncSidebar();
+mobileSidebar.addEventListener("change", syncSidebar);
 if (window.location.hash === "#account") showAccount(false);
 applyBusinessTheme($("business").value);
 refreshModels().catch(() => {});
@@ -2752,5 +2763,5 @@ const changeChartType = event => {
   $(control.id)?.focus({preventScroll: true});
 };
 $("dashboardMain").addEventListener("change", changeChartType);
-return () => { window.removeEventListener("hashchange", followPageHash); previewChartObserver.disconnect(); compactPreview.removeEventListener("change", resizePreview); $("dashboardMain").removeEventListener("change", changeChartType); document.body.classList.remove("workspaceMode"); };
+return () => { window.removeEventListener("hashchange", followPageHash); previewChartObserver.disconnect(); compactPreview.removeEventListener("change", resizePreview); mobileSidebar.removeEventListener("change", syncSidebar); $("dashboardMain").removeEventListener("change", changeChartType); document.body.classList.remove("workspaceMode", "sidebarCollapsed"); };
 }

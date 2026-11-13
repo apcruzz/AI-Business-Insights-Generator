@@ -104,6 +104,10 @@ def main():
                 assert page.locator('input[name="chartChoice"]:disabled').count() > 0
                 page.screenshot(path='/tmp/dashboard-ui-customize.png')
                 page.locator('#loadSelectedCharts').click()
+                expect(page).to_have_url(origin + '/#business-overview')
+                expect(page.locator('#businessOverviewTitle')).to_have_text('Business overview')
+                expect(page.locator('#previewHeader')).to_be_visible()
+                assert page.locator('#previewInsights, .previewOriginalLink, a[href="#overview-preview"]').count() == 0
                 expect(page.locator('#overviewCards .card')).to_have_count(2)
                 metric_row = page.locator('#overviewCards').bounding_box()
                 final_metric = page.locator('#overviewCards .card').last.bounding_box()
@@ -134,23 +138,25 @@ def main():
                 navigate(page, 'overviewNav')
 
                 # Reopening restores committed choices; Escape discards pending edits.
-                page.locator('#chooseCharts').click()
+                page.locator('#previewCustomize').click()
                 expect(page.locator('input[name="kpi"][value="units"]')).to_be_checked()
                 page.locator('input[name="kpi"][value="units"]').uncheck()
                 page.locator('input[name="chartChoice"]:checked').first.uncheck()
                 page.keyboard.press('Escape')
-                expect(page.locator('#chooseCharts')).to_be_focused()
-                page.locator('#chooseCharts').click()
+                expect(page.locator('#previewCustomize')).to_be_focused()
+                page.locator('#previewCustomize').click()
                 expect(page.locator('input[name="kpi"][value="units"]')).to_be_checked()
                 assert page.locator('input[name="chartChoice"]:checked').count() == 3
                 page.locator('input[name="kpi"][value="units"]').uncheck()
                 page.locator('#loadSelectedCharts').click()
                 expect(page.locator('#overviewCards .card')).to_have_count(1)
                 assert abs(page.locator('#overviewCards .card').bounding_box()['width'] - page.locator('#overviewCards').bounding_box()['width']) < 1
+                page.locator('#previewFilterButton').click()
                 page.locator('#category').select_option('Drinks')
                 expect(page.locator('#overviewCards .card')).to_have_count(1)
                 page.locator('#reset').click()
-                page.locator('#chooseCharts').click()
+                page.locator('#previewFilterButton').click()
+                page.locator('#previewCustomize').click()
                 page.locator('input[name="kpi"][value="netSales"]').uncheck()
                 page.locator('#loadSelectedCharts').click()
                 assert page.locator('#overviewCards .card').count() > 1, 'All unchecked must use defaults'
@@ -161,7 +167,7 @@ def main():
                 expect(page.locator('#insightAnswer')).to_contain_text('Calculated answer')
                 page.screenshot(path='/tmp/dashboard-ui-desktop.png', full_page=True)
                 original_height = page.locator('.compactAssistant').bounding_box()['height']
-                assert original_height == 300
+                assert original_height > 0
                 page.route('**/api/analyst', lambda route: route.fulfill(json={
                     'conversationId': 'mock-ui-only', 'mode': 'Groq', 'model': 'mock-ui-only',
                     'answer': '\n\n'.join(['Long answer with fictional calculations.'] * 50),
@@ -199,12 +205,14 @@ def main():
 
                 for width, height in [(1366, 768), (1024, 768), (768, 1024), (390, 844)]:
                     page.set_viewport_size({'width': width, 'height': height})
-                    assert page.locator('.compactAssistant').bounding_box()['height'] == (320 if width <= 850 else 300)
+                    if width <= 1200:
+                        page.locator('#previewAssistantTab').click()
+                    expect(page.locator('.compactAssistant')).to_be_in_viewport(ratio=1)
                     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'), f'Horizontal overflow at {width}'
                     page.locator('#openAiSettings').click()
                     assert page.locator('#aiSettings').bounding_box()['width'] <= width
                     page.keyboard.press('Escape')
-                    page.locator('#chooseCharts').click()
+                    page.locator('#previewCustomize').click()
                     page.locator('#loadSelectedCharts').scroll_into_view_if_needed()
                     expect(page.locator('#loadSelectedCharts')).to_be_in_viewport()
                     page.keyboard.press('Escape')
@@ -224,7 +232,8 @@ def main():
                     page.screenshot(path=f'/tmp/dashboard-ui-detail-{width}x{height}.png')
                     navigate(page, 'overviewNav')
 
-                check_overview_preview(page, context, expect, origin, source, local_requests)
+                check_business_overview(page, context, expect, origin, source, local_requests)
+                check_sidebar_collapse(page, expect, origin)
 
                 # Pagination reaches every row and resets when filters change.
                 page.set_viewport_size({'width': 1440, 'height': 900})
@@ -268,7 +277,7 @@ def main():
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
                 page.screenshot(path='/tmp/dashboard-ui-detail-salon.png', full_page=True)
                 assert not errors, errors
-                print('PASS: mapping colors/tools; KPI/chart save/cancel/defaults; calculated chat; mocked AI/evidence/settings; fixed shared headers, keyboard hamburger navigation, scrolling detail report, responsive original/preview layouts; shared layout state and dataset changes; filtered full table and pagination; keyboard focus.')
+                print('PASS: mapping colors/tools; KPI/chart save/cancel/defaults; calculated chat; mocked AI/evidence/settings; fixed shared headers, keyboard navigation, scrolling detail report, viewport Business Overview and legacy URL; sidebar collapse/restore and preserved state; dataset changes; filtered full table and pagination.')
                 print('Chrome:', browser.version)
                 browser.close()
         finally:
@@ -279,7 +288,9 @@ def main():
 
 def check_chart_type_options(page, expect):
     """PR #12 works across current layouts without losing filters, AI mode, or chat."""
+    page.locator('#previewFilterButton').click()
     page.select_option('#category', 'Drinks')
+    page.locator('#previewFilterButton').click()
     page.locator('#insightQuestion').fill('Summarize these filtered sales')
     page.locator('#askButton').click()
     expect(page.locator('#insightAnswer')).to_contain_text('mock-ui-only')
@@ -298,7 +309,7 @@ def check_chart_type_options(page, expect):
     assert page.locator('#chart-type-detail-category').input_value() == 'doughnut'
     page.select_option('#chart-type-detail-category', 'line')
     expect(page.locator('[data-detail-chart="category"] > svg polyline')).to_have_count(1)
-    navigate(page, 'previewNav')
+    navigate(page, 'overviewNav')
     assert page.locator(control).input_value() == 'line'
     for width, height in [(1440, 900), (1024, 768), (390, 844), (320, 640)]:
         page.set_viewport_size({'width': width, 'height': height})
@@ -327,7 +338,9 @@ def check_chart_type_options(page, expect):
     page.select_option(control, 'auto')
     navigate(page, 'overviewNav')
     assert page.locator(control).input_value() == 'auto'
+    page.locator('#previewFilterButton').click()
     page.locator('#reset').click()
+    page.locator('#previewFilterButton').click()
 
 
 def check_detail_workspace(page, expect, width):
@@ -356,16 +369,16 @@ def check_detail_workspace(page, expect, width):
     check_header(page)
 
 
-def check_overview_preview(page, context, expect, origin, source, local_requests):
-    """Exercise real uploads, shared state, navigation history, and the alternate layout."""
+def check_business_overview(page, context, expect, origin, source, local_requests):
+    """Exercise real uploads, shared state, navigation history, and the main overview."""
     page.set_viewport_size({'width': 1440, 'height': 900})
     page.locator('#insightQuestion').fill('Which product leads sales?')
     page.locator('#askButton').click()
     expect(page.locator('#insightAnswer')).to_contain_text('Calculated answer')
     transcript = page.locator('#insightAnswer').inner_text()
     local_count = len(local_requests)
-    navigate(page, 'previewNav')
-    expect(page).to_have_url(origin + '/#overview-preview')
+    navigate(page, 'overviewNav')
+    expect(page).to_have_url(origin + '/#business-overview')
     expect(page.locator('#previewSidebar')).to_be_visible()
     assert page.locator('.previewChartType, .previewEyebrow, .previewDesignBadge').count() == 0
     assert page.locator('#previewHeader').bounding_box()['height'] <= 76
@@ -396,7 +409,7 @@ def check_overview_preview(page, context, expect, origin, source, local_requests
     page.keyboard.press('Escape')
     expect(page.locator('#previewCustomize')).to_be_focused()
 
-    # Switching layouts preserves both the pending/finished conversation and chosen mode.
+    # Switching pages preserves the conversation and chosen mode.
     page.select_option('#localModel', 'groq:openai/gpt-oss-120b')
     page.locator('#insightQuestion').fill('Summarize this business')
     assistant_height = page.locator('.compactAssistant').bounding_box()['height']
@@ -405,12 +418,13 @@ def check_overview_preview(page, context, expect, origin, source, local_requests
     transcript = page.locator('#insightAnswer').inner_text()
     assert page.locator('.compactAssistant').bounding_box()['height'] == assistant_height
     assert page.locator('.conversationViewport').evaluate('(el) => el.scrollHeight > el.clientHeight')
-    page.get_by_role('link', name='Original overview').click()
+    navigate(page, 'detailNav')
     expect(page.locator('#previewHeader')).to_be_hidden()
     expect(page.locator('#previewSidebar')).to_be_visible()
     expect(page.locator('#insightAnswer')).to_have_text(transcript)
-    assert abs(page.locator('.compactAssistant').bounding_box()['height'] - 300) < 1, page.locator('.compactAssistant').bounding_box()
     page.go_back()
+    expect(page).to_have_url(origin + '/#business-overview')
+    expect(page.locator('#previewHeader')).to_be_visible()
     expect(page.locator('#previewSidebar')).to_be_visible()
     expect(page.locator('#insightAnswer')).to_have_text(transcript)
     page.locator('#previewAiSettings').click()
@@ -435,7 +449,7 @@ def check_overview_preview(page, context, expect, origin, source, local_requests
     page.get_by_role('link', name='Detailed dashboard', exact=True).click()
     expect(page.locator('#detailPage')).to_be_visible()
     expect(page.locator('#datasetTable tbody tr')).to_have_count(4)
-    navigate(page, 'previewNav')
+    navigate(page, 'overviewNav')
     page.locator('#previewChangeDataset').click()
     page.select_option('#sample', 'Cafe_Demo.csv')
     page.locator('#inspectButton').click()
@@ -473,20 +487,23 @@ def check_overview_preview(page, context, expect, origin, source, local_requests
     expect(page.locator('#overviewCards .card')).to_have_count(2)
     expect(page.locator('.overviewChartSlot:visible')).to_have_count(1)
     check_preview_fit(page, expect, 1440)
-    page.get_by_role('link', name='Original overview').click()
-    expect(page.locator('#previewHeader')).to_be_hidden()
-    expect(page.locator('#previewSidebar')).to_be_visible()
+    navigate(page, 'detailNav')
+    navigate(page, 'overviewNav')
+    expect(page.locator('#previewHeader')).to_be_visible()
     expect(page.locator('#overviewCards .card')).to_have_count(2)
     expect(page.locator('.overviewChartSlot:visible')).to_have_count(1)
 
-    # A fresh preview URL still goes through normal upload and column confirmation.
+    # The legacy URL aliases the single overview, including a fresh upload workflow.
     fresh = context.new_page()
     fresh.goto(origin + '/#overview-preview')
+    expect(fresh).to_have_url(origin + '/#business-overview')
     expect(fresh.locator('#setupPage')).to_be_visible()
     fresh.locator('#upload').set_input_files(str(source))
     fresh.locator('#inspectButton').click()
     fresh.locator('#buildButton').click()
     fresh.locator('#loadSelectedCharts').click()
+    expect(fresh).to_have_url(origin + '/#business-overview')
+    expect(fresh.locator('#previewHeader')).to_be_visible()
     expect(fresh.locator('#previewSidebar')).to_be_visible()
     # Exercise line, bar, stacked, donut, histogram, heatmap, and ranking layouts
     # using fictional samples with realistic category labels and chart notes.
@@ -501,6 +518,87 @@ def check_overview_preview(page, context, expect, origin, source, local_requests
             fresh.set_viewport_size({'width': width, 'height': height})
             check_preview_fit(fresh, expect, width)
     fresh.close()
+
+
+def check_sidebar_collapse(page, expect, origin):
+    """The midpoint arrow releases real width and preserves workspace state."""
+    page.set_viewport_size({'width': 1440, 'height': 900})
+    page.locator('#previewFilterButton').click()
+    category = page.locator('#category option').last.get_attribute('value')
+    page.select_option('#category', category)
+    page.locator('#previewFilterButton').click()
+    page.select_option('#chart-type-overview-trend', 'bar')
+    page.select_option('#localModel', 'groq:openai/gpt-oss-120b')
+    page.locator('#insightQuestion').fill('Summarize these sales')
+    page.locator('#askButton').click()
+    expect(page.locator('#insightAnswer')).to_contain_text('mock-ui-only')
+    transcript = page.locator('#insightAnswer').inner_text()
+    page.locator('#insightQuestion').fill('Keep this draft question')
+    kpis = page.locator('#overviewCards').inner_text()
+    sidebar, toggle = page.locator('#previewSidebar'), page.locator('#sidebarToggle')
+    expanded_width = page.locator('#dashboardMain').bounding_box()['width']
+    sidebar_width = sidebar.bounding_box()['width']
+    box = toggle.bounding_box()
+    assert abs(box['y'] + box['height'] / 2 - 450) < 1, box
+    icon = toggle.locator('svg').bounding_box()
+    assert icon['width'] >= 18 and icon['height'] >= 18, icon
+    assert abs(icon['x'] + icon['width'] / 2 - box['x'] - box['width'] / 2) < 1, icon
+    expect(toggle).to_have_attribute('aria-expanded', 'true')
+    toggle.focus()
+    page.keyboard.press('Enter')
+    expect(toggle).to_have_attribute('aria-expanded', 'false')
+    expect(toggle).to_have_accessible_name('Expand sidebar')
+    expect(toggle).to_be_focused()
+    expect(sidebar).to_be_hidden()
+    assert sidebar.evaluate('el => el.inert'), 'Hidden navigation cannot keep keyboard focus'
+    assert abs(page.locator('#dashboardMain').bounding_box()['width'] - expanded_width - sidebar_width) < 1
+    check_header(page)
+    check_preview_fit(page, expect, 1440)
+    check_menu(page, expect)
+    page.screenshot(path='/tmp/dashboard-ui-sidebar-collapsed.png')
+
+    # The hamburger still reaches every route with the sidebar hidden.
+    for route in ['detailNav', 'setupNav', 'accountNav', 'overviewNav']:
+        navigate(page, route)
+        expect(sidebar).to_be_hidden()
+        expect(toggle).to_have_attribute('aria-expanded', 'false')
+        expect(toggle).to_be_in_viewport(ratio=1)
+        check_header(page)
+    expect(page.locator('#insightAnswer')).to_have_text(transcript)
+    expect(page.locator('#insightQuestion')).to_have_value('Keep this draft question')
+    assert page.locator('#overviewCards').inner_text() == kpis
+    assert page.locator('#category').input_value() == category
+    assert page.locator('#chart-type-overview-trend').input_value() == 'bar'
+
+    # Narrow desktop and phone layouts remain usable after a collapse at desktop.
+    for width, height in [(1280, 600), (1024, 768), (768, 1024), (390, 568), (320, 640)]:
+        page.set_viewport_size({'width': width, 'height': height})
+        if width <= 760:
+            expect(toggle).to_be_hidden()
+            expect(sidebar).to_be_visible()
+            assert not sidebar.evaluate('el => el.inert')
+        else:
+            expect(toggle).to_have_attribute('aria-expanded', 'false')
+            expect(sidebar).to_be_hidden()
+        check_header(page)
+        check_preview_fit(page, expect, width)
+
+    page.set_viewport_size({'width': 1440, 'height': 900})
+    expect(toggle).to_have_attribute('aria-expanded', 'false')
+    toggle.focus()
+    page.keyboard.press('Space')
+    expect(toggle).to_have_attribute('aria-expanded', 'true')
+    expect(toggle).to_have_accessible_name('Collapse sidebar')
+    expect(sidebar).to_be_visible()
+    assert not sidebar.evaluate('el => el.inert')
+    assert abs(page.locator('#dashboardMain').bounding_box()['width'] - expanded_width) < 1
+    expect(page.locator('#insightAnswer')).to_have_text(transcript)
+    check_preview_plots(page, expect)
+    # An already-loaded legacy bookmark also canonicalizes without clearing data.
+    page.evaluate("location.hash = '#overview-preview'")
+    expect(page).to_have_url(origin + '/#business-overview')
+    expect(page.locator('#insightAnswer')).to_have_text(transcript)
+    page.screenshot(path='/tmp/dashboard-ui-sidebar-restored.png')
 
 
 def check_preview_fit(page, expect, width):
@@ -546,9 +644,8 @@ def check_preview_fit(page, expect, width):
     page.locator('#previewFilterButton').click()
     expect(page.locator('#dashboardFilters')).to_be_visible()
     fits()
-    if width > 1200:
-        for control in ['#previewChangeDataset', '.previewOriginalLink']:
-            expect(page.locator(control)).to_be_in_viewport(ratio=1)
+    if width > 1200 and page.locator('#previewSidebar').is_visible():
+        expect(page.locator('#previewChangeDataset')).to_be_in_viewport(ratio=1)
     page.locator('#category').focus()
     page.keyboard.press('Escape')
     expect(page.locator('#dashboardFilters')).to_be_hidden()
