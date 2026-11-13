@@ -367,7 +367,7 @@ function Dashboard({accountPage, user}) {
                 <span id="aiModeSummary" className="modeSummary" aria-live="polite">Uses dashboard data</span>
               </div>
               <div className="conversationViewport" tabIndex="0" aria-label="Conversation and supporting calculations">
-                <p id="insightAnswer" aria-live="polite"></p>
+                <div id="insightAnswer" role="log" aria-label="Conversation" aria-live="polite" aria-relevant="additions text"></div>
                 <div id="analystEvidence" hidden></div>
               </div>
               <form id="insightForm">

@@ -95,6 +95,32 @@ body.workspaceMode .accountDanger { background: #fffcfd; border-color: #f1dfe6; 
 body.workspaceMode .dangerButton { color: #a32136; background: #fff4f6; border-color: #e8c8d2; }
 body.workspaceMode .accountInfo a { color: var(--accent-dark); }
 
+/* Speaker labels and opposite alignment distinguish messages as well as color.
+   Only the transcript grows; the existing conversation viewport handles scroll. */
+body.workspaceMode .compactAssistant #insightAnswer:not(:empty) {
+  display: flex; flex-direction: column; gap: 12px; white-space: normal;
+}
+.compactAssistant .chatMessage {
+  align-self: flex-start; width: fit-content; max-width: 92%; min-width: 0;
+  padding: 10px 12px; border: 1px solid #e1e7f2; border-radius: 12px 12px 12px 4px;
+  background: #f3f5fb; color: #45516b; text-align: left;
+}
+.compactAssistant .chatMessage--user {
+  align-self: flex-end; max-width: 88%; border-color: #dcd8ff;
+  border-radius: 12px 12px 4px 12px; background: #eeecff; color: #453b81;
+}
+.compactAssistant .chatMessageSpeaker {
+  display: block; margin-bottom: 4px; font-size: var(--font-caption);
+  line-height: 1.4; font-weight: 650; color: #596781;
+}
+.compactAssistant .chatMessage--user .chatMessageSpeaker { color: #6356a8; }
+.compactAssistant .chatMessageBody {
+  margin: 0; font-size: var(--font-body); line-height: 1.6;
+  white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.compactAssistant .chatMessage[data-status="pending"] .chatMessageBody { color: #657188; }
+.compactAssistant .chatMessage[data-status="error"] { background: #fff3f5; border-color: #efd4dc; color: #98334b; }
+
 /* Original overview keeps its curated charts and bounded conversation. Shared
    navigation replaces the old left filter column, so filters align above cards. */
 body.overviewMode #dashboardMain, body.detailMode #dashboardMain { display: block; height: auto; min-height: calc(100dvh - var(--workspace-header-height)); width: 100%; max-width: 1600px; padding: 12px 24px 24px; margin: 0 auto; }

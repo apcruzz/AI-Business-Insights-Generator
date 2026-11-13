@@ -2472,13 +2472,33 @@ function resetConversation() {
   conversationId = null;
   conversationTurns = [];
   $("insightAnswer").textContent = "";
+  $("insightAnswer").setAttribute("aria-busy", "false");
   $("analystEvidence").hidden = true;
   $("analystEvidence").replaceChildren();
 }
-// Display recent exchanges as plain text and scroll to the latest response.
-function showConversation(pending = "") {
+// Give each speaker a separate bubble. All questions and model output remain
+// plain text so uploaded labels and AI answers cannot inject HTML into the UI.
+function showConversation(pending = null) {
   const panel = $("insightAnswer");
-  panel.textContent = [...conversationTurns, pending].filter(Boolean).join("\n\n");
+  const messages = document.createDocumentFragment();
+  for (const turn of [...conversationTurns, pending].filter(Boolean)) {
+    for (const role of ["user", "assistant"]) {
+      const message = document.createElement("article");
+      message.className = `chatMessage chatMessage--${role}`;
+      message.setAttribute("aria-label", role === "user" ? "Your message" : "Assistant reply");
+      if (role === "assistant" && turn.status) message.dataset.status = turn.status;
+      const speaker = document.createElement("strong"), body = document.createElement("p");
+      speaker.className = "chatMessageSpeaker";
+      speaker.textContent = role === "user" ? "You" : "Assistant";
+      body.className = "chatMessageBody";
+      body.textContent = role === "user" ? turn.question : turn.answer;
+      // Text separators also keep copied/read transcripts from joining speakers.
+      message.append(speaker, "\n", body);
+      messages.append(message, "\n");
+    }
+  }
+  panel.replaceChildren(messages);
+  panel.setAttribute("aria-busy", String(pending?.status === "pending"));
   const viewport = panel.closest(".conversationViewport");
   // Keep the latest answer visible while leaving its evidence just below it.
   viewport.scrollTop = Math.max(0, panel.offsetHeight - viewport.clientHeight);
@@ -2494,7 +2514,9 @@ async function ask(question) {
     model = option?.model;
   $("analystEvidence").hidden = true;
   $("analystEvidence").replaceChildren();
-  showConversation("You: " + question + "\n" + (model ? `${option.provider === "groq" ? "Groq" : "Your local model"} is inspecting the data and running calculations…` : "Calculating…"));
+  showConversation({question, status: "pending", answer: model
+    ? `${option.provider === "groq" ? "Groq" : "Your local model"} is inspecting the data and running calculations…`
+    : "Calculating…"});
   try {
     let answer;
     if (model) {
@@ -2523,13 +2545,13 @@ async function ask(question) {
     } else answer = "Calculated answer\n" + calculatedAnswer(question);
     if (revision === current) {
       // Keep the visible transcript aligned with the backend limit of four recent exchanges.
-      conversationTurns.push("You: " + question + "\n" + answer);
+      conversationTurns.push({question, answer});
       conversationTurns = conversationTurns.slice(-4);
       showConversation();
     }
   } catch (e) {
     if (revision === current)
-      showConversation(e.message + " Choose Calculated answers to continue without a model.");
+      showConversation({question, status: "error", answer: e.message + " Choose Calculated answers to continue without a model."});
   } finally {
     busy = false;
     $("askButton").disabled = false;
