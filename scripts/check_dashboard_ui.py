@@ -184,6 +184,7 @@ def main():
                 expect(page.locator('#analystEvidence table')).to_be_visible()
                 assert page.locator('.compactAssistant').bounding_box()['height'] == original_height
 
+                check_conversation_messages(page, expect)
                 check_chart_type_options(page, expect)
 
                 page.locator('#openAiSettings').click()
@@ -341,6 +342,76 @@ def check_chart_type_options(page, expect):
     page.locator('#previewFilterButton').click()
     page.locator('#reset').click()
     page.locator('#previewFilterButton').click()
+
+
+def check_conversation_messages(page, expect):
+    """Both speakers, pending/error replies, and untrusted text use bounded bubbles."""
+    log = page.locator('#insightAnswer')
+    page.locator('#newConversation').click()
+    pending = []
+
+    def hold_reply(route):
+        pending.append(route)
+
+    page.route('**/api/analyst', hold_reply)
+    question = '<img src=x onerror="window.chatMarkupExecuted=true"> Explain revenue'
+    answer = '<strong>Literal model output</strong>\n\n' + 'Long fictional explanation. ' * 80 + '\n' + 'x' * 180
+    try:
+        page.locator('#insightQuestion').fill(question)
+        with page.expect_request('**/api/analyst'):
+            page.locator('#askButton').click()
+        expect(log).to_have_attribute('aria-busy', 'true')
+        expect(log.locator('.chatMessage--user .chatMessageBody')).to_have_text(question)
+        expect(log.locator('[data-status="pending"]')).to_contain_text('running calculations')
+        expect(page.locator('#askButton')).to_be_disabled()
+        pending.pop().fulfill(json={'conversationId': 'mock-message-ui', 'mode': 'Groq',
+            'model': 'mock-ui-only', 'answer': answer, 'selectedRows': 4, 'evidence': []})
+        expect(log).to_have_attribute('aria-busy', 'false')
+        expect(log.locator('.chatMessage--assistant .chatMessageBody')).to_contain_text(answer)
+        assert log.locator('.chatMessageBody img, .chatMessageBody strong').count() == 0
+        assert not page.evaluate('Boolean(window.chatMarkupExecuted)')
+        for width, height in [(1440, 900), (1024, 768), (390, 568), (320, 640)]:
+            page.set_viewport_size({'width': width, 'height': height})
+            if width <= 1200:
+                page.locator('#previewAssistantTab').click()
+            check_message_layout(page)
+            expect(page.locator('#askButton')).to_be_in_viewport(ratio=1)
+            assert page.evaluate('document.documentElement.scrollHeight <= innerHeight + 1')
+            assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+            assert page.locator('.conversationViewport').evaluate('el => el.scrollWidth <= el.clientWidth')
+            page.screenshot(path=f'/tmp/dashboard-ui-conversation-{width}.png')
+
+        # A failed response keeps the submitted question on the right.
+        page.set_viewport_size({'width': 1440, 'height': 900})
+        page.locator('#insightQuestion').fill('What about profit?')
+        with page.expect_request('**/api/analyst'):
+            page.locator('#askButton').click()
+        expect(log).to_have_attribute('aria-busy', 'true')
+        pending.pop().fulfill(status=503, json={'error': 'Fictional service unavailable.'})
+        expect(log.locator('[data-status="error"]')).to_contain_text('Fictional service unavailable.')
+        expect(log.locator('.chatMessage--user .chatMessageBody').last).to_have_text('What about profit?')
+        expect(page.locator('#askButton')).to_be_enabled()
+        page.locator('#newConversation').click()
+        expect(log).to_have_text('')
+        expect(log).to_have_attribute('aria-busy', 'false')
+    finally:
+        page.unroute('**/api/analyst', hold_reply)
+
+
+def check_message_layout(page):
+    """Replies stay left, questions stay right, and speaker colors differ."""
+    result = page.locator('#insightAnswer').evaluate('''log => {
+        const edge = log.getBoundingClientRect();
+        return [...log.querySelectorAll('.chatMessage')].map(message => {
+            const box = message.getBoundingClientRect(), user = message.classList.contains('chatMessage--user');
+            return {user, offset: user ? edge.right - box.right : box.left - edge.left,
+                color: getComputedStyle(message).backgroundColor,
+                speaker: message.querySelector('.chatMessageSpeaker').textContent};
+        });
+    }''')
+    assert result and all(abs(item['offset']) < 1 for item in result), result
+    assert all(item['speaker'] == ('You' if item['user'] else 'Assistant') for item in result), result
+    assert result[0]['color'] != result[1]['color'], result
 
 
 def check_detail_workspace(page, expect, width):
