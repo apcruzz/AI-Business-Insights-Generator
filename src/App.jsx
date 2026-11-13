@@ -14,6 +14,7 @@ import "./detail-workspace.css";
 import "./ui.css";
 import "./workspace-header.css";
 import "./chart-options.css";
+import "./workspace-theme.css";
 
 export default function App() {
   return <AccountAccess>{({accountPage, user}) => <Dashboard accountPage={accountPage} user={user} />}</AccountAccess>;
@@ -31,10 +32,8 @@ function Dashboard({accountPage, user}) {
       <OverviewPreview user={user} />
       <header className="dashboardHeader">
         <div className="dashboardIdentity">
-          <small>
-            <span id="businessName">BUSINESS INSIGHTS</span>
-          </small>
-          <h1 id="dashboardTitle">Your business at a glance</h1>
+          <h1 id="dashboardTitle">AI Business Insights</h1>
+          <small id="businessName">Your workspace</small>
         </div>
         <small className="headerDataset">
           <span id="datasetName">Choose your business and dataset</span>
@@ -262,6 +261,65 @@ function Dashboard({accountPage, user}) {
 
       {/* Dashboard content stays hidden until an upload is normalized successfully. */}
       <main id="dashboardMain" hidden>
+        {/* These controls filter both browser calculations and backend analyst queries. */}
+        <div id="dashboardFilters" className="filters" role="region" aria-label="Dashboard filters">
+          <div className="filterHeading">
+            <strong>Filters</strong>
+            <span className="hint" id="count" aria-live="polite"></span>
+          </div>
+          <label>
+            From
+            <input id="from" type="date" />
+          </label>
+          <label>
+            Through
+            <input id="to" type="date" />
+          </label>
+          <label>
+            Category
+            <select id="category" defaultValue="">
+              <option value="">All categories</option>
+            </select>
+          </label>
+          <label>
+            <span id="productFilterLabel">Product</span>
+            <select id="product" defaultValue="">
+              <option value="">All products</option>
+            </select>
+          </label>
+          <label>
+            Day of week
+            <select id="weekday" defaultValue="">
+              <option value="">All days</option>
+              <option value="1">Monday</option>
+              <option value="2">Tuesday</option>
+              <option value="3">Wednesday</option>
+              <option value="4">Thursday</option>
+              <option value="5">Friday</option>
+              <option value="6">Saturday</option>
+              <option value="0">Sunday</option>
+            </select>
+          </label>
+          <label>
+            Time of day
+            <select id="period" defaultValue="">
+              <option value="">All hours</option>
+              <option value="overnight">Overnight · 12-5 am</option>
+              <option value="morning">Morning · 6-11 am</option>
+              <option value="afternoon">Afternoon · 12-5 pm</option>
+              <option value="evening">Evening · 6-11 pm</option>
+            </select>
+          </label>
+          <div className="filterActions">
+            <button id="reset" type="button">Reset filters</button>
+            <button id="chooseCharts" type="button" aria-haspopup="dialog">Customize</button>
+          </div>
+          <details>
+            <summary>Data notes</summary>
+            <div id="sidebarNotes"></div>
+          </details>
+        </div>
+
         <div id="overview">
           <div id="overviewCards" className="cards" tabIndex={0} role="region" aria-label="Overview key performance indicators"></div>
           <nav id="previewWorkspaceTabs" className="previewWorkspaceTabs" role="tablist" aria-label="Overview preview sections" hidden>
@@ -330,65 +388,6 @@ function Dashboard({accountPage, user}) {
               <div id="insightCards" className="insightCards"></div>
             </section>
           </div>
-        </div>
-
-        {/* These controls filter both browser calculations and backend analyst queries. */}
-        <div id="dashboardFilters" className="filters" role="region" aria-label="Dashboard filters">
-          <div className="filterHeading">
-            <strong>Filters</strong>
-            <span className="hint" id="count" aria-live="polite"></span>
-          </div>
-          <label>
-            From
-            <input id="from" type="date" />
-          </label>
-          <label>
-            Through
-            <input id="to" type="date" />
-          </label>
-          <label>
-            Category
-            <select id="category" defaultValue="">
-              <option value="">All categories</option>
-            </select>
-          </label>
-          <label>
-            <span id="productFilterLabel">Product</span>
-            <select id="product" defaultValue="">
-              <option value="">All products</option>
-            </select>
-          </label>
-          <label>
-            Day of week
-            <select id="weekday" defaultValue="">
-              <option value="">All days</option>
-              <option value="1">Monday</option>
-              <option value="2">Tuesday</option>
-              <option value="3">Wednesday</option>
-              <option value="4">Thursday</option>
-              <option value="5">Friday</option>
-              <option value="6">Saturday</option>
-              <option value="0">Sunday</option>
-            </select>
-          </label>
-          <label>
-            Time of day
-            <select id="period" defaultValue="">
-              <option value="">All hours</option>
-              <option value="overnight">Overnight · 12-5 am</option>
-              <option value="morning">Morning · 6-11 am</option>
-              <option value="afternoon">Afternoon · 12-5 pm</option>
-              <option value="evening">Evening · 6-11 pm</option>
-            </select>
-          </label>
-          <div className="filterActions">
-            <button id="reset" type="button">Reset filters</button>
-            <button id="chooseCharts" type="button" aria-haspopup="dialog">Customize</button>
-          </div>
-          <details>
-            <summary>Data notes</summary>
-            <div id="sidebarNotes"></div>
-          </details>
         </div>
 
         {/* Detailed Dashboard includes every chart supported by the mapped data. */}

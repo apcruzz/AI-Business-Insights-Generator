@@ -12,7 +12,7 @@ import subprocess
 import tempfile
 import threading
 from unittest.mock import patch
-from scripts.ui_helpers import navigate, check_header, check_menu
+from scripts.ui_helpers import navigate, check_header, check_menu, check_form_alignment
 
 
 def main():
@@ -85,6 +85,15 @@ def main():
                 page.locator('#toggleOptionalColumns').click()
                 page.locator('#toggleSourcePreview').click()
                 expect(page.locator('#preview tbody tr')).to_have_count(4)
+                for width, height in [(1440, 900), (1024, 768), (768, 1024), (390, 844), (320, 640)]:
+                    page.set_viewport_size({'width': width, 'height': height})
+                    check_form_alignment(page, '#setupPage')
+                    panels = [page.locator(selector).bounding_box() for selector in ('#toggleOptionalColumns', '#toggleSourcePreview')]
+                    assert abs(panels[0]['y'] - panels[1]['y']) < 1
+                    assert abs(panels[0]['height'] - panels[1]['height']) < 1
+                    page.evaluate('window.scrollTo(0, 0)')
+                    page.screenshot(path=f'/tmp/dashboard-ui-mapping-{width}.png', full_page=True)
+                page.set_viewport_size({'width': 1440, 'height': 900})
                 page.screenshot(path='/tmp/dashboard-ui-mapping.png', full_page=True)
                 page.locator('#buildButton').click()
                 expect(page.locator('#chartChooser')).to_be_visible()
@@ -96,6 +105,11 @@ def main():
                 page.screenshot(path='/tmp/dashboard-ui-customize.png')
                 page.locator('#loadSelectedCharts').click()
                 expect(page.locator('#overviewCards .card')).to_have_count(2)
+                metric_row = page.locator('#overviewCards').bounding_box()
+                final_metric = page.locator('#overviewCards .card').last.bounding_box()
+                assert abs(final_metric['x'] + final_metric['width'] - metric_row['x'] - metric_row['width']) < 1
+                page.evaluate('window.scrollTo(0, 0)')
+                page.screenshot(path='/tmp/dashboard-ui-unified-overview.png', full_page=True)
                 assert 'Units sold' in page.locator('#overviewCards').inner_text()
                 assert page.locator('[data-question]').count() == 0
                 assert not local_requests, 'Page load/upload must not contact Ollama'
@@ -132,6 +146,7 @@ def main():
                 page.locator('input[name="kpi"][value="units"]').uncheck()
                 page.locator('#loadSelectedCharts').click()
                 expect(page.locator('#overviewCards .card')).to_have_count(1)
+                assert abs(page.locator('#overviewCards .card').bounding_box()['width'] - page.locator('#overviewCards').bounding_box()['width']) < 1
                 page.locator('#category').select_option('Drinks')
                 expect(page.locator('#overviewCards .card')).to_have_count(1)
                 page.locator('#reset').click()
@@ -391,9 +406,10 @@ def check_overview_preview(page, context, expect, origin, source, local_requests
     assert page.locator('.compactAssistant').bounding_box()['height'] == assistant_height
     assert page.locator('.conversationViewport').evaluate('(el) => el.scrollHeight > el.clientHeight')
     page.get_by_role('link', name='Original overview').click()
-    expect(page.locator('#previewSidebar')).to_be_hidden()
+    expect(page.locator('#previewHeader')).to_be_hidden()
+    expect(page.locator('#previewSidebar')).to_be_visible()
     expect(page.locator('#insightAnswer')).to_have_text(transcript)
-    assert page.locator('.compactAssistant').bounding_box()['height'] == 300
+    assert abs(page.locator('.compactAssistant').bounding_box()['height'] - 300) < 1, page.locator('.compactAssistant').bounding_box()
     page.go_back()
     expect(page.locator('#previewSidebar')).to_be_visible()
     expect(page.locator('#insightAnswer')).to_have_text(transcript)
@@ -458,7 +474,8 @@ def check_overview_preview(page, context, expect, origin, source, local_requests
     expect(page.locator('.overviewChartSlot:visible')).to_have_count(1)
     check_preview_fit(page, expect, 1440)
     page.get_by_role('link', name='Original overview').click()
-    expect(page.locator('#previewSidebar')).to_be_hidden()
+    expect(page.locator('#previewHeader')).to_be_hidden()
+    expect(page.locator('#previewSidebar')).to_be_visible()
     expect(page.locator('#overviewCards .card')).to_have_count(2)
     expect(page.locator('.overviewChartSlot:visible')).to_have_count(1)
 

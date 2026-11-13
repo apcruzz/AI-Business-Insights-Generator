@@ -1,0 +1,205 @@
+/* Overview preview is the visual foundation for every route. Layout rules stay
+   scoped so the detailed report scrolls and the preview keeps its viewport fit. */
+:root {
+  --ink: #1c2540;
+  --muted: #758198;
+  --line: #e5e9f3;
+  --accent: #6572ed;
+  --accent-dark: #515dce;
+  --surface: #fff;
+  --surface-soft: #f5f6fc;
+  --workspace-radius: 16px;
+  --workspace-shadow: 0 3px 15px rgb(46 61 94 / 4%);
+  --preview-sidebar-width: 208px;
+}
+body {
+  color: var(--ink);
+  background: radial-gradient(ellipse at top right, #f0f2fc, #f7f8fc 52%, #f8f9fc);
+}
+body.workspaceMode { margin-left: var(--preview-sidebar-width); }
+body.workspaceMode:not(.previewMode) { height: auto; min-height: 100dvh; overflow: auto; background: radial-gradient(ellipse at top right, #f0f2fc, #f7f8fc 52%, #f8f9fc); }
+body.workspaceMode:not(.previewMode) #root { display: block; height: auto; min-height: 100dvh; }
+body :is(button, a, input, select, summary, [tabindex]):focus-visible { outline: 3px solid #aab4ff; outline-offset: 3px; }
+body :is(input, select, button) { border-color: var(--line); color: var(--ink); }
+body button:hover { background: #f0f2ff; border-color: #cdd4f6; }
+body button:disabled { opacity: .5; cursor: not-allowed; }
+body :is(input, select):disabled { background: var(--surface-soft); color: var(--muted); }
+body :is(input[type="checkbox"], input[type="radio"]) { accent-color: var(--accent); }
+body :is(.primary, .authPrimary, #askButton) { background: var(--accent); border-color: var(--accent); color: white; box-shadow: 0 2px 4px rgb(72 86 180 / 8%); }
+body :is(.primary, .authPrimary, #askButton):hover { background: var(--accent-dark); border-color: var(--accent-dark); }
+body :is(.card, .panel, .setup) { background: var(--surface); border: 1px solid var(--line); border-radius: var(--workspace-radius); box-shadow: var(--workspace-shadow); min-width: 0; }
+body :is(.sub, .hint) { color: var(--muted); }
+
+/* Shared sidebar and 72px headers keep all pages on the same horizontal grid. */
+body.workspaceMode .previewSidebar {
+  position: fixed; inset: 0 auto 0 0; z-index: 25; display: flex; flex-direction: column;
+  width: var(--preview-sidebar-width); padding: 27px 16px 18px; overflow-y: auto;
+  border-right: 1px solid var(--line); background: rgb(255 255 255 / 88%);
+}
+body.workspaceMode .previewNavigation :is(a, button) { gap: 10px; line-height: 1.4 !important; height: auto !important; min-height: var(--control-height) !important; white-space: normal; }
+body.workspaceMode .previewNavigation .previewIcon { align-self: center; }
+body.workspaceMode .previewNavigation a[aria-current="page"] { background: #edf0ff; color: #505dc2; }
+body.workspaceMode #previewChangeDataset[aria-current="page"] { background: #e7eaff; border-color: #cbd2fa; color: #424fb5; }
+body.workspaceMode .previewOriginalLink { font-size: var(--font-caption) !important; }
+body.workspaceMode .dashboardHeader, body.workspaceMode .previewHeader { padding-inline: 24px; background: #f7f8fc; color: var(--ink); border: 0; box-shadow: none; }
+body.workspaceMode .dashboardIdentity h1 { font-weight: 750; letter-spacing: -.6px; }
+body.workspaceMode .dashboardIdentity small { display: block; margin-top: 3px; color: var(--muted); }
+body.workspaceMode .dashboardHeader #businessName { color: var(--muted); }
+body.workspaceMode .headerDataset { min-width: 0; max-width: 240px; }
+body.workspaceMode .headerDataset #datasetName { display: block; max-width: 100%; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+body.workspaceMode :is(.headerAccountLink, .pageMenuButton) { color: #5966b2; border-color: var(--line); background: white; }
+body.workspaceMode :is(.headerAccountLink, .pageMenuButton):hover { background: #edf0ff; border-color: #cdd4f6; }
+body.workspaceMode .pageMenu a[aria-current="page"], body.workspaceMode .pageMenu a:hover, body.workspaceMode .pageMenu a:focus-visible { background: #eef0ff; color: #505dc2; outline-color: var(--accent); }
+
+/* Upload, mapping, and account pages use the same width, spacing, and surfaces. */
+body.workspaceMode .setup { width: calc(100% - 48px); max-width: 1160px; margin: 12px auto 28px; padding: 28px; }
+body.workspaceMode .setup > h2, body.workspaceMode #mappingPanel > h2 { font-size: var(--font-heading); letter-spacing: -.5px; color: var(--ink); }
+body.workspaceMode .setup p { line-height: 1.6; color: var(--muted); }
+body.workspaceMode .setup :is(.businessHint, .sampleDescription, .mapInfo) { border-color: #e1e5fa; background: #f3f4ff; color: #626e9a; border-radius: 10px; }
+body.workspaceMode .setupGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; gap: 18px; }
+body.workspaceMode #mappingPanel > .setupGrid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+body.workspaceMode .mappingGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; align-items: end; }
+body.workspaceMode :is(.setupGrid, .mappingGrid) > label { display: grid; min-width: 0; align-content: end; gap: 7px; color: #657188; font-size: var(--font-caption); font-weight: 550; }
+body.workspaceMode :is(.setupGrid, .mappingGrid) :is(input, select) { width: 100%; min-width: 0; background-color: #fcfcfe; }
+body.workspaceMode input[type="file"] { line-height: calc(var(--control-height) - 2px) !important; padding: 0 6px !important; color: var(--muted); overflow: hidden; }
+body.workspaceMode input[type="file"]::file-selector-button { height: calc(var(--control-height) - 10px); border: 0; border-radius: 5px; padding: 0 9px; margin-right: 8px; background: #edf0ff; color: #5361bc; font: inherit; cursor: pointer; }
+body.workspaceMode .setupActions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+body.workspaceMode #setupStatus { color: #5966b2; font-size: var(--font-caption); }
+body.workspaceMode .mappingTools { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; gap: 12px; }
+body.workspaceMode .mappingTool { display: flex; justify-content: space-between; align-items: center; gap: 12px; height: auto !important; min-height: 64px !important; font-size: var(--font-body); color: #5966a5; border-color: #e1e5fa; background: #f3f4ff; }
+body.workspaceMode .sourcePreviewButton { background: #eef5ff; border-color: #dfeafa; color: #5274a1; }
+body.workspaceMode .mappingTool > span:first-child { min-width: 0; }
+body.workspaceMode .mappingToolsPanel { background: #fcfcff; border-color: var(--line); border-radius: 12px; }
+body.workspaceMode :is(#preview, .scroll, .datasetTableScroll) { min-width: 0; max-width: 100%; overscroll-behavior: contain; }
+body.workspaceMode :is(.accountUsername, .accountChangeNotice, .rowCount) { background: #f0f2ff; border-color: #e1e5fa; color: #66739a; }
+body.workspaceMode .accountPage { width: calc(100% - 48px); max-width: 1160px; margin: 12px auto 28px; }
+body.workspaceMode .accountPageHeading { align-items: center; }
+body.workspaceMode .accountPageGrid { align-items: stretch; gap: 20px; }
+body.workspaceMode .accountSection { padding: 24px; display: flex; flex-direction: column; }
+body.workspaceMode .accountSection .accountForm { flex: 1; align-content: start; }
+body.workspaceMode .accountSection .accountForm > button { align-self: end; }
+body.workspaceMode .accountForm :is(label, small), .optionalLabel { color: var(--muted); }
+body.workspaceMode .accountDanger { background: #fffcfd; border-color: #f1dfe6; }
+body.workspaceMode .dangerButton { color: #a32136; background: #fff4f6; border-color: #e8c8d2; }
+body.workspaceMode .accountInfo a { color: var(--accent-dark); }
+
+/* Original overview keeps its curated charts and bounded conversation. Shared
+   navigation replaces the old left filter column, so filters align above cards. */
+body.overviewMode #dashboardMain, body.detailMode #dashboardMain { display: block; height: auto; min-height: calc(100dvh - var(--workspace-header-height)); width: 100%; max-width: 1600px; padding: 12px 24px 24px; margin: 0 auto; }
+body.overviewMode #overview { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; min-height: 0; }
+body.overviewMode #overviewCards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: 12px; margin: 0; }
+body.overviewMode .overviewGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 16px; margin: 0; min-height: 0; }
+body.overviewMode .overviewChartSlot { height: 350px; padding: 16px; }
+body.overviewMode .overviewBottom { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; margin: 0; }
+body.overviewMode .overviewBottom .compactAssistant { height: 300px; }
+body.overviewMode .filters, body.detailMode .filters { position: static; display: grid; width: auto; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 14px; align-items: end; padding: 18px; margin: 0 0 20px; border: 1px solid var(--line); border-radius: var(--workspace-radius); background: white; box-shadow: var(--workspace-shadow); }
+body.overviewMode .filterHeading, body.detailMode .filterHeading { grid-column: 1 / -1; display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 10px; }
+body.overviewMode .filters label, body.detailMode .filters label { min-width: 0; margin: 0; color: var(--muted); font-size: var(--font-caption); }
+body.overviewMode .filters :is(input, select), body.detailMode .filters :is(input, select) { width: 100%; min-width: 0; background: #fcfcfe; }
+body.overviewMode .filterActions, body.detailMode .filterActions { grid-column: 1 / 5; display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 8px; }
+body.overviewMode .filters > details, body.detailMode .filters > details { grid-column: 5 / -1; justify-self: end; margin: 0; font-size: var(--font-caption); }
+body.overviewMode .filters > details[open], body.detailMode .filters > details[open] { grid-column: 1 / -1; justify-self: stretch; }
+
+/* Metric labels, values and hints line up even when a business has long labels. */
+body.workspaceMode:not(.previewMode) .card { position: relative; display: flex; flex-direction: column; min-height: 122px; padding: 14px; border-top: 1px solid var(--line); }
+body.workspaceMode:not(.previewMode) .card .label { min-height: 28px; display: flex; align-items: center; padding-left: 35px; font-size: var(--font-caption); line-height: 1.35; color: var(--muted); }
+body.workspaceMode:not(.previewMode) .card .value { max-width: 100%; margin: 8px 0 6px; font-size: var(--font-heading); line-height: 1.2; letter-spacing: -.5px; color: var(--ink); overflow-wrap: anywhere; }
+body.workspaceMode:not(.previewMode) .card .hint { margin-top: auto; font-size: var(--font-caption); line-height: 1.4; }
+body.workspaceMode :is(.overviewChartHeader, .detailChartHeader) h2 { color: var(--ink); font-size: var(--font-section); line-height: 1.4; }
+body.workspaceMode .chartTypeSelect { background: #fcfcff; color: #67748f; }
+body.workspaceMode .track { background: #f0f1fb; border-radius: 5px; }
+body.workspaceMode .barhead { gap: 12px; color: #788198; }
+body.workspaceMode .barhead strong { color: #505a75; }
+body.workspaceMode .barhead span { min-width: 0; overflow-wrap: anywhere; }
+body.workspaceMode .chartNote { color: var(--muted); }
+body.workspaceMode .insightsPanel h2 { color: var(--ink); }
+body.workspaceMode .tableJump { color: var(--accent-dark); }
+body.workspaceMode th { background: #f7f8fd; color: #6f7b93; font-weight: 600; }
+body.workspaceMode #datasetTable th { background: #f7f8fd; color: #6f7b93; }
+body.workspaceMode :is(th, td) { border-color: var(--line); font-size: var(--font-caption); }
+body.workspaceMode tbody tr:hover { background: #fafaff; }
+body.workspaceMode .datasetPagination { display: flex; align-items: center; gap: 10px; }
+body.workspaceMode .datasetPagination span { color: var(--muted); }
+body.workspaceMode .detailChartHeader { min-height: 68px; border-color: var(--line); }
+
+/* Chat, insights, and overlays use the same lavender details as the preview. */
+body.overviewMode .conversationViewport { background: #fafaff; border-color: var(--line); }
+body.workspaceMode .quietButton { color: #7c89b9; }
+body.workspaceMode .highlightsPanel h2 { display: flex; align-items: center; gap: 9px; }
+body.workspaceMode:not(.previewMode) .highlightsPanel h2::before { content: "✦"; display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 9px; background: #f2edff; color: #9474e9; }
+body.overviewMode .overviewBottom .highlightsPanel .insightCards article { border: 1px solid #edf0fa; border-left: 3px solid #aaa1f0; background: #fafaff; }
+body.workspaceMode :is(.chartChooser, .aiSettingsDialog) { border: 1px solid var(--line); border-radius: var(--workspace-radius); box-shadow: 0 20px 80px rgb(28 37 64 / 18%); }
+body.workspaceMode dialog::backdrop { background: rgb(28 37 64 / 28%); backdrop-filter: blur(3px); }
+body.workspaceMode .chooserHeader { background: #fafaff; align-items: center; }
+body.workspaceMode .sectionNumber { background: #eef0ff; color: #6d78d2; }
+body.workspaceMode :is(.kpiOption, .chartChoice) { background: #fcfcff; border-color: var(--line); }
+body.workspaceMode :is(.kpiOption, .chartChoice):has(input:checked) { background: #f0f2ff; border-color: #aeb8fa; }
+body.workspaceMode .chartChooserActions { background: #fafaff; border-color: var(--line); align-items: center; }
+body.workspaceMode :is(.browserOllamaPanel, .aiDataNotice) { background: #f6f7ff; border-color: var(--line); border-radius: 12px; }
+body.workspaceMode .aiSettingsContent pre { background: #f0f2fa; color: #53617c; border-radius: 8px; }
+
+/* Sign-in and registration share the palette without inheriting workspace offsets. */
+.authEyebrow { color: var(--accent-dark); }
+.authIntroduction h1, .authCard :is(h1, h2) { color: var(--ink); }
+.authIntroduction > p:not(.authEyebrow), .authDescription, .authFeatures, .authFootnote, .accountForm label, .accountForm small { color: var(--muted); }
+.authFeatures span::before { background: #ecedff; color: var(--accent); }
+.authCard { border-color: var(--line); border-radius: var(--workspace-radius); box-shadow: 0 12px 50px rgb(46 61 94 / 7%); }
+.authTabs { background: #f0f2fa; }
+.authTabs button[aria-pressed="true"] { color: var(--accent-dark); }
+.accountForm input { background: #fcfcfe; border-color: var(--line); }
+.authPrimary:hover { background: var(--accent-dark); border-color: var(--accent-dark); }
+
+/* Short laptop windows still expose dataset actions without scrolling the sidebar. */
+@media (min-width: 761px) and (max-height: 760px) {
+  body.workspaceMode .previewSidebar { padding: 20px 12px 12px; }
+  body.workspaceMode .previewNavLabel { margin: 20px 10px 8px; }
+  body.workspaceMode .previewNavigation { gap: 6px; }
+  body.workspaceMode .previewSidebarBottom { padding-top: 16px; }
+  body.workspaceMode .previewDatasetInfo { padding: 10px 8px; }
+  body.workspaceMode .previewDatasetInfo p { display: none; }
+}
+
+@media (max-width: 1200px) {
+  :root { --preview-sidebar-width: 190px; }
+  body.detailMode #detailPage .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  body.overviewMode .overviewGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  body.overviewMode .overviewChartSlot:last-child:not([hidden]) { grid-column: 1 / -1; }
+  body.overviewMode .filters, body.detailMode .filters { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  body.overviewMode .filterActions, body.detailMode .filterActions { grid-column: 1 / 3; }
+  body.overviewMode .filters > details, body.detailMode .filters > details { grid-column: 3; }
+  body.workspaceMode #mappingPanel > .setupGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  body.workspaceMode .mappingGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 1000px) {
+  body.workspaceMode .setupGrid { grid-template-columns: minmax(0, 1fr); }
+  body.workspaceMode .accountPageGrid { grid-template-columns: minmax(0, 1fr); }
+  body.overviewMode .overviewBottom { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 850px) {
+  body.overviewMode .overviewBottom .compactAssistant { height: 320px; }
+}
+@media (max-width: 760px) {
+  body.workspaceMode { margin-left: 0; }
+  body.workspaceMode .previewSidebar { position: static; width: 100%; flex: 0 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 10px 12px; border-right: 0; border-bottom: 1px solid var(--line); overflow: visible; }
+  body.workspaceMode .previewBrand { padding: 0; font-size: var(--font-body); gap: 10px; }
+  body.workspaceMode :is(.previewNavLabel, .previewDatasetInfo, .previewNavigation, .previewOriginalLink) { display: none; }
+  body.workspaceMode .previewSidebarBottom { display: contents; }
+  body.workspaceMode #previewChangeDataset { grid-column: 2; grid-row: 1; width: auto; }
+  body.workspaceMode .dashboardHeader, body.workspaceMode .previewHeader { padding-inline: 12px; }
+  body.overviewMode #dashboardMain, body.detailMode #dashboardMain { padding: 12px; }
+  body.workspaceMode .setup, body.workspaceMode .accountPage { width: calc(100% - 24px); margin: 12px auto 20px; }
+  body.workspaceMode .setup { padding: 18px; }
+  body.workspaceMode :is(.setupGrid, .mappingGrid) { gap: 14px; }
+  body.workspaceMode .setupGrid, body.workspaceMode #mappingPanel > .setupGrid, body.workspaceMode .mappingGrid { grid-template-columns: minmax(0, 1fr); }
+  body.workspaceMode .mappingTools { gap: 8px; }
+  body.workspaceMode .mappingTool { font-size: var(--font-caption) !important; padding: 10px !important; }
+  body.overviewMode #overviewCards, body.detailMode #detailPage .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  body.overviewMode #overviewCards .card:only-child { grid-column: 1 / -1; }
+  body.overviewMode .overviewGrid { grid-template-columns: minmax(0, 1fr); }
+  body.overviewMode .overviewChartSlot:last-child:not([hidden]) { grid-column: auto; }
+  body.overviewMode .filters, body.detailMode .filters { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 14px; gap: 12px; }
+  body.overviewMode .filterHeading, body.detailMode .filterHeading { flex-wrap: wrap; }
+  body.overviewMode .filterActions, body.detailMode .filterActions, body.overviewMode .filters > details, body.detailMode .filters > details { grid-column: 1 / -1; justify-self: stretch; }
+  body.workspaceMode .detailChartHeader { min-height: 64px; }
+  body.workspaceMode .datasetPagination { flex-wrap: wrap; }
+}

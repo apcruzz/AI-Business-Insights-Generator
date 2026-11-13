@@ -22,7 +22,14 @@ export function HeaderNavigation({preview = false, user}) {
     <nav id={menuId} className="pageMenu" popover="auto" ref={menu} aria-label="Workspace pages" onToggle={event => {
       const opened = event.newState === "open";
       setOpen(opened);
-      if (opened) menu.current.querySelector('[aria-current="page"], a')?.focus();
+      if (opened) {
+        // Position below the actual trigger, including the mobile brand bar or a scrolled header.
+        const button = document.getElementById(`${menuId}Button`);
+        const bottom = button.getBoundingClientRect().bottom + 8;
+        menu.current.style.top = `${bottom}px`;
+        menu.current.style.maxHeight = `${Math.max(100, window.innerHeight - bottom - 12)}px`;
+        menu.current.querySelector('[aria-current="page"], a')?.focus();
+      }
     }}>
       <p className="pageMenuLabel">YOUR WORKSPACE</p>
       {pages.map(([id, href, label]) => <a id={preview ? `preview${id}` : id} key={id} href={href} onClick={() => menu.current.hidePopover()}>{label}</a>)}

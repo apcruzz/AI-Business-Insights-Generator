@@ -27,6 +27,7 @@ import {
 
 // Keep state and handlers inside the initializer called by App after mounting.
 export function initDashboard() {
+document.body.classList.add("workspaceMode");
 
 // Shared app state. `data` holds normalized rows returned by the Python server.
 let data = [],
@@ -183,18 +184,23 @@ function showSetup(updateRoute = true) {
   document.body.classList.remove("detailMode");
   document.body.classList.remove("previewMode");
   document.body.classList.remove("accountMode");
-  $("previewSidebar").hidden = true;
+  $("previewSidebar").hidden = false;
   $("previewHeader").hidden = true;
   document.querySelector(".dashboardHeader").hidden = false;
   markNavigation("#change-dataset");
   $("cancelSetup").hidden = !data.length;
   if (updateRoute) updatePageHash("#change-dataset");
+  window.scrollTo(0, 0);
 }
 function markNavigation(hash) {
-  document.querySelectorAll(".pageMenu a").forEach(link => {
-    if (link.getAttribute("href") === hash) link.setAttribute("aria-current", "page");
+  document.querySelectorAll(".pageMenu a, .previewNavigation a, .previewOriginalLink, [data-workspace-page]").forEach(link => {
+    if ((link.getAttribute("href") || link.dataset.workspacePage) === hash) link.setAttribute("aria-current", "page");
     else link.removeAttribute("aria-current");
   });
+  const titles = {"#business-overview": "Business overview", "#detailed-dashboard": "Detailed dashboard", "#overview-preview": "Overview preview", "#change-dataset": "Change dataset", "#account": "Your account"};
+  $("dashboardTitle").textContent = titles[hash] || "AI Business Insights";
+  // Controls remain discoverable, but cannot focus a hidden, empty dashboard.
+  $("previewInsights").disabled = !data.length;
 }
 function showAccount(updateRoute = true) {
   closePreviewFilters();
@@ -202,12 +208,13 @@ function showAccount(updateRoute = true) {
   $("setupPage").hidden = true;
   $("dashboardMain").hidden = true;
   $("accountPage").hidden = false;
-  $("previewSidebar").hidden = true;
+  $("previewSidebar").hidden = false;
   $("previewHeader").hidden = true;
   document.querySelector(".dashboardHeader").hidden = false;
   document.body.classList.remove("overviewMode", "detailMode", "previewMode");
   document.body.classList.add("accountMode");
   markNavigation("#account");
+  window.scrollTo(0, 0);
 }
 function showPage(page, updateRoute = true) {
   closePreviewFilters();
@@ -226,13 +233,14 @@ function showPage(page, updateRoute = true) {
   document.body.classList.toggle("overviewMode", page === "overview");
   document.body.classList.toggle("detailMode", !overview);
   document.body.classList.toggle("previewMode", preview);
-  $("previewSidebar").hidden = !preview;
+  $("previewSidebar").hidden = false;
   $("previewHeader").hidden = !preview;
   document.querySelector(".dashboardHeader").hidden = preview;
   markNavigation(pageHashes[page]);
   // Redraw only the layout-dependent markup. Dataset, filters, and chat stay intact.
   if (overview) renderOverviewLayout(filtered());
   syncPreviewView();
+  window.scrollTo(0, 0);
 }
 // Rank business preferences first, then choose distinct, supported fallback metrics.
 function chartOptions() {
@@ -244,11 +252,12 @@ function chartOptions() {
 }
 function applyBusinessTheme(name) {
   const p = businessProfile(name);
-  document.documentElement.style.setProperty("--business-accent", p.color);
-  document.documentElement.style.setProperty("--business-tint", p.tint);
+  // Profile wording and chart recommendations adapt; UI accents remain consistent.
+  const theme = getComputedStyle(document.documentElement);
+  document.documentElement.style.setProperty("--business-accent", theme.getPropertyValue("--accent").trim());
+  document.documentElement.style.setProperty("--business-tint", theme.getPropertyValue("--surface-soft").trim());
   document.body.dataset.business = name;
-  $("dashboardTitle").textContent = p.title;
-  $("businessName").textContent = p.label.toUpperCase();
+  $("businessName").textContent = p.label;
   $("businessHint").textContent = p.label + " · recommendations adapt to your uploaded columns";
   $("insightQuestion").placeholder = `Example: How can we improve ${p.item.toLowerCase()} sales?`;
   $("productFilterLabel").textContent = p.item;
@@ -676,7 +685,7 @@ function categoryPie(rows, preview = false) {
   groups.forEach(([c, n], i) => {
     const share = n / total,
       next = angle + share * 2 * Math.PI,
-      col = preview ? previewColors[i] : colorFor(c);
+      col = previewColors[i];
     if (share > 0.999999)
       svg += `<circle cx="160" cy="150" r="119" fill="${col}"/>`;
     else
@@ -694,7 +703,7 @@ function categoryPie(rows, preview = false) {
     groups
       .map(
         ([c, n], index) =>
-          `<div class="categoryLegend"><span><i style="display:inline-block;width:10px;height:10px;background:${preview ? previewColors[index] : colorFor(c)};margin-right:5px"></i>${esc(c)}</span><span>${money(n)} · ${pct((n / total) * 100)}</span></div>`,
+          `<div class="categoryLegend"><span><i style="display:inline-block;width:10px;height:10px;background:${previewColors[index]};margin-right:5px"></i>${esc(c)}</span><span>${money(n)} · ${pct((n / total) * 100)}</span></div>`,
       )
       .join("") +
     "</div>"
@@ -907,7 +916,7 @@ function metrics(rows, overview = false) {
   return cards
     .map(
       (m, index) =>
-        `<article class="card">${preview ? `<span class="previewMetricIcon previewMetricIcon${index % 4}">${overviewIcon(/margin|rate|change/i.test(m[0]) ? "percent" : /order|line/i.test(m[0]) ? "orders" : /units|quantity/i.test(m[0]) ? "units" : "money")}</span>` : ""}<div class="label">${esc(m[0])}</div><div class="value">${esc(m[1])}</div><div class="hint">${esc(m[2])}</div></article>`,
+        `<article class="card"><span class="previewMetricIcon previewMetricIcon${index % 4}">${overviewIcon(/margin|rate|change/i.test(m[0]) ? "percent" : /order|line/i.test(m[0]) ? "orders" : /units|quantity/i.test(m[0]) ? "units" : "money")}</span><div class="label">${esc(m[0])}</div><div class="value">${esc(m[1])}</div><div class="hint">${esc(m[2])}</div></article>`,
     )
 	    .join("");
 }
@@ -1010,21 +1019,21 @@ function weatherChart(rows, c, color, layout) {
 }
 // Dispatch a selected chart ID to the same chart builders used in the detail view.
 function overviewChartHtml(id, rows, products, c, preview = false, layout = null) {
-  const specialized = renderBusinessChart(id, rows, meta, preview ? (id === "trend" ? "#5489ff" : "#9285ed") : businessProfile(meta.business).color, money, layout);
+  const specialized = renderBusinessChart(id, rows, meta, id === "trend" ? "#5489ff" : "#9285ed", money, layout);
   if (specialized !== null) return specialized;
   if (id === "trend") return trend(rows);
   if (id === "category") return categoryPie(rows, preview);
   if (id === "products") return topProductsChart(products, c);
-  if (id === "weekday") return weekdayChart(rows, c, preview ? "#9c90f7" : undefined, layout);
+  if (id === "weekday") return weekdayChart(rows, c, "#9c90f7", layout);
   if (id === "hour") return hourStack(rows);
   if (id === "profitability") return profitabilityChart(products, c);
-  if (id === "weather") return weatherChart(rows, c, preview ? "#9c90f7" : undefined, layout);
+  if (id === "weather") return weatherChart(rows, c, "#9c90f7", layout);
   if (id === "staff") return staffChart(rows, c);
   return note("Choose a chart to show here.");
 }
 // Presentation changes reuse the validated metrics without rerunning analysis or clearing chat.
 function chartPlot(id, rows, products, c, preview = false, layout = null) {
-  const color = preview ? (id === "trend" ? "#5489ff" : "#9285ed") : businessProfile(meta.business).color;
+  const color = id === "trend" ? "#5489ff" : "#9285ed";
   return renderChartVariant(id, rows, meta, color, money, chartTypeById[id] || "auto", layout)
     ?? overviewChartHtml(id, rows, products, c, preview, layout);
 }
@@ -2636,10 +2645,13 @@ $("cancelSetup").onclick = () => showPage(lastDashboardPage);
 $("previewCustomize").onclick = () => showChartChooser(false);
 $("previewAiSettings").onclick = () => $("aiSettings").showModal();
 $("previewInsights").onclick = () => {
-  if (compactPreview.matches) { previewView = "highlights"; syncPreviewView(); }
+  if (!data.length) return;
+  if (!document.body.classList.contains("overviewMode") && !document.body.classList.contains("previewMode")) showPage("preview");
+  if (compactPreview.matches && document.body.classList.contains("previewMode")) { previewView = "highlights"; syncPreviewView(); }
   const panel = document.querySelector(".highlightsPanel");
   panel.setAttribute("tabindex", "-1");
   panel.focus({preventScroll: true});
+  if (!document.body.classList.contains("previewMode")) panel.scrollIntoView({block: "nearest"});
 };
 $("previewFilterButton").onclick = () => {
   if (document.body.classList.contains("previewFiltersOpen")) { closePreviewFilters(); return; }
@@ -2740,5 +2752,5 @@ const changeChartType = event => {
   $(control.id)?.focus({preventScroll: true});
 };
 $("dashboardMain").addEventListener("change", changeChartType);
-return () => { window.removeEventListener("hashchange", followPageHash); previewChartObserver.disconnect(); compactPreview.removeEventListener("change", resizePreview); $("dashboardMain").removeEventListener("change", changeChartType); };
+return () => { window.removeEventListener("hashchange", followPageHash); previewChartObserver.disconnect(); compactPreview.removeEventListener("change", resizePreview); $("dashboardMain").removeEventListener("change", changeChartType); document.body.classList.remove("workspaceMode"); };
 }
