@@ -14,7 +14,7 @@ def navigate(page, nav_id):
         if (hash === '#account') return visible('accountPage');
         if (hash === '#change-dataset') return visible('setupPage');
         if (visible('setupPage') && !visible('dashboardMain')) return true;
-        const mode = {'#business-overview': 'overviewMode', '#detailed-dashboard': 'detailMode', '#overview-preview': 'previewMode'}[hash];
+        const mode = {'#business-overview': 'previewMode', '#detailed-dashboard': 'detailMode'}[hash];
         return mode && document.body.classList.contains(mode);
     }''', arg=href)
 
@@ -31,7 +31,8 @@ def check_header(page):
     sidebar = page.locator('#previewSidebar').bounding_box()
     assert sidebar, 'All workspace pages share the preview navigation shell'
     if page.viewport_size['width'] > 760:
-        assert abs(box['x'] - sidebar['width']) < 1, {'header': box, 'sidebar': sidebar}
+        collapsed = page.locator('body').evaluate("el => el.classList.contains('sidebarCollapsed')")
+        assert abs(box['x'] - (0 if collapsed else sidebar['width'])) < 1, {'header': box, 'sidebar': sidebar}
     assert header.evaluate('el => getComputedStyle(el).backgroundColor') == 'rgb(247, 248, 252)'
 
 
@@ -43,7 +44,7 @@ def check_menu(page, expect):
     page.keyboard.press('Enter')
     expect(menu).to_be_visible()
     expect(trigger).to_have_attribute('aria-expanded', 'true')
-    expect(menu.locator('a')).to_have_count(5)
+    expect(menu.locator('a')).to_have_count(4)
     assert menu.evaluate('el => el.contains(document.activeElement)')
     page.keyboard.press('Escape')
     expect(menu).to_be_hidden()

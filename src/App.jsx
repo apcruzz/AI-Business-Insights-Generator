@@ -322,14 +322,14 @@ function Dashboard({accountPage, user}) {
 
         <div id="overview">
           <div id="overviewCards" className="cards" tabIndex={0} role="region" aria-label="Overview key performance indicators"></div>
-          <nav id="previewWorkspaceTabs" className="previewWorkspaceTabs" role="tablist" aria-label="Overview preview sections" hidden>
+          <nav id="previewWorkspaceTabs" className="previewWorkspaceTabs" role="tablist" aria-label="Business overview sections" hidden>
             <button id="previewChartsTab" type="button" role="tab" aria-selected="true" aria-controls="overviewCharts">Charts</button>
             <button id="previewHighlightsTab" type="button" role="tab" aria-selected="false" aria-controls="overviewHighlights" tabIndex={-1}>At a glance</button>
             <button id="previewAssistantTab" type="button" role="tab" aria-selected="false" aria-controls="overviewAssistant" tabIndex={-1}>Assistant</button>
           </nav>
           <div id="previewChartControls" className="previewChartControls" hidden>
             <label htmlFor="previewChartSelect">Chart</label>
-            <select id="previewChartSelect" defaultValue="" aria-label="Overview preview chart"></select>
+            <select id="previewChartSelect" defaultValue="" aria-label="Business overview chart"></select>
             <span id="previewChartPageStatus" className="srOnly" aria-live="polite"></span>
             <button id="previewPreviousChart" type="button" aria-label="Previous overview chart">←</button>
             <button id="previewNextChart" type="button" aria-label="Next overview chart">→</button>

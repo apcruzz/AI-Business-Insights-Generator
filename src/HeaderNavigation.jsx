@@ -4,7 +4,6 @@ import { overviewIcon } from "./overview-icons.js";
 const pages = [
   ["overviewNav", "#business-overview", "Business Overview"],
   ["detailNav", "#detailed-dashboard", "Detailed Dashboard"],
-  ["previewNav", "#overview-preview", "Overview preview"],
   ["setupNav", "#change-dataset", "Change dataset"],
   ["accountNav", "#account", "Account"],
 ];

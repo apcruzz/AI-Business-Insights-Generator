@@ -89,7 +89,7 @@ def main():
 
                 # Account is a normal route. Navigation preserves the dataset and chat.
                 transcript = page.locator('#insightAnswer').inner_text()
-                navigate(page, 'previewNav')
+                navigate(page, 'overviewNav')
                 for width, height in [(1440, 900), (1024, 768), (390, 568)]:
                     page.set_viewport_size({'width': width, 'height': height})
                     check_header(page)
@@ -119,7 +119,7 @@ def main():
                 navigate(page, 'overviewNav')
 
                 # Profile update rotates the session and reloads without leaving dataset data behind.
-                page.locator('#accountButton').click()
+                page.locator('#previewAccountButton').click()
                 expect(page.locator('#profileUsername')).to_have_value('browser.analyst')
                 page.locator('#profileDisplayName').fill('<b>Fictional name</b>')
                 page.locator('#profileCurrentPassword').fill('incorrect-password')

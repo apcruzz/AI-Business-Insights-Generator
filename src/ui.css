@@ -1,4 +1,4 @@
-/* One type and control scale for setup, both overviews, detail, and accounts.
+/* One type and control scale for setup, overview, detail, and accounts.
    Text roles stay distinct; actions share a height even inside compact panes. */
 :root {
   --font-caption: 12px;
