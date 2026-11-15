@@ -3,41 +3,45 @@ import { SAMPLE_DATASETS } from "./sample-datasets.js";
 import { BUSINESSES } from "./business-config.js";
 import { useEffect } from "react";
 import { initDashboard } from "./dashboard.js";
+import { AccountAccess } from "./AccountAccess.jsx";
+import { OverviewPreview } from "./OverviewPreview.jsx";
+import { HeaderNavigation } from "./HeaderNavigation.jsx";
 import "./styles.css";
 // Load setup.css after the base stylesheet so its layout overrides win.
 import "./setup.css";
+import "./overview-preview.css";
+import "./detail-workspace.css";
+import "./ui.css";
+import "./workspace-header.css";
+import "./chart-options.css";
+import "./workspace-theme.css";
 
 export default function App() {
+  return <AccountAccess>{({accountPage, user}) => <Dashboard accountPage={accountPage} user={user} />}</AccountAccess>;
+}
+
+function Dashboard({accountPage, user}) {
   // Run the DOM controller after React has mounted the elements it needs.
   useEffect(() => {
-    initDashboard();
+    return initDashboard();
   }, []);
 
   return (
     <>
       {/* Navigation and dataset labels are updated by showPage() and build(). */}
-      <header>
-        <div>
-          <small>
-            <span id="businessName">BUSINESS INSIGHTS</span>
-          </small>
-          <h1 id="dashboardTitle">Your business at a glance</h1>
+      <OverviewPreview user={user} />
+      <header className="dashboardHeader">
+        <div className="dashboardIdentity">
+          <h1 id="dashboardTitle">AI Business Insights</h1>
+          <small id="businessName">Your workspace</small>
         </div>
-        <small>
+        <small className="headerDataset">
           <span id="datasetName">Choose your business and dataset</span>
         </small>
-        <nav className="topnav" aria-label="Dashboard pages">
-          <button id="overviewNav" type="button" aria-current="page">
-            Business Overview
-          </button>
-          <button id="detailNav" type="button">
-            Detailed Dashboard
-          </button>
-          <button id="setupNav" type="button">
-            Change dataset
-          </button>
-        </nav>
+        <HeaderNavigation user={user} />
       </header>
+
+      <section id="accountPage" className="accountPage" aria-labelledby="accountTitle" hidden>{accountPage}</section>
 
       {/* Upload setup: inspect sends the chosen file or sample to /api/profile. */}
       <section className="setup" id="setupPage">
@@ -257,65 +261,8 @@ export default function App() {
 
       {/* Dashboard content stays hidden until an upload is normalized successfully. */}
       <main id="dashboardMain" hidden>
-        <div id="overview">
-          <div id="overviewCards" className="cards"></div>
-          {/* Three empty slots are filled with the charts selected in the chooser. */}
-          <div className="overviewGrid">
-            <section className="panel overviewChartSlot" data-dashboard-module="salesTrend" id="overviewSlot0">
-              <h2>Net sales trend</h2>
-              <div id="ovTrend"></div>
-            </section>
-            <section className="panel overviewChartSlot" data-dashboard-module="categoryChart" id="overviewSlot1">
-              <h2>Sales by category</h2>
-              <div id="ovCategory"></div>
-            </section>
-            <section className="panel overviewChartSlot" data-dashboard-module="topProductsChart" id="overviewSlot2">
-              <h2>Top 5 products by net sales</h2>
-              <div id="ovTop"></div>
-            </section>
-          </div>
-
-          {/* Insights combine computed cards with calculated answers, Ollama, or Groq chat. */}
-          <div className="overviewBottom">
-            <section className="panel insightsPanel compactAssistant" aria-labelledby="assistantTitle">
-              <div className="insightHeader">
-                <div>
-                  <h2 id="assistantTitle">Business assistant</h2>
-                </div>
-                <button id="openAiSettings" className="quietButton" type="button" aria-haspopup="dialog">AI settings</button>
-              </div>
-              <div className="modelRow">
-                <label htmlFor="localModel" className="srOnly">Answer mode</label>
-                <select id="localModel" defaultValue="" aria-describedby="aiModeSummary">
-                  <option value="">Calculated answers</option>
-                </select>
-                <span id="aiModeSummary" className="modeSummary" aria-live="polite">Uses dashboard data</span>
-              </div>
-              <div className="conversationViewport" tabIndex="0" aria-label="Conversation and supporting calculations">
-                <p id="insightAnswer" aria-live="polite"></p>
-                <div id="analystEvidence" hidden></div>
-              </div>
-              <form id="insightForm">
-                <label htmlFor="insightQuestion" className="srOnly">Ask a question about this dashboard</label>
-                <div className="askRow">
-                  <input id="insightQuestion" placeholder="Ask about your business…" required />
-                  <button id="askButton" type="submit">Ask</button>
-                </div>
-              </form>
-              <div className="conversationFooter">
-                <small>New data or filters reset the conversation.</small>
-                <button type="button" id="newConversation" className="quietButton">New conversation</button>
-              </div>
-            </section>
-            <section className="panel highlightsPanel" aria-labelledby="highlightsTitle">
-              <h2 id="highlightsTitle">At a glance</h2>
-              <div id="insightCards" className="insightCards"></div>
-            </section>
-          </div>
-        </div>
-
         {/* These controls filter both browser calculations and backend analyst queries. */}
-        <div className="filters">
+        <div id="dashboardFilters" className="filters" role="region" aria-label="Dashboard filters">
           <div className="filterHeading">
             <strong>Filters</strong>
             <span className="hint" id="count" aria-live="polite"></span>
@@ -365,12 +312,82 @@ export default function App() {
           </label>
           <div className="filterActions">
             <button id="reset" type="button">Reset filters</button>
-            <button id="chooseCharts" type="button" aria-haspopup="dialog">Customize overview</button>
+            <button id="chooseCharts" type="button" aria-haspopup="dialog">Customize</button>
           </div>
           <details>
             <summary>Data notes</summary>
             <div id="sidebarNotes"></div>
           </details>
+        </div>
+
+        <div id="overview">
+          <div id="overviewCards" className="cards" tabIndex={0} role="region" aria-label="Overview key performance indicators"></div>
+          <nav id="previewWorkspaceTabs" className="previewWorkspaceTabs" role="tablist" aria-label="Business overview sections" hidden>
+            <button id="previewChartsTab" type="button" role="tab" aria-selected="true" aria-controls="overviewCharts">Charts</button>
+            <button id="previewHighlightsTab" type="button" role="tab" aria-selected="false" aria-controls="overviewHighlights" tabIndex={-1}>At a glance</button>
+            <button id="previewAssistantTab" type="button" role="tab" aria-selected="false" aria-controls="overviewAssistant" tabIndex={-1}>Assistant</button>
+          </nav>
+          <div id="previewChartControls" className="previewChartControls" hidden>
+            <label htmlFor="previewChartSelect">Chart</label>
+            <select id="previewChartSelect" defaultValue="" aria-label="Business overview chart"></select>
+            <span id="previewChartPageStatus" className="srOnly" aria-live="polite"></span>
+            <button id="previewPreviousChart" type="button" aria-label="Previous overview chart">←</button>
+            <button id="previewNextChart" type="button" aria-label="Next overview chart">→</button>
+          </div>
+          {/* Three empty slots are filled with the charts selected in the chooser. */}
+          <div id="overviewCharts" className="overviewGrid">
+            <section className="panel overviewChartSlot" data-dashboard-module="salesTrend" id="overviewSlot0">
+              <h2>Net sales trend</h2>
+              <div id="ovTrend"></div>
+            </section>
+            <section className="panel overviewChartSlot" data-dashboard-module="categoryChart" id="overviewSlot1">
+              <h2>Sales by category</h2>
+              <div id="ovCategory"></div>
+            </section>
+            <section className="panel overviewChartSlot" data-dashboard-module="topProductsChart" id="overviewSlot2">
+              <h2>Top 5 products by net sales</h2>
+              <div id="ovTop"></div>
+            </section>
+          </div>
+
+          {/* Insights combine computed cards with calculated answers, Ollama, or Groq chat. */}
+          <div className="overviewBottom">
+            <section id="overviewAssistant" className="panel insightsPanel compactAssistant" aria-labelledby="assistantTitle">
+              <div className="insightHeader">
+                <div>
+                  <h2 id="assistantTitle">Business assistant</h2>
+                </div>
+                <button id="openAiSettings" className="quietButton" type="button" aria-haspopup="dialog">AI settings</button>
+              </div>
+              <div className="modelRow">
+                <label htmlFor="localModel" className="srOnly">Answer mode</label>
+                <select id="localModel" defaultValue="" aria-describedby="aiModeSummary">
+                  <option value="">Calculated answers</option>
+                </select>
+                <span id="aiModeSummary" className="modeSummary" aria-live="polite">Uses dashboard data</span>
+              </div>
+              <div className="conversationViewport" tabIndex="0" aria-label="Conversation and supporting calculations">
+                <div id="insightAnswer" role="log" aria-label="Conversation" aria-live="polite" aria-relevant="additions text"></div>
+                <div id="analystEvidence" hidden></div>
+              </div>
+              <form id="insightForm">
+                <label htmlFor="insightQuestion" className="srOnly">Ask a question about this dashboard</label>
+                <div className="askRow">
+                  <input id="insightQuestion" placeholder="Ask about your business…" required />
+                  <button id="askButton" type="submit">Ask</button>
+                </div>
+              </form>
+              <div className="conversationFooter">
+                <small>New data or filters reset the conversation.</small>
+                <button type="button" id="newConversation" className="quietButton">New conversation</button>
+              </div>
+            </section>
+            <section id="overviewHighlights" className="panel highlightsPanel" aria-labelledby="highlightsTitle">
+              <h2 id="highlightsTitle">At a glance</h2>
+              <p className="previewHighlightsNote">Calculated from your selected data</p>
+              <div id="insightCards" className="insightCards"></div>
+            </section>
+          </div>
         </div>
 
         {/* Detailed Dashboard includes every chart supported by the mapped data. */}
@@ -379,13 +396,21 @@ export default function App() {
           <div className="detailHeading">
             <div>
               <h2>Detailed dashboard</h2>
-              <p className="sub">All supported charts, using your current filters.</p>
+              <p className="sub">Explore every supported chart with your current filters.</p>
             </div>
-            <a href="#datasetTablePanel" className="tableJump">View data table ↓</a>
+            <a className="tableJump" href="#datasetTablePanel">Dataset rows ↓</a>
           </div>
           <div className="cards" id="cards"></div>
-          <div id="detailCharts" className="businessDetailGrid"></div>
-          <div id="detailTables" className="businessDetailGrid"></div>
+          <section id="detailChartsView" className="detailChartsView" aria-label="All supported charts">
+            <div className="detailChartToolbar">
+              <label htmlFor="detailChartSelect">Jump to a chart</label>
+              <select id="detailChartSelect" defaultValue="" aria-label="Jump to a detailed chart"></select>
+            </div>
+            <div id="detailCharts" className="businessDetailGrid"></div>
+          </section>
+          <section id="detailSummariesView" className="detailSummariesView" aria-label="Sales summaries">
+            <div id="detailTables" className="businessDetailGrid"></div>
+          </section>
           <section id="datasetTablePanel" className="panel datasetTablePanel" aria-labelledby="datasetTableTitle">
             <div className="datasetTableHeader">
               <div>

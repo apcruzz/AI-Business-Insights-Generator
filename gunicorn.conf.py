@@ -1,4 +1,4 @@
-"""One worker is required: sessions and datasets live in process memory."""
+"""One worker is required for temporary datasets, conversations, and request limits."""
 import os
 bind = '0.0.0.0:' + os.environ.get('PORT', '10000')
 workers = 1

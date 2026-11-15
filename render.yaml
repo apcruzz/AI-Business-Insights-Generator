@@ -12,7 +12,11 @@ services:
         value: production
       - key: PUBLIC_ORIGIN
         sync: false
-      - key: DEMO_USERS_JSON
+      - key: AUTH_MODE
+        value: accounts
+      - key: ALLOW_REGISTRATION
+        value: "true"
+      - key: DATABASE_URL
         sync: false
       - key: GROQ_API_KEY
         sync: false

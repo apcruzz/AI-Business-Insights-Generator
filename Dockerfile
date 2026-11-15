@@ -9,10 +9,12 @@ RUN npm run build
 
 FROM python:3.12-slim-bookworm AS runtime
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 APP_ENV=production \
-    OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1
+    OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 \
+    SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 WORKDIR /app
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt \
+    && test -s "$SSL_CERT_FILE" \
     && useradd --create-home --uid 10001 dashboard
 COPY backend/ ./backend/
 COPY gunicorn.conf.py ./

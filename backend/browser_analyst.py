@@ -76,5 +76,11 @@ class BrowserRuns:
                 del self.items[key]
             return {'status': 'cancelled'}
 
+    def discard_owner(self, prefix):
+        with self.lock:
+            for key, entry in list(self.items.items()):
+                if entry['owner'].startswith(prefix):
+                    del self.items[key]
+
 
 BROWSER_RUNS = BrowserRuns()
