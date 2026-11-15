@@ -17,6 +17,7 @@ import "./chart-options.css";
 import "./workspace-theme.css";
 
 export default function App() {
+  // Authentication wraps the whole workspace so protected UI never mounts for signed-out visitors.
   return <AccountAccess>{({accountPage, user}) => <Dashboard accountPage={accountPage} user={user} />}</AccountAccess>;
 }
 
@@ -41,6 +42,7 @@ function Dashboard({accountPage, user}) {
         <HeaderNavigation user={user} />
       </header>
 
+      {/* Route changes toggle visibility instead of remounting the dashboard and losing its local state. */}
       <section id="accountPage" className="accountPage" aria-labelledby="accountTitle" hidden>{accountPage}</section>
 
       {/* Upload setup: inspect sends the chosen file or sample to /api/profile. */}
@@ -322,6 +324,7 @@ function Dashboard({accountPage, user}) {
 
         <div id="overview">
           <div id="overviewCards" className="cards" tabIndex={0} role="region" aria-label="Overview key performance indicators"></div>
+          {/* Narrow screens reveal the same overview panels through tabs, rather than copying their data. */}
           <nav id="previewWorkspaceTabs" className="previewWorkspaceTabs" role="tablist" aria-label="Business overview sections" hidden>
             <button id="previewChartsTab" type="button" role="tab" aria-selected="true" aria-controls="overviewCharts">Charts</button>
             <button id="previewHighlightsTab" type="button" role="tab" aria-selected="false" aria-controls="overviewHighlights" tabIndex={-1}>At a glance</button>
@@ -334,6 +337,7 @@ function Dashboard({accountPage, user}) {
             <button id="previewPreviousChart" type="button" aria-label="Previous overview chart">←</button>
             <button id="previewNextChart" type="button" aria-label="Next overview chart">→</button>
           </div>
+          {/* Three empty slots are filled with the charts selected in the chooser. */}
           {/* Three empty slots are filled with the charts selected in the chooser. */}
           <div id="overviewCharts" className="overviewGrid">
             <section className="panel overviewChartSlot" data-dashboard-module="salesTrend" id="overviewSlot0">
@@ -367,6 +371,7 @@ function Dashboard({accountPage, user}) {
                 <span id="aiModeSummary" className="modeSummary" aria-live="polite">Uses dashboard data</span>
               </div>
               <div className="conversationViewport" tabIndex="0" aria-label="Conversation and supporting calculations">
+                {/* Replies and evidence scroll here so long answers cannot expand the surrounding card. */}
                 <div id="insightAnswer" role="log" aria-label="Conversation" aria-live="polite" aria-relevant="additions text"></div>
                 <div id="analystEvidence" hidden></div>
               </div>
@@ -412,6 +417,7 @@ function Dashboard({accountPage, user}) {
             <div id="detailTables" className="businessDetailGrid"></div>
           </section>
           <section id="datasetTablePanel" className="panel datasetTablePanel" aria-labelledby="datasetTableTitle">
+            {/* The table stays last in the scrolling report; row pagination bounds DOM size for large uploads. */}
             <div className="datasetTableHeader">
               <div>
                 <h2 id="datasetTableTitle">Dataset rows</h2>
