@@ -92,7 +92,7 @@ def main():
                     expect(page.locator("#askButton")).to_be_enabled(timeout=640000)
                     text = page.locator('#insightAnswer').inner_text()
                     evidence = page.locator('#analystEvidence').text_content()
-                    latest = text.rsplit('You: ', 1)[-1]
+                    latest = page.locator('#insightAnswer .chatMessage--assistant .chatMessageBody').last.inner_text()
                     if question.startswith('Which product generated'):
                         assert '220' in latest and 'Tea' in latest, latest
                     if question.startswith('Which product has'):

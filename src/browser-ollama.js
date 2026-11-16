@@ -12,6 +12,7 @@ export class BrowserOllama {
   }
 
   disconnect() {
+    // Invalidate late discovery replies as well as aborting requests already in flight.
     this.generation++;
     for (const controller of this.controllers) controller.abort();
     this.controllers.clear();
@@ -23,6 +24,7 @@ export class BrowserOllama {
     if (!['/api/tags', '/api/chat'].includes(path)) throw Error('Unsupported local Ollama endpoint.');
     const controller = new AbortController();
     this.controllers.add(controller);
+    // One controller combines caller cancellation, manual disconnect, and the per-request timeout.
     const abort = () => controller.abort();
     if (signal?.aborted) abort();
     else signal?.addEventListener('abort', abort, {once: true});
@@ -84,6 +86,7 @@ export class BrowserOllama {
     const result = await this.request('/api/tags', null, {timeout: 15000});
     if (generation !== this.generation) throw Error('Local Ollama connection cancelled.');
     if (!Array.isArray(result.models)) throw Error('Ollama returned an invalid model list.');
+    // Offer only downloaded local models; cloud-linked entries must not disguise remote inference as local.
     this.models = [...new Set(result.models.filter(model =>
       model && typeof model.name === 'string' && /^[A-Za-z0-9][A-Za-z0-9._/:+-]{0,199}$/.test(model.name) &&
       !model.remote_host && !model.remote_model && !model.name.toLowerCase().includes(':cloud') &&
@@ -119,6 +122,7 @@ export async function runBrowserAnalyst(api, ollama, payload, {signal} = {}) {
       if (packet.status === 'complete') return packet.result;
       if (packet.status !== 'model_required' || !packet.runId || !packet.step) throw Error('Invalid local analysis step.');
       runId = packet.runId;
+      // The opaque step token binds this model reply to the server's next expected action.
       const output = await ollama.chat(packet.inference, {signal});
       packet = await api('/api/ollama-step', {runId, step: packet.step, output}, {signal});
     }

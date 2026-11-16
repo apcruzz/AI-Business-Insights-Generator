@@ -1,12 +1,12 @@
 # Free Business Dashboard
 
-A local two-page dashboard with business setup, CSV/Excel uploads, column suggestions, automatic charts, calculated insights, and optional AI data analysts through Ollama, Google Gemini, or GroqCloud GPT-OSS 120B.
+A business dashboard with account access, CSV/Excel uploads, column suggestions, automatic charts, calculated insights, and optional AI conversations through Ollama, Google Gemini, or GroqCloud GPT-OSS 120B.
 
-The dashboard and Ollama run on your computer without API keys or subscriptions. Uploaded files are processed in memory and are not saved by the server. Gemini and Groq are optional cloud choices requiring their own backend API keys and internet access. Selecting a cloud provider generates the initial overview and sends questions, recent conversation, dataset metadata, column samples and query results to that provider. API project access, usage limits and any charges depend on your account. Existing local and calculated modes remain available.
+The dashboard and Ollama run on your computer without API keys or subscriptions. Uploaded files are processed in memory and are not saved by the server. Gemini and Groq are optional cloud choices requiring their own backend API keys and internet access. Selecting Gemini generates an automatic overview in the existing Business assistant conversation. The overview request and follow-up questions send recent conversation, dataset metadata, column samples and query results to the selected provider. API project access, usage limits and any charges depend on your account. Existing local and calculated modes remain available.
 
 ## Gemini overview and chat
 
-See [Gemini setup](docs/gemini-setup.md) for Windows startup commands, provider selection, data sharing and verification. Select Gemini explicitly to generate an initial overview; ask follow-up questions in Business assistant. The backend API key stays on the server.
+See [Gemini setup](docs/gemini-setup.md) for Windows startup commands, provider selection, data sharing and verification. Select Gemini in the existing Business assistant dropdown to generate an initial overview as an assistant message, then press Ask for follow-up questions. Dashboard markup, styling and navigation are unchanged. The backend API key stays on the server.
 
 ## Project structure
 
@@ -109,15 +109,23 @@ npm run build
 2. Upload a CSV, XLSX, or XLS file, or choose an included sample.
 3. Click **Inspect columns**. For a workbook, choose the worksheet containing the sales table.
 4. Check the suggested mappings, date order, decimal separator, and currency. The first row must contain unique column headings. No merged heading rows or subtotal rows.
-5. Click **Confirm columns**. In **Customize your overview**, choose KPI cards first, then up to three charts, and click **Load dashboard**. Leave KPIs unchecked to use the defaults. Reopen **Customize overview** beside the filters to change either selection later. Closing the popup discards unsaved choices.
+5. Click **Confirm columns**. In **Customize your overview**, choose KPI cards first, then up to three charts, and click **Load dashboard**. Leave KPIs unchecked to use the defaults. Reopen **Customize** beside the filters to change either selection later. Closing the popup discards unsaved choices.
 
-The Business assistant has a fixed-height conversation area that scrolls through long answers and supporting calculations. **AI settings** contains model refresh, local Ollama connection controls, setup help, and data-use details. The answer-mode selector stays beside the conversation. Use the top navigation to switch between Business Overview and Detailed Dashboard.
+The Business assistant has a bounded conversation area that scrolls through long answers and supporting calculations. Your messages appear on the right in lavender bubbles; assistant replies appear on the left in light blue-gray bubbles, with speaker labels on both. **AI settings** contains model refresh, local Ollama connection controls, setup help, and data-use details. The answer-mode selector stays beside the conversation. Use the hamburger menu beside the account icon to switch between Business Overview, Detailed Dashboard, Change dataset, and Account. All workspace headers use the same fixed height. The menu supports keyboard navigation, Escape, and outside-click dismissal. The account icon opens `/#account`, with profile, password, sign-out, and account-deletion controls in matching page panels.
 
-During mapping, **Not provided** appears in red; optional fields can still be left blank. The tinted **Optional delivery, booking, waste, channel and job columns** and **Preview source rows** buttons sit side by side and expand their panels below. In Detailed Dashboard, the aligned filters apply to all charts, summaries, and the **Dataset rows** table at the bottom. That table includes mapped and calculated columns, with 50 rows per page; it does not include source columns left unmapped. **View data table** jumps directly to it.
+**Business Overview** now uses the former preview design at `/#business-overview`. It fits the browser window, with a light sidebar, compact KPI cards, and charts beside a bounded assistant on larger screens. Smaller screens use **Charts**, **At a glance**, and **Assistant** tabs; the chart selector and arrows retain every chosen chart. The compact Assistant tab gives the conversation the full pane. Long conversations, chart content, and additional selected KPIs scroll within their regions. **Filters** opens a floating panel; **Customize** stays at the top. **Change dataset** in the sidebar opens the existing upload and mapping workflow. The separate original overview and the sidebar’s At a glance shortcut have been removed; the At a glance panel remains in Business Overview. Old `/#overview-preview` bookmarks redirect to Business Overview. Reloading still requires rebuilding temporary data.
 
-The selected business sets the recommended charts, dashboard heading, terminology, and accent colors. Recommendations follow each business’s preferred three charts and fill missing slots with supported alternatives. **Why these charts?** explains missing data; you can override the choices. If fewer than three meaningful charts are supported, only those are recommended. This version is designed for sales/order data. Payroll logs, inventory-only files, and unrelated business records require additional data models.
+During mapping, **Not provided** appears in red; optional fields can still be left blank. The tinted **Optional delivery, booking, waste, channel and job columns** and **Preview source rows** buttons sit side by side and expand their panels below.
 
-Grocery stores use a green theme and recommend **revenue by grocery category** (bar chart), **best-selling groceries** (horizontal bars), and **grocery product gross margin** (horizontal bars). These show department contribution, item demand, and margins; missing costs prioritize a sales trend instead. Ice cream shops use a berry-pink theme and recommend **best-selling flavors and treats** (horizontal bars), **sales by hour** (stacked columns), and **weather versus sales** (bar chart using uploaded weather only). Missing weather prioritizes a sales trend; missing hours can use category sales. Best sellers use quantities when available and explicitly use revenue otherwise.
+**Detailed Dashboard** is a scrolling report. All supported charts appear together, followed by expanded product/staff summaries and the complete mapped dataset table at the bottom. **Jump to a chart** scrolls to the selected chart; **Dataset rows ↓** jumps to the bottom table. The header stays available while scrolling. Filters apply to every chart, summary, and table. Dataset rows retain 50-row pagination so large uploads remain manageable; source columns left unmapped are excluded.
+
+Each chart has a **Chart type** menu: **Recommended**, **Bar**, **Line**, **Pie**, or **Doughnut**. Choices follow the same metric across Business Overview and Detailed Dashboard. Changing type preserves filters, table pagination, and the AI conversation; a new dataset resets types to Recommended. Alternative types combine stacked series or booking hours into labeled totals. Comparisons show up to 12 groups with an omission note; pie/doughnut charts require nonnegative values and calculate shares from the displayed groups. Recommended restores the specialized chart.
+
+All pages share the light background, lavender/blue accents, rounded white cards, form controls, and navigation. The desktop sidebar has an arrow halfway down its edge: collapse it to give the page its full width, then use the same arrow to restore it. This preference stays in memory while navigating between pages and does not reset the dataset, filters, or conversation. On phones the sidebar becomes a compact brand/dataset bar, with page links in the hamburger menu beside the account icon. Sign-in, registration, customization, and AI settings use the same visual system. Detailed Dashboard remains a scrolling report with filters above the content; Business Overview uses floating filters and its viewport layout and section tabs.
+
+The selected business sets the recommended charts and terminology. Recommendations follow each business’s preferred three charts and fill missing slots with supported alternatives. **Why these charts?** explains missing data; you can override the choices. If fewer than three meaningful charts are supported, only those are recommended. This version is designed for sales/order data. Payroll logs, inventory-only files, and unrelated business records require additional data models.
+
+Grocery stores recommend **revenue by grocery category** (bar chart), **best-selling groceries** (horizontal bars), and **grocery product gross margin** (horizontal bars). These show department contribution, item demand, and margins; missing costs prioritize a sales trend instead. Ice cream shops recommend **best-selling flavors and treats** (horizontal bars), **sales by hour** (stacked columns), and **weather versus sales** (bar chart using uploaded weather only). Missing weather prioritizes a sales trend; missing hours can use category sales. Best sellers use quantities when available and explicitly use revenue otherwise.
 
 **Required:** net sales/revenue, gross sales, or both quantity and unit price. When deriving net sales from gross sales without discounts, the app explicitly treats discounts as zero and reports that assumption.
 
@@ -274,7 +282,21 @@ Repeated event IDs must have consistent details. Conflicts disable the correspon
 
 The preferred charts and fallback order live in `src/business-config.js`; calculations and SVG rendering live in `src/business-charts.js`. Backend validation in `backend/business_data.py` controls availability. The same renderers serve both dashboard pages.
 
-## Render Free sponsor/team demonstration
+## Self-service accounts on Render Free
+
+Users can register, sign in, view/edit their own profile, change their password,
+delete their account, and sign out through the website. Persistent PostgreSQL
+stores accounts and sessions; uploads and conversations remain temporary.
+See [the complete Neon Free and Render account setup](docs/self-service-accounts.md)
+for required environment variables, deployment steps, tests, and security limits.
+Set `AUTH_MODE=accounts` and `DATABASE_URL` to enable it. No demo-user JSON is
+required in account mode. `python app.py` still works locally without accounts.
+
+## Legacy Render Free sponsor/team demonstration
+
+The following Basic-auth configuration is retained for existing deployments using
+`AUTH_MODE=demo` (the code-level compatibility default). New `render.yaml`
+deployments select self-service account mode; follow the account setup above.
 
 This deployment runs the React build and Python APIs on **one Docker Web Service**.
 It is restricted to invited team members using individual HTTP Basic credentials
@@ -349,9 +371,10 @@ if its key is missing; configure it for this demo's AI requirement.
    deployed checks pass. Rotate/remove credentials in `DEMO_USERS_JSON` and restart
    the service to revoke access; rotate the Groq key if it was exposed.
 
-`render.yaml` provides the same service definition for an optional Blueprint.
-Select the reviewed pushed branch and provide the three `sync: false` secrets
-when prompted. The Blueprint disables auto deploys. If the Render CLI is installed,
+`render.yaml` now provides the self-service account configuration for an optional
+Blueprint. Follow the account guide for its database and `sync: false` secrets;
+retain `AUTH_MODE=demo` and `DEMO_USERS_JSON` only when using the legacy setup.
+The Blueprint disables auto deploys. If the Render CLI is installed,
 validate with `render blueprints validate render.yaml` before applying. No remote
 resources are created by the repository preparation itself.
 

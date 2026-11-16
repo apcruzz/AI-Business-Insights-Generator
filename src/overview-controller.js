@@ -12,14 +12,17 @@ export class OverviewController {
     this.key = "";
     this.state = {status: "idle"};
     this.generation = 0;
+    this.disposed = false;
   }
 
   emit(state) {
+    if (this.disposed) return;
     this.state = state;
     this.onChange(state);
   }
 
   select(scope) {
+    if (this.disposed) return;
     const key = overviewScopeKey(scope);
     if (key === this.key) return;
     clearTimeout(this.timer);
@@ -40,14 +43,14 @@ export class OverviewController {
   }
 
   retry() {
-    if (!this.key || ["loading", "scheduled"].includes(this.state.status)) return;
+    if (this.disposed || !this.key || ["loading", "scheduled"].includes(this.state.status)) return;
     this.cache.delete(this.key);
     return this.start();
   }
 
   async start() {
     clearTimeout(this.timer);
-    if (!this.key) return;
+    if (this.disposed || !this.key) return;
     const key = this.key, generation = ++this.generation, controller = new AbortController();
     this.controller?.abort();
     this.controller = controller;
@@ -65,7 +68,21 @@ export class OverviewController {
     }
   }
 
+  dispose() {
+    // An unmounted account workspace must never publish a late answer into a new one.
+    this.disposed = true;
+    clearTimeout(this.timer);
+    this.controller?.abort();
+    this.controller = null;
+    this.generation++;
+    this.key = "";
+    this.scope = null;
+    this.cache.clear();
+    this.state = {status: "idle"};
+  }
+
   remember(key, state) {
+    if (this.disposed) return;
     this.cache.set(key, {state, saved: Date.now()});
     while (this.cache.size > this.maxEntries) this.cache.delete(this.cache.keys().next().value);
     this.emit(state);

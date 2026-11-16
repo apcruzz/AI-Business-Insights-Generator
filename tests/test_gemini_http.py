@@ -88,7 +88,7 @@ class GeminiHostedHTTPTests(unittest.TestCase):
         self.origin = 'https://gemini-test.example'
         password = 'synthetic-test-password'
         users = json.dumps({'test-user': generate_password_hash(password, method='pbkdf2:sha256:600000')})
-        env = patch.dict(os.environ, {'APP_ENV': 'production', 'PUBLIC_ORIGIN': self.origin,
+        env = patch.dict(os.environ, {'APP_ENV': 'production', 'AUTH_MODE': 'demo', 'PUBLIC_ORIGIN': self.origin,
                                      'DEMO_USERS_JSON': users, 'GEMINI_API_KEY': 'synthetic-hosted-key'})
         env.start()
         self.addCleanup(env.stop)

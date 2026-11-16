@@ -1,9 +1,12 @@
 import {BrowserOllama, runBrowserAnalyst} from "./browser-ollama.js";
 import {SAMPLE_DATASETS} from "./sample-datasets.js";
 import {BUSINESS_FIELDS, CHARTS, businessProfile, chartPlan, chartTitle} from "./business-config.js";
-import {businessChartData, renderBusinessChart} from "./business-charts.js";
+import {renderBusinessChart} from "./business-charts.js";
+import {CHART_TYPES, chartTypeLabel, renderChartVariant} from "./chart-variants.js";
 import {answerOptions, chooseAnswerMode, answerModeNotice} from "./ai-options.js";
+import {overviewIcon} from "./overview-icons.js";
 import {OverviewController} from "./overview-controller.js";
+import {assistantMessages, formatAIAnswer} from "./assistant-messages.js";
 // Frontend controller: upload -> map columns -> normalize via API -> filter/render -> ask questions.
 import {
   $,
@@ -26,6 +29,7 @@ import {
 
 // Keep state and handlers inside the initializer called by App after mounting.
 export function initDashboard() {
+document.body.classList.add("workspaceMode");
 
 // Shared app state. `data` holds normalized rows returned by the Python server.
 let data = [],
@@ -41,24 +45,76 @@ let data = [],
   conversationTurns = [],
   revision = 0,
   overviewChartIds = [],
-  chartTypeById = {},
   overviewKpiIds = [],
+  chartTypeById = {},
   datasetTablePage = 0,
   aiOptions = answerOptions({}),
   modelsLoaded = false,
   groqConfigured = false,
   geminiConfigured = false,
   analysisScopeKey = "",
+  analysisDataset = null,
   hosted = false,
   backendModels = {};
 const browserOllama = new BrowserOllama();
 let localAnalysisController = null;
+let disposed = false;
+const discoveryController = new AbortController();
 const overview = new OverviewController({
-  request: (payload, signal) => payload.provider === "browser_ollama"
-    ? runBrowserAnalyst(api, browserOllama, payload, {signal})
-    : api("/api/overview", payload, {signal}),
-  onChange: renderAIOverview,
+  request: (payload, signal) => api("/api/overview", payload, {signal}),
+  onChange: renderAutomaticOverview,
 });
+const pageHashes = {overview: "#business-overview", detail: "#detailed-dashboard"};
+const pageFromHash = () => {
+  // Keep bookmarks to the former preview working, with one canonical overview URL.
+  if (window.location.hash === "#overview-preview") window.history.replaceState(null, "", pageHashes.overview);
+  return Object.keys(pageHashes).find(page => pageHashes[page] === window.location.hash);
+};
+let lastDashboardPage = pageFromHash() || "overview";
+let chooserTrigger = null;
+let previewView = "charts", previewChartIndex = 0;
+const compactPreview = window.matchMedia("(max-width: 1200px)");
+const mobileSidebar = window.matchMedia("(max-width: 760px)");
+let sidebarCollapsed = false;
+function syncSidebar() {
+  // Only the desktop sidebar takes horizontal space. Phones keep the compact
+  // dataset bar, and the preference survives page changes within this workspace.
+  const collapsed = sidebarCollapsed && !mobileSidebar.matches;
+  document.body.classList.toggle("sidebarCollapsed", collapsed);
+  $("previewSidebar").inert = collapsed;
+  $("previewSidebar").setAttribute("aria-hidden", String(collapsed));
+  $("sidebarToggle").setAttribute("aria-expanded", String(!collapsed));
+  const label = collapsed ? "Expand sidebar" : "Collapse sidebar";
+  $("sidebarToggle").setAttribute("aria-label", label);
+  $("sidebarToggle").title = label;
+}
+const previewViews = {charts: ["previewChartsTab", "overviewCharts"], highlights: ["previewHighlightsTab", "overviewHighlights"], assistant: ["previewAssistantTab", "overviewAssistant"]};
+// Resize only the plot markup, leaving card dimensions, selected models, and conversations intact.
+const previewChartObserver = new ResizeObserver(entries => {
+  if (!document.body.classList.contains("previewMode")) return;
+  const rows = filtered(), products = group(rows, "Product_Name").sort((a, b) => sum(b[1], "Net_Sales") - sum(a[1], "Net_Sales"));
+  for (const {target: content} of entries) {
+    const svg = content.querySelector(":scope > svg"), id = content.dataset.overviewChart;
+    const type = chartTypeById[id] || "auto";
+    if (!svg || ["pie", "doughnut"].includes(type) || (id === "category" && type === "auto") || !content.clientWidth || !content.clientHeight) continue;
+    // Reserve space for the chart's notes and legends; draw at actual CSS pixel
+    // dimensions so labels stay legible without stretching the surrounding card.
+    const footerHeight = [...content.children].filter(child => child !== svg).reduce((height, child) => {
+      const style = getComputedStyle(child);
+      return height + child.getBoundingClientRect().height + parseFloat(style.marginTop) + parseFloat(style.marginBottom);
+    }, 0);
+    const layout = {width: content.clientWidth, height: Math.max(120, content.clientHeight - footerHeight),
+      fontSize: parseFloat(getComputedStyle(content).getPropertyValue("--font-caption"))};
+    const size = `${layout.width}:${layout.height}:${layout.fontSize}`;
+    if (content.dataset.chartSize === size) continue;
+    content.dataset.chartSize = size;
+    content.innerHTML = chartPlot(id, rows, products, meta.capabilities, true, layout);
+  }
+});
+function updatePageHash(hash) {
+  // Programmatic navigation already renders its page; pushState avoids a second hashchange render.
+  if (window.location.hash !== hash) window.history.pushState(null, "", hash);
+}
 
 // Fields the dashboard understands. The mapping UI connects source columns to these names.
 const fields = {
@@ -112,6 +168,7 @@ const colors = [
   "#475569",
   "#4d7c0f",
 ];
+const previewColors = ["#5489ff", "#9c90f7", "#39bd90", "#ffba8e", "#7db9eb", "#cc82b6", "#8eab92", "#718096"];
 
 // Gives each category or product a stable color while the dashboard is open.
 function colorFor(name, field = "Category") {
@@ -127,7 +184,13 @@ function note(text) {
 
 // POST helper for the local Python API. The token ties requests to this page load.
 async function api(path, payload, {signal} = {}) {
-  if (!token) token = (await (await fetch("/api/session", {signal})).json()).token;
+  if (!token) {
+    const session = await fetch("/api/session", {signal});
+    if (session.status === 401) { window.location.reload(); throw Error("Sign in again to continue."); }
+    const result = await session.json();
+    if (!session.ok) throw Error(result.error || "Unable to load your session.");
+    token = result.token;
+  }
   const response = await fetch(path, {
     method: "POST",
     signal,
@@ -136,32 +199,79 @@ async function api(path, payload, {signal} = {}) {
   });
   const result = await response.json();
   if (!response.ok) {
+    if (response.status === 401) window.location.reload();
     if (response.status === 403) token = "";
     throw Error(result.error || "Unable to complete this action.");
   }
   return result;
 }
-function showSetup() {
+function showSetup(updateRoute = true) {
+  closePreviewFilters();
   // Show the upload/mapping screen and hide the dashboard views.
   $("setupPage").hidden = false;
   $("dashboardMain").hidden = true;
+  $("accountPage").hidden = true;
   document.body.classList.remove("overviewMode");
   document.body.classList.remove("detailMode");
+  document.body.classList.remove("previewMode");
+  document.body.classList.remove("accountMode");
+  $("previewSidebar").hidden = false;
+  $("previewHeader").hidden = true;
+  document.querySelector(".dashboardHeader").hidden = false;
+  markNavigation("#change-dataset");
   $("cancelSetup").hidden = !data.length;
+  if (updateRoute) updatePageHash("#change-dataset");
+  window.scrollTo(0, 0);
 }
-function showPage(page) {
+function markNavigation(hash) {
+  // Mark both header menus and sidebar links together so their current-page state stays consistent.
+  document.querySelectorAll(".pageMenu a, .previewNavigation a, [data-workspace-page]").forEach(link => {
+    if ((link.getAttribute("href") || link.dataset.workspacePage) === hash) link.setAttribute("aria-current", "page");
+    else link.removeAttribute("aria-current");
+  });
+  const titles = {"#business-overview": "Business overview", "#detailed-dashboard": "Detailed dashboard", "#change-dataset": "Change dataset", "#account": "Your account"};
+  $("dashboardTitle").textContent = titles[hash] || "AI Business Insights";
+}
+function showAccount(updateRoute = true) {
+  // Hide other views without clearing their state; only saving account changes triggers a full reload.
+  closePreviewFilters();
+  if (updateRoute) updatePageHash("#account");
+  $("setupPage").hidden = true;
+  $("dashboardMain").hidden = true;
+  $("accountPage").hidden = false;
+  $("previewSidebar").hidden = false;
+  $("previewHeader").hidden = true;
+  document.querySelector(".dashboardHeader").hidden = false;
+  document.body.classList.remove("overviewMode", "detailMode", "previewMode");
+  document.body.classList.add("accountMode");
+  markNavigation("#account");
+  window.scrollTo(0, 0);
+}
+function showPage(page, updateRoute = true) {
+  closePreviewFilters();
   // The overview page uses the compact dashboard layout; detail keeps full charts.
-  if (!data.length) return showSetup();
+  lastDashboardPage = page;
+  if (updateRoute) updatePageHash(pageHashes[page]);
+  if (!data.length) return showSetup(false);
   applyBusinessTheme(meta.business);
   const overview = page === "overview";
   $("setupPage").hidden = true;
+  $("accountPage").hidden = true;
+  document.body.classList.remove("accountMode");
   $("dashboardMain").hidden = false;
   $("overview").hidden = !overview;
   $("detailPage").hidden = overview;
-  document.body.classList.toggle("overviewMode", overview);
+  document.body.classList.remove("overviewMode");
   document.body.classList.toggle("detailMode", !overview);
-  $("overviewNav").setAttribute("aria-current", overview ? "page" : "false");
-  $("detailNav").setAttribute("aria-current", overview ? "false" : "page");
+  document.body.classList.toggle("previewMode", overview);
+  $("previewSidebar").hidden = false;
+  $("previewHeader").hidden = !overview;
+  document.querySelector(".dashboardHeader").hidden = overview;
+  markNavigation(pageHashes[page]);
+  // Redraw only the layout-dependent markup. Dataset, filters, and chat stay intact.
+  if (overview) renderOverviewLayout(filtered());
+  syncPreviewView();
+  window.scrollTo(0, 0);
 }
 // Rank business preferences first, then choose distinct, supported fallback metrics.
 function chartOptions() {
@@ -172,12 +282,14 @@ function chartOptions() {
     recommended:plan.recommended.includes(id)}));
 }
 function applyBusinessTheme(name) {
+  // A profile changes presentation and terminology, while every business keeps the same data pipeline.
   const p = businessProfile(name);
-  document.documentElement.style.setProperty("--business-accent", p.color);
-  document.documentElement.style.setProperty("--business-tint", p.tint);
+  // Profile wording and chart recommendations adapt; UI accents remain consistent.
+  const theme = getComputedStyle(document.documentElement);
+  document.documentElement.style.setProperty("--business-accent", theme.getPropertyValue("--accent").trim());
+  document.documentElement.style.setProperty("--business-tint", theme.getPropertyValue("--surface-soft").trim());
   document.body.dataset.business = name;
-  $("dashboardTitle").textContent = p.title;
-  $("businessName").textContent = p.label.toUpperCase();
+  $("businessName").textContent = p.label;
   $("businessHint").textContent = p.label + " · recommendations adapt to your uploaded columns";
   $("insightQuestion").placeholder = `Example: How can we improve ${p.item.toLowerCase()} sales?`;
   $("productFilterLabel").textContent = p.item;
@@ -199,6 +311,8 @@ function applyChartVisibility() {
 function showChartChooser(resetSelection = false) {
   // Edit KPI cards and charts together; drafts apply only when the user loads them.
   if (!data.length) return;
+  closePreviewFilters();
+  chooserTrigger = document.body.classList.contains("previewMode") ? $("previewCustomize") : $("chooseCharts");
   const options = chartOptions(),
     optionIds = options.map((option) => option.id);
   overviewChartIds = overviewChartIds.filter((id) => optionIds.includes(id));
@@ -259,6 +373,7 @@ function loadSelectedCharts() {
   $("setupStatus").textContent = "Dashboard ready.";
 }
 function selectRecommendedCharts() {
+  // Reset the dialog's draft checkboxes to supported defaults without committing them immediately.
   const recommended = new Set(chartOptions().slice(0, 3).map((option) => option.id));
   document.querySelectorAll('input[name="chartChoice"]').forEach((input) => {
     input.checked = recommended.has(input.value);
@@ -439,7 +554,10 @@ function buildDashboard() {
   if (!analyzedData) return;
   meta = analyzedData;
   data = meta.rows;
+  previewView = "charts";
+  previewChartIndex = 0;
   overviewKpiIds = [];
+  chartTypeById = {};
   overviewChartIds = chartOptions().slice(0, 3).map((option) => option.id);
   for (const id of ["category", "product"])
     sourceOptions(
@@ -464,6 +582,8 @@ function buildDashboard() {
   $("product").disabled = !meta.capabilities.product;
   applyBusinessTheme(meta.business);
   $("datasetName").textContent = meta.filename;
+  $("previewSidebarDataset").textContent = meta.filename;
+  $("previewSidebarDataset").title = meta.filename;
   $("sidebarNotes").innerHTML = meta.warnings
     .map((w) => `<p>${esc(w)}</p>`)
     .join("");
@@ -501,14 +621,15 @@ function filtered() {
       (!$("period").value || period(r.Hour) === $("period").value),
   );
 }
-function chart(items, dual = false) {
+function chart(items, dual = false, color = businessProfile(meta.business).color, layout = null) {
   // Generic SVG bar chart used by trend and weekday charts.
   if (!items.length) return note("No matching sales.");
-  const W = 680,
-    H = 270,
-    L = 70,
-    B = 220,
-    T = 22,
+  const W = layout?.width || 680,
+    H = layout?.height || 270,
+    font = layout?.fontSize || 13,
+    L = layout ? 64 : 70,
+    B = layout ? H - font - 15 : 220,
+    T = layout ? 12 : 22,
     values = items.flatMap((x) => (dual ? [x[1], x[2]] : [x[1]])),
     max = Math.max(...values, 1),
     min = Math.min(...values, 0),
@@ -521,7 +642,7 @@ function chart(items, dual = false) {
   for (let i = 0; i < 5; i++) {
     const v = min + (range * i) / 4,
       y = Y(v);
-    svg += `<line x1="${L}" y1="${y}" x2="665" y2="${y}" stroke="#e1e8ec"/><text x="61" y="${y + 4}" text-anchor="end" fill="#657686" font-size="13">${esc(axisMoney(v))}</text>`;
+    svg += `<line x1="${L}" y1="${y}" x2="${W - 15}" y2="${y}" stroke="#e1e8ec"/><text x="${L - 9}" y="${y + 4}" text-anchor="end" fill="#657686" font-size="${font}">${esc(axisMoney(v))}</text>`;
   }
   items.forEach((x, i) => {
     const cx = L + step * (i + 0.5),
@@ -529,10 +650,11 @@ function chart(items, dual = false) {
     for (let k = 1; k <= (dual ? 2 : 1); k++) {
       const y = Y(x[k]),
         h = Math.abs(zero - y);
-      svg += `<rect x="${cx - bw / 2 + (k - 1) * w}" y="${Math.min(y, zero)}" width="${w}" height="${h}" fill="${k === 1 ? businessProfile(meta.business).color : "#438dcc"}" rx="2"><title>${esc(x[0])}: ${k === 1 ? "Net sales" : "Gross profit"} ${esc(money(x[k]))}</title></rect>`;
+      svg += `<rect x="${cx - bw / 2 + (k - 1) * w}" y="${Math.min(y, zero)}" width="${w}" height="${h}" fill="${k === 1 ? color : "#438dcc"}" rx="2"><title>${esc(x[0])}: ${k === 1 ? "Net sales" : "Gross profit"} ${esc(money(x[k]))}</title></rect>`;
     }
-    if (items.length <= 12 || i % Math.ceil(items.length / 10) === 0)
-      svg += `<text x="${cx}" y="245" text-anchor="middle" font-size="12" fill="#657686">${esc(x[0])}</text>`;
+    const labelStep = layout ? Math.max(1, Math.ceil(items.length / Math.max(1, Math.floor((W - L) / 65)))) : Math.ceil(items.length / 10);
+    if ((!layout && items.length <= 12) || i % labelStep === 0)
+      svg += `<text x="${cx}" y="${layout ? H - 7 : 245}" text-anchor="middle" font-size="${layout ? font : 12}" fill="#657686">${esc(x[0])}</text>`;
   });
   return svg + "</svg>";
 }
@@ -565,7 +687,7 @@ function trend(rows, dual = false) {
     dual,
   );
 }
-function categoryPie(rows) {
+function categoryPie(rows, preview = false) {
   // Category share is shown as a pie only when totals are positive.
   const groups = group(rows, "Category")
       .map(([c, r]) => [c, sum(r, "Net_Sales")])
@@ -592,28 +714,29 @@ function categoryPie(rows) {
   }
   let angle = -Math.PI / 2,
     svg =
-      '<svg viewBox="0 0 320 300" role="img" aria-label="Category net sales share">';
+      `<svg viewBox="${preview ? "34 24 252 252" : "0 0 320 300"}" role="img" aria-label="Category net sales share">`;
   groups.forEach(([c, n], i) => {
     const share = n / total,
       next = angle + share * 2 * Math.PI,
-      col = colorFor(c);
+      col = previewColors[i];
     if (share > 0.999999)
       svg += `<circle cx="160" cy="150" r="119" fill="${col}"/>`;
     else
       svg += `<path d="M160 150 L${160 + 119 * Math.cos(angle)} ${150 + 119 * Math.sin(angle)} A119 119 0 ${share > 0.5 ? 1 : 0} 1 ${160 + 119 * Math.cos(next)} ${150 + 119 * Math.sin(next)} Z" fill="${col}" stroke="white" stroke-width="2"><title>${esc(c)}: ${money(n)} (${pct(share * 100)})</title></path>`;
-    if (share > 0.08) {
+    if (share > 0.08 && !preview) {
       const mid = (angle + next) / 2;
       svg += `<text x="${160 + 77 * Math.cos(mid)}" y="${155 + 77 * Math.sin(mid)}" text-anchor="middle" fill="white" font-size="16" font-weight="600">${pct(share * 100)}</text>`;
     }
     angle = next;
   });
+  if (preview) svg += `<circle cx="160" cy="150" r="77" fill="white"/><text x="160" y="145" text-anchor="middle" fill="#17213b" font-size="21" font-weight="700">${esc(axisMoney(total))}</text><text x="160" y="170" text-anchor="middle" fill="#778197" font-size="13">Net sales</text>`;
   return (
     svg +
     '</svg><div class="categoryLegendList">' +
     groups
       .map(
-        ([c, n]) =>
-          `<div class="categoryLegend"><span><i style="display:inline-block;width:10px;height:10px;background:${colorFor(c)};margin-right:5px"></i>${esc(c)}</span><span>${money(n)} · ${pct((n / total) * 100)}</span></div>`,
+        ([c, n], index) =>
+          `<div class="categoryLegend"><span><i style="display:inline-block;width:10px;height:10px;background:${previewColors[index]};margin-right:5px"></i>${esc(c)}</span><span>${money(n)} · ${pct((n / total) * 100)}</span></div>`,
       )
       .join("") +
     "</div>"
@@ -816,18 +939,22 @@ function metrics(rows, overview = false) {
       "Recorded weather condition with highest net sales",
     ],
   };
-  const cards = overview && picked.length
+  let cards = overview && picked.length
     ? picked.map((key) => custom[key]).filter(Boolean)
     : defaults;
+  const preview = overview && document.body.classList.contains("previewMode");
+  // Four default measures fit the alternative layout; explicit KPI choices are preserved.
+  if (preview && !picked.length) cards = defaults.filter((_, index) => index !== 3);
+  if (preview) $("overviewCards").style.setProperty("--preview-kpi-columns", Math.min(4, cards.length) || 1);
   return cards
     .map(
-      (m) =>
-        `<article class="card"><div class="label">${esc(m[0])}</div><div class="value">${esc(m[1])}</div><div class="hint">${esc(m[2])}</div></article>`,
+      (m, index) =>
+        `<article class="card"><span class="previewMetricIcon previewMetricIcon${index % 4}">${overviewIcon(/margin|rate|change/i.test(m[0]) ? "percent" : /order|line/i.test(m[0]) ? "orders" : /units|quantity/i.test(m[0]) ? "units" : "money")}</span><div class="label">${esc(m[0])}</div><div class="value">${esc(m[1])}</div><div class="hint">${esc(m[2])}</div></article>`,
     )
 	    .join("");
 }
 // Sum selected revenue for each weekday in Monday-to-Sunday display order.
-function weekdayChart(rows, c) {
+function weekdayChart(rows, c, color, layout) {
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   return c.Date
     ? chart(
@@ -841,7 +968,7 @@ function weekdayChart(rows, c) {
             ),
             "Net_Sales",
           ),
-        ]),
+        ]), false, color, layout,
       )
     : note("Map a date column to compare weekdays.");
 }
@@ -910,13 +1037,13 @@ function staffChart(rows, c) {
   );
 }
 // Compare sales per recorded date for each uploaded weather label; no weather lookup occurs.
-function weatherChart(rows, c) {
+function weatherChart(rows, c, color, layout) {
   return c.weather && c.Date
     ? chart(
         group(rows, "Weather").map(([weather, items]) => [
           weather,
           sum(items, "Net_Sales") / new Set(items.map((row) => row.Date)).size,
-        ]),
+        ]), false, color, layout,
       ) +
         note(
           "Average per recorded day; coverage and other factors can affect this comparison.",
@@ -924,79 +1051,31 @@ function weatherChart(rows, c) {
     : note("Map date and weather columns to compare sales by weather.");
 }
 // Dispatch a selected chart ID to the same chart builders used in the detail view.
-function overviewChartHtml(id, rows, products, c) {
-  const specialized = renderBusinessChart(id, rows, meta, businessProfile(meta.business).color, money);
+function overviewChartHtml(id, rows, products, c, preview = false, layout = null) {
+  const specialized = renderBusinessChart(id, rows, meta, id === "trend" ? "#5489ff" : "#9285ed", money, layout);
   if (specialized !== null) return specialized;
   if (id === "trend") return trend(rows);
-  if (id === "category") return categoryPie(rows);
+  if (id === "category") return categoryPie(rows, preview);
   if (id === "products") return topProductsChart(products, c);
-  if (id === "weekday") return weekdayChart(rows, c);
+  if (id === "weekday") return weekdayChart(rows, c, "#9c90f7", layout);
   if (id === "hour") return hourStack(rows);
   if (id === "profitability") return profitabilityChart(products, c);
-  if (id === "weather") return weatherChart(rows, c);
+  if (id === "weather") return weatherChart(rows, c, "#9c90f7", layout);
   if (id === "staff") return staffChart(rows, c);
   return note("Choose a chart to show here.");
 }
-const chartTypeOptions = ["auto", "bar", "line", "pie", "doughnut"];
-function variantItems(id, rows, products, c) {
-  const result = businessChartData(id, rows, c);
-  if (result?.items?.length) {
-    if (result.type === "heatmap") {
-      const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-      return {...result, items: days.map((day, index) => [day, result.items.filter(item => item[0] === index).reduce((total, item) => total + item[2], 0)])};
-    }
-    if (result.items.some(item => item.length > 2)) return {...result, items: result.items.map(item => [item[0], item.slice(1).reduce((total, value) => total + Number(value || 0), 0)])};
-    return result;
-  }
-  let items = [];
-  if (id === "category") items = group(rows, "Category").map(([name, r]) => [name, sum(r, "Net_Sales")]);
-  else if (id === "weekday") items = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((name, day) => [name, sum(rows.filter(r => (new Date(r.Date + "T12:00:00Z").getUTCDay() + 6) % 7 === day), "Net_Sales")]);
-  else if (id === "weather") items = group(rows, "Weather").map(([name, r]) => [name, sum(r, "Net_Sales") / new Set(r.map(x => x.Date)).size]);
-  else if (id === "staff") items = group(rows, "Employee_Name").map(([name, r]) => [name, sum(r, "Net_Sales")]).sort((a,b) => b[1]-a[1]);
-  else if (id === "hour") items = group(rows, "Hour").map(([name, r]) => [`${name}:00`, sum(r, "Net_Sales")]).sort((a,b) => Number.parseInt(a[0])-Number.parseInt(b[0]));
-  else if (id === "products") items = products.map(([name, r]) => [name, sum(r, c.Quantity ? "Quantity" : "Net_Sales")]);
-  else if (id === "profitability") items = products.filter(([,r]) => sum(r,"Net_Sales") > 0).map(([name,r]) => [name, sum(r,"Gross_Profit")/sum(r,"Net_Sales")*100]);
-  return items.length ? {items, unit: id === "products" && c.Quantity ? "units" : id === "profitability" ? "percent" : "money"} : null;
+// Presentation changes reuse the validated metrics without rerunning analysis or clearing chat.
+function chartPlot(id, rows, products, c, preview = false, layout = null) {
+  const color = id === "trend" ? "#5489ff" : "#9285ed";
+  return renderChartVariant(id, rows, meta, color, money, chartTypeById[id] || "auto", layout)
+    ?? overviewChartHtml(id, rows, products, c, preview, layout);
 }
-function renderChartVariant(id, rows, products, c, type) {
-  if (type === "auto") return overviewChartHtml(id, rows, products, c);
-  const data = variantItems(id, rows, products, c);
-  if (!data?.items?.length) return note("This chart type has no matching values.");
-  const items = data.items.slice(0, 12), color = businessProfile(meta.business).color;
-  const fmt = value => data.unit === "money" ? money(value) : `${Number(value.toFixed(1)).toLocaleString()}${data.unit === "percent" ? "%" : ` ${data.unit || ""}`}`;
-  if ((type === "pie" || type === "doughnut") && items.some(x => x[1] < 0)) return note("Pie charts need nonnegative values. Choose another chart type.");
-  const total = items.reduce((n, x) => n + Math.max(0, x[1]), 0);
-  if ((type === "pie" || type === "doughnut") && !total) return note("This chart has no positive values to show as a share.");
-  const palette = [color,"#cb6b42","#5689b1","#a77ab0","#b69b3c","#708477","#438dcc","#d17c9a","#6c8b45","#a47c48","#6171a8","#7e858b"];
-  if (type === "pie" || type === "doughnut") {
-    let angle = -Math.PI / 2;
-    const slices = items.map(([name,value], i) => {
-      const next = angle + Math.max(0,value) / total * Math.PI * 2;
-      const point = a => [150 + 105*Math.cos(a), 120 + 105*Math.sin(a)];
-      const [x1,y1]=point(angle), [x2,y2]=point(next), large=next-angle > Math.PI ? 1 : 0;
-      const path = `M 150 120 L ${x1} ${y1} A 105 105 0 ${large} 1 ${x2} ${y2} Z`;
-      angle=next;
-      return `<path d="${path}" fill="${palette[i%palette.length]}"><title>${esc(name)}: ${esc(fmt(value))} (${(value/total*100).toFixed(1)}%)</title></path>`;
-    }).join("");
-    const hole = type === "doughnut" ? '<circle cx="150" cy="120" r="55" fill="white"/>' : "";
-    // The legend is a separate DOM element, so keep the SVG viewBox tight around
-    // the circular plot. A wide 620px viewBox made the pie occupy less than half
-    // of its available chart area when users changed chart types.
-    return `<svg viewBox="0 0 300 240" role="img" aria-label="${esc(chartTitle(id,meta.business))} ${type} chart"><title>${esc(chartTitle(id,meta.business))}</title>${slices}${hole}</svg><div class="chartVariantLegend">${items.map(([n,v],i)=>`<span><i style="background:${palette[i%palette.length]}"></i>${esc(n)} · ${esc(fmt(v))}</span>`).join("")}</div>`;
-  }
-  const max=Math.max(...items.map(x=>Math.abs(x[1])),1), min=Math.min(0,...items.map(x=>x[1])), range=Math.max(max-min,1), step=580/items.length, y=v=>205-(v-min)/range*165;
-  let svg=`<svg viewBox="0 0 620 250" role="img" aria-label="${esc(chartTitle(id,meta.business))} ${type} chart"><title>${esc(chartTitle(id,meta.business))}</title>`;
-  for(let i=0;i<5;i++){const v=min+(max-min)*i/4;svg+=`<line x1="55" y1="${y(v)}" x2="610" y2="${y(v)}" stroke="#e1e8ec"/><text x="50" y="${y(v)+4}" text-anchor="end" font-size="10">${esc(fmt(v))}</text>`;}
-  if(type === "line") svg+=`<polyline fill="none" stroke="${color}" stroke-width="3" points="${items.map((r,i)=>`${55+step*(i+.5)},${y(r[1])}`).join(" ")}"/>`;
-  items.forEach(([name,value],i)=>{const x=55+step*(i+.5); if(type === "line") svg+=`<circle cx="${x}" cy="${y(value)}" r="4" fill="${color}"><title>${esc(name)}: ${esc(fmt(value))}</title></circle>`; else svg+=`<rect x="${x-Math.min(34,step*.34)}" y="${Math.min(y(value),y(0))}" width="${Math.min(68,step*.68)}" height="${Math.max(1,Math.abs(y(value)-y(0)))}" rx="3" fill="${color}"><title>${esc(name)}: ${esc(fmt(value))}</title></rect>`; if(items.length<=8 || i%Math.ceil(items.length/6)===0) svg+=`<text x="${x}" y="230" text-anchor="middle" font-size="10">${esc(String(name).slice(0,16))}</text>`;});
-  return svg+"</svg>";
-}
-function chartPanelContent(id, rows, products, c, scope) {
-  const type = chartTypeById[id] || "auto";
-  return `<div class="chartPanelToolbar"><label class="srOnly" for="chart-type-${esc(scope)}-${esc(id)}">Chart type for ${esc(chartTitle(id,meta.business))}</label><select class="chartTypeSelect" id="chart-type-${esc(scope)}-${esc(id)}" data-chart-type="${esc(id)}" aria-label="Chart type for ${esc(chartTitle(id,meta.business))}">${chartTypeOptions.map(option=>`<option value="${option}" ${option===type?"selected":""}>${option === "auto" ? "Recommended" : option[0].toUpperCase()+option.slice(1)}</option>`).join("")}</select></div>`;
+function chartTypeControl(id, scope) {
+  return `<select class="chartTypeSelect" id="chart-type-${scope}-${esc(id)}" data-chart-type="${esc(id)}" aria-label="Chart type for ${esc(chartTitle(id, meta.business))}">${CHART_TYPES.map(type => `<option value="${type}"${(chartTypeById[id] || "auto") === type ? " selected" : ""}>${chartTypeLabel(type)}</option>`).join("")}</select>`;
 }
 function renderOverviewCharts(rows, products, c) {
   // Fill the three Business Overview slots with the user's selected charts.
+  previewChartObserver.disconnect();
   const options = chartOptions(),
     optionById = new Map(options.map((option) => [option.id, option])),
     availableIds = new Set(options.map((option) => option.id));
@@ -1005,14 +1084,63 @@ function renderOverviewCharts(rows, products, c) {
     .slice(0, 3);
   if (!overviewChartIds.length)
     overviewChartIds = options.slice(0, 3).map((option) => option.id);
+  const preview = document.body.classList.contains("previewMode");
+  previewChartIndex = Math.max(0, Math.min(previewChartIndex, overviewChartIds.length - 1));
+  document.body.dataset.previewChartCount = overviewChartIds.length;
   document.querySelectorAll(".overviewChartSlot").forEach((slot, index) => {
     const id = overviewChartIds[index],
       option = optionById.get(id);
-    slot.hidden = !option;
+    slot.hidden = !option || (preview && compactPreview.matches && index !== previewChartIndex);
     slot.innerHTML = option
-      ? `<div class="overviewChartHeader"><h2>${esc(option.title)}</h2>${chartPanelContent(id, rows, products, c, "overview")}</div><div class="overviewChartContent" data-overview-chart="${esc(id)}" data-chart-type="${esc(chartTypeById[id] || "auto")}">${renderChartVariant(id, rows, products, c, chartTypeById[id] || "auto")}</div>`
+      ? `<div class="${preview ? "previewChartHeader" : "overviewChartHeader"}">${preview ? `<span class="previewChartIcon">${overviewIcon(id === "trend" ? "insights" : "charts")}</span>` : ""}<h2>${esc(option.title)}</h2>${chartTypeControl(id, "overview")}</div><div class="overviewChartContent" data-overview-chart="${esc(id)}" data-chart-type="${chartTypeById[id] || "auto"}"${preview ? ` tabindex="0" role="region" aria-label="${esc(option.title)} chart data"` : ""}>${chartPlot(id, rows, products, c, preview)}</div>`
       : "";
+    const content = slot.querySelector(".overviewChartContent");
+    if (preview && content) previewChartObserver.observe(content);
   });
+  $("previewChartSelect").innerHTML = overviewChartIds.length
+    ? overviewChartIds.map((id, index) => `<option value="${index}">${index + 1}. ${esc(optionById.get(id).title)}</option>`).join("")
+    : '<option value="0">No optional charts available</option>';
+  $("previewChartSelect").value = String(previewChartIndex);
+  $("previewChartSelect").disabled = !overviewChartIds.length;
+  $("previewPreviousChart").disabled = previewChartIndex === 0;
+  $("previewNextChart").disabled = previewChartIndex >= overviewChartIds.length - 1;
+  $("previewChartPageStatus").textContent = overviewChartIds.length ? `Chart ${previewChartIndex + 1} of ${overviewChartIds.length}` : "No optional charts available";
+  syncPreviewView();
+}
+function syncPreviewView() {
+  // Compact tabs and desktop columns share the same DOM panels; update roles as well as visibility.
+  const preview = document.body.classList.contains("previewMode"), compact = preview && compactPreview.matches;
+  document.body.dataset.previewView = previewView;
+  $("previewWorkspaceTabs").hidden = !compact;
+  $("previewChartControls").hidden = !compact || previewView !== "charts";
+  for (const [view, [tabId, panelId]] of Object.entries(previewViews)) {
+    const active = view === previewView;
+    $(tabId).setAttribute("aria-selected", String(active));
+    $(tabId).tabIndex = active ? 0 : -1;
+    $(panelId).hidden = compact && !active;
+    if (compact) {
+      $(panelId).setAttribute("role", "tabpanel");
+      $(panelId).setAttribute("aria-labelledby", tabId);
+    } else {
+      $(panelId).removeAttribute("role");
+      if (view === "charts") $(panelId).removeAttribute("aria-labelledby");
+      else $(panelId).setAttribute("aria-labelledby", view === "assistant" ? "assistantTitle" : "highlightsTitle");
+    }
+  }
+}
+function closePreviewFilters() {
+  // Remove popover behavior before another page uses these same filters in its normal layout.
+  const filters = $("dashboardFilters");
+  if (typeof filters.hidePopover === "function" && filters.matches(":popover-open")) filters.hidePopover();
+  filters.removeAttribute("popover");
+  document.body.classList.remove("previewFiltersOpen");
+  $("previewFilterButton").setAttribute("aria-expanded", "false");
+}
+function renderOverviewLayout(rows) {
+  // A layout switch redraws presentation only; render() handles actual filter/data changes and chat reset.
+  $("overviewCards").innerHTML = metrics(rows, true);
+  const products = group(rows, "Product_Name").sort((a, b) => sum(b[1], "Net_Sales") - sum(a[1], "Net_Sales"));
+  renderOverviewCharts(rows, products, meta.capabilities);
 }
 function renderDatasetTable() {
   // Paginate the complete filtered dataset so large uploads do not create a huge DOM.
@@ -1031,6 +1159,10 @@ function renderDatasetTable() {
   $("nextDataPage").disabled = datasetTablePage >= pages - 1;
   $("datasetTable").parentElement.scrollTop = 0;
 }
+function renderDetailedCharts(rows, products, c) {
+  $("detailCharts").innerHTML = chartOptions().map(option =>
+    `<section class="panel detailChartPanel" data-chart-panel="${esc(option.id)}"><div class="detailChartHeader"><div><h2>${esc(option.title)}</h2><p class="sub">${esc(!chartTypeById[option.id] || chartTypeById[option.id] === "auto" ? CHARTS[option.id].kind : chartTypeLabel(chartTypeById[option.id]) + " chart")}</p></div>${chartTypeControl(option.id, "detail")}</div><div class="businessDetailChart" data-detail-chart="${esc(option.id)}" data-chart-type="${chartTypeById[option.id] || "auto"}">${chartPlot(option.id, rows, products, c)}</div></section>`).join("") || '<p class="chartNote">No optional charts are available from these columns.</p>';
+}
 function render() {
   // Recalculate every chart/table whenever filters or data change.
   if (!data.length) return;
@@ -1042,19 +1174,30 @@ function render() {
     rows.length.toLocaleString() + " sales lines selected";
   $("cards").innerHTML = metrics(rows);
   $("overviewCards").innerHTML = metrics(rows, true);
+  const activeFilters = ["category", "product", "weekday", "period"].filter(id => $(id).value).length
+    + Number(Boolean($("from").value && $("from").value !== (meta.dateMin || "")))
+    + Number(Boolean($("to").value && $("to").value !== (meta.dateMax || "")));
+  $("previewFilterCount").hidden = !activeFilters;
+  $("previewFilterCount").textContent = activeFilters;
+  $("previewFilterCount").setAttribute("aria-label", `${activeFilters} active filters`);
   const products = group(rows, "Product_Name").sort(
     (a, b) => sum(b[1], "Net_Sales") - sum(a[1], "Net_Sales"),
   );
   renderOverviewCharts(rows, products, c);
   // Render remaining charts through the same dispatcher as Overview.
-  $("detailCharts").innerHTML = chartOptions().map(option =>
-    `<section class="panel detailChartPanel" data-chart-panel="${esc(option.id)}"><div class="detailChartHeader"><div><h2>${esc(option.title)}</h2><p class="sub">${esc(CHARTS[option.id].kind)}</p></div>${chartPanelContent(option.id, rows, products, c, "detail")}</div><div class="businessDetailChart" data-detail-chart="${esc(option.id)}" data-chart-type="${esc(chartTypeById[option.id] || "auto")}">${renderChartVariant(option.id, rows, products, c, chartTypeById[option.id] || "auto")}</div></section>`).join("") || '<p class="chartNote">No optional charts are available from these columns.</p>';
+  renderDetailedCharts(rows, products, c);
+  const detailOptions = chartOptions();
+  $("detailChartSelect").innerHTML = detailOptions.length
+    ? detailOptions.map(option => `<option value="${esc(option.id)}">${esc(option.title)}</option>`).join("")
+    : '<option value="">No supported charts</option>';
+  $("detailChartSelect").disabled = !detailOptions.length;
   // Retain the detailed source summaries alongside the new business charts.
-  $("detailTables").innerHTML = (c.product ? `<details class="panel"><summary>${esc(businessProfile(meta.business).item)} totals</summary><div class="scroll"><table><thead><tr><th>Item</th><th>Units</th><th>Net sales</th><th>Gross profit</th><th>Margin</th></tr></thead><tbody>${products.map(([name, items]) => {
+  $("detailTables").innerHTML = (c.product ? `<details class="panel" open><summary>${esc(businessProfile(meta.business).item)} totals</summary><div class="scroll"><table><thead><tr><th>Item</th><th>Units</th><th>Net sales</th><th>Gross profit</th><th>Margin</th></tr></thead><tbody>${products.map(([name, items]) => {
     const sales = sum(items, "Net_Sales"), profit = sum(items, "Gross_Profit");
     return `<tr><td>${esc(name)}</td><td>${c.Quantity ? sum(items, "Quantity") : "—"}</td><td>${esc(money(sales))}</td><td>${c.Gross_Profit ? esc(money(profit)) : "—"}</td><td>${c.Gross_Profit && sales > 0 ? pct(profit / sales * 100) : "—"}</td></tr>`;
-  }).join("")}</tbody></table></div></details>` : "") + (c.employee ? `<details class="panel"><summary>Staff sales totals</summary><div class="scroll"><table><thead><tr><th>Employee</th><th>Gross sales</th><th>Discounts</th><th>Net sales</th><th>Gross profit</th><th>Margin</th></tr></thead><tbody>${staffTable(rows, c)}</tbody></table></div></details>` : "");
+  }).join("")}</tbody></table></div></details>` : "") + (c.employee ? `<details class="panel" open><summary>Staff sales totals</summary><div class="scroll"><table><thead><tr><th>Employee</th><th>Gross sales</th><th>Discounts</th><th>Net sales</th><th>Gross profit</th><th>Margin</th></tr></thead><tbody>${staffTable(rows, c)}</tbody></table></div></details>` : "");
   applyChartVisibility();
+  if (!$("detailTables").childElementCount) $("detailTables").innerHTML = note("Map a product or employee column to show sales summaries.");
   renderDatasetTable();
   renderInsights(rows);
   syncAnalysisSelection();
@@ -2333,8 +2476,8 @@ function calculatedAnswer(question) {
   return `I can answer from the mapped dashboard data. Selected net sales are ${money(f.netSales)}${f.grossMarginPercent !== null ? ", gross margin is " + pct(f.grossMarginPercent) : ""}, ${topProduct ? topProduct.name + " is the top product" : "product ranking is unavailable"}${leastRevenueProduct ? ", and " + leastRevenueProduct.name + " is lowest by revenue" : ""}. Try asking about least sold, business health, next steps, profit, categories, timing, or average daily sales.`;
 }
 // Render backend calculation tables and optional query text; escape all dataset values.
-function renderAnalystEvidence(response, containerId = "analystEvidence") {
-  const container = $(containerId);
+function renderAnalystEvidence(response) {
+  const container = $("analystEvidence");
   const evidence = response.evidence || [];
   container.hidden = !evidence.length;
   container.innerHTML = evidence.length ? `<details><summary>Supporting calculations · ${response.selectedRows.toLocaleString()} selected rows</summary>${evidence.map((item, i) =>
@@ -2348,32 +2491,53 @@ function resetConversation() {
   conversationId = null;
   conversationTurns = [];
   $("insightAnswer").textContent = "";
+  $("insightAnswer").setAttribute("aria-busy", "false");
   $("analystEvidence").hidden = true;
   $("analystEvidence").replaceChildren();
   updateAskAvailability();
 }
-// Display recent exchanges as plain text and scroll to the latest response.
-function showConversation(pending = "") {
+// Give each speaker a separate bubble. All questions and model output remain
+// plain text so uploaded labels and AI answers cannot inject HTML into the UI.
+function showConversation(pending = null) {
   const panel = $("insightAnswer");
-  panel.textContent = [...conversationTurns, pending].filter(Boolean).join("\n\n");
+  const messages = document.createDocumentFragment();
+  for (const item of assistantMessages(overview.state, conversationTurns, pending)) {
+      const role = item.role;
+      const message = document.createElement("article");
+      message.className = `chatMessage chatMessage--${role}`;
+      message.setAttribute("aria-label", role === "user" ? "Your message" : "Assistant reply");
+      if (role === "assistant" && item.status) message.dataset.status = item.status;
+      const speaker = document.createElement("strong"), body = document.createElement("p");
+      speaker.className = "chatMessageSpeaker";
+      speaker.textContent = role === "user" ? "You" : "Assistant";
+      body.className = "chatMessageBody";
+      body.textContent = item.content;
+      // Text separators also keep copied/read transcripts from joining speakers.
+      message.append(speaker, "\n", body);
+      messages.append(message, "\n");
+  }
+  panel.replaceChildren(messages);
+  panel.setAttribute("aria-busy", String(pending?.status === "pending" || ["scheduled", "loading"].includes(overview.state.status)));
   const viewport = panel.closest(".conversationViewport");
   // Keep the latest answer visible while leaving its evidence just below it.
   viewport.scrollTop = Math.max(0, panel.offsetHeight - viewport.clientHeight);
 }
 async function ask(question) {
   // Ask the deterministic engine or the explicitly selected AI provider.
-  if (busy || ["scheduled", "loading"].includes(overview.state.status)) return;
+  if (disposed || busy || ["scheduled", "loading"].includes(overview.state.status)) return;
   busy = true;
   const requestController = new AbortController();
   localAnalysisController = requestController;
-  $("askButton").disabled = true;
+  updateAskAvailability();
   // Remember the selection revision so a slow response cannot overwrite a newer dashboard.
   const current = revision,
     option = aiOptions.find(item => item.value === $("localModel").value),
     model = option?.model;
   $("analystEvidence").hidden = true;
   $("analystEvidence").replaceChildren();
-  showConversation("You: " + question + "\n" + (model ? `${option.provider === "groq" ? "Groq" : option.provider === "gemini" ? "Gemini" : "Your local model"} is inspecting the data and running calculations…` : "Calculating…"));
+  showConversation({question, status: "pending", answer: model
+    ? `${option.provider === "groq" ? "Groq" : option.provider === "gemini" ? "Gemini" : "Your local model"} is inspecting the data and running calculations…`
+    : "Calculating…"});
   try {
     let answer;
     if (model) {
@@ -2393,71 +2557,61 @@ async function ask(question) {
         conversationId = response.conversationId;
         renderAnalystEvidence(response);
       }
-      answer =
-        response.mode + " · " +
-        response.model +
-        "\n" +
-        response.answer +
-        (response.evidence?.length ? "\nCheck the supporting calculations below: AI interpretation can still make mistakes." : "");
+      answer = formatAIAnswer(response);
     } else answer = "Calculated answer\n" + calculatedAnswer(question);
     if (revision === current) {
       // Keep the visible transcript aligned with the backend limit of four recent exchanges.
-      conversationTurns.push("You: " + question + "\n" + answer);
+      conversationTurns.push({question, answer});
       conversationTurns = conversationTurns.slice(-4);
       showConversation();
     }
   } catch (e) {
     if (revision === current)
-      showConversation(e.message + " Choose Calculated answers to continue without a model.");
+      showConversation({question, status: "error", answer: e.message + " Choose Calculated answers to continue without a model."});
   } finally {
     if (localAnalysisController === requestController) {
       busy = false;
       localAnalysisController = null;
-      updateAskAvailability();
+      if (!disposed) updateAskAvailability();
     }
   }
 }
 function updateAskAvailability() {
   $("askButton").disabled = busy || ["scheduled", "loading"].includes(overview.state.status);
-  $("retryOverview").disabled = $("askButton").disabled;
 }
 function syncAnalysisSelection() {
+  if (disposed) return;
   const option = aiOptions.find(item => item.value === $("localModel").value);
   const filters = Object.fromEntries(["from", "to", "category", "product", "weekday", "period"].map(id => [id, $(id).value]));
   const scope = {datasetId: meta.datasetId, provider: option?.provider, model: option?.model, filters};
   const key = JSON.stringify(scope);
-  if (key === analysisScopeKey) return;
+  if (key === analysisScopeKey && analysisDataset === meta) return;
   analysisScopeKey = key;
+  analysisDataset = meta;
   revision++;
   resetConversation();
-  overview.select(meta.datasetId && option?.available && option?.model && selected.length ? scope : null);
-  renderAIOverview(overview.state);
+  overview.select(meta.datasetId && option?.available && option.provider === "gemini" && selected.length ? scope : null);
+  renderAutomaticOverview(overview.state);
 }
-function renderAIOverview(state) {
-  const option = aiOptions.find(item => item.value === $("localModel").value);
-  const pending = ["scheduled", "loading"].includes(state.status);
-  $("overviewStatus").textContent = pending
-    ? "Preparing the initial overview from calculations over all selected rows…"
-    : state.status === "ready" ? `${state.response.mode} · ${state.response.model} · ${state.response.selectedRows.toLocaleString()} selected rows. AI interpretation can still make mistakes.`
-    : state.status === "error" ? state.error
-    : !option?.model ? "Choose an AI provider to generate an overview. Calculated answers and At a glance remain available."
-    : !selected.length ? "No rows match these filters."
-    : meta.analystNote || "Build the dashboard again to load data for AI analysis.";
-  $("overviewAnswer").textContent = state.status === "ready" ? state.response.answer : "";
-  $("overviewAnswer").hidden = state.status !== "ready";
-  $("overviewEvidence").hidden = true;
-  $("overviewEvidence").replaceChildren();
-  if (state.response) renderAnalystEvidence(state.response, "overviewEvidence");
-  $("retryOverview").hidden = state.status !== "error";
-  $("retryOverview").disabled = pending;
-  $("overviewStatus").closest("section").setAttribute("aria-busy", String(pending));
+function renderAutomaticOverview(state) {
+  if (disposed) return;
+  $("analystEvidence").hidden = true;
+  $("analystEvidence").replaceChildren();
+  if (state.response) renderAnalystEvidence(state.response);
+  showConversation();
   updateAskAvailability();
 }
+function startNewConversation() {
+  revision++;
+  resetConversation();
+  if (overview.state.status === "error") overview.retry();
+  else renderAutomaticOverview(overview.state);
+}
 function updateAnswerModeNotice() {
+  // Explain where inference runs before a question is sent; changing this text makes no provider call.
   const option = aiOptions.find(item => item.value === $("localModel").value);
   $("aiDataNotice").textContent = answerModeNotice(option, groqConfigured, hosted, geminiConfigured);
   $("localModel").title = $("aiDataNotice").textContent;
-  $("overviewDataNotice").textContent = $("aiDataNotice").textContent;
   $("aiModeSummary").textContent = option?.provider === "groq"
     ? "Shares question & data context with Groq cloud"
     : option?.provider === "gemini" ? "Shares question & data context with Google Gemini"
@@ -2467,6 +2621,7 @@ function updateAnswerModeNotice() {
   $("insightMode").textContent = "Calculated insights · " + (option?.model ? option.label : "AI optional");
 }
 function applyAIOptions(current = $("localModel").value, initial = false) {
+  // Merge server discovery with explicitly connected browser models, keeping provider-qualified IDs.
   const options = [...(backendModels.options || []), ...browserOllama.models.map(model => ({
     provider: "browser_ollama", model, label: `${model} · Local Ollama (this browser)`, available: true,
   }))];
@@ -2482,21 +2637,24 @@ function applyAIOptions(current = $("localModel").value, initial = false) {
   syncAnalysisSelection();
 }
 async function connectBrowserOllama() {
+  // This explicit action is the point where the page may first ask to access the visitor's loopback service.
   $("connectBrowserOllama").disabled = true;
   $("disconnectBrowserOllama").disabled = false;
   $("browserOllamaStatus").textContent = "Connecting to Ollama on this computer. Allow Chrome’s Local Network Access prompt if shown…";
   try {
     const models = await browserOllama.connect();
+    if (disposed) return;
     applyAIOptions();
     $("browserOllamaStatus").textContent = models.length
       ? `Connected · ${models.length} local model(s). Select Local Ollama under Answer mode to use one.`
       : "Connected, but no downloaded local models were found. Run ollama pull llama3.2:3b, then Reconnect.";
     $("connectBrowserOllama").textContent = "Reconnect Local Ollama";
   } catch (error) {
+    if (disposed) return;
     applyAIOptions();
     $("browserOllamaStatus").textContent = error.message;
   } finally {
-    $("connectBrowserOllama").disabled = false;
+    if (!disposed) $("connectBrowserOllama").disabled = false;
   }
 }
 $("connectBrowserOllama").onclick = connectBrowserOllama;
@@ -2514,9 +2672,12 @@ async function refreshModels() {
   // Discover local models and backend Groq configuration without sending data to cloud AI.
   $("refreshModels").disabled = true;
   try {
-    const response = await fetch("/api/models");
+    const response = await fetch("/api/models", {signal: discoveryController.signal});
+    if (response.status === 401) { window.location.reload(); return; }
     if (!response.ok) throw Error("AI discovery failed");
-    const result = await response.json(), current = $("localModel").value;
+    const result = await response.json();
+    if (disposed) return;
+    const current = $("localModel").value;
     if (result.hosted) {
       uploadLimitMb = 2;
       $("uploadLimitNote").hidden = false;
@@ -2532,9 +2693,10 @@ async function refreshModels() {
     modelsLoaded = true;
     updateAnswerModeNotice();
   } catch {
+    if (disposed) return;
     $("insightMode").textContent = "Could not refresh AI options. Check that the backend is running.";
   } finally {
-    $("refreshModels").disabled = false;
+    if (!disposed) $("refreshModels").disabled = false;
   }
 }
 // Connect page buttons and dropdowns to the functions above.
@@ -2545,6 +2707,7 @@ $("sheet").onchange = () => {
   inspect();
 };
 function setMappingTool(buttonId, panelId, expanded) {
+  // Keep the disclosure's visual state and screen-reader state synchronized with the same boolean.
   $(buttonId).setAttribute("aria-expanded", String(expanded));
   $(panelId).hidden = !expanded;
 }
@@ -2577,39 +2740,116 @@ $("sample").onchange = () => {
   applyBusinessTheme($("business").value);
 };
 $("business").onchange = () => applyBusinessTheme($("business").value);
-$("overviewNav").onclick = () => showPage("overview");
-$("detailNav").onclick = () => showPage("detail");
-$("setupNav").onclick = showSetup;
-$("cancelSetup").onclick = () => showPage("overview");
+$("previewChangeDataset").onclick = () => showSetup();
+$("cancelSetup").onclick = () => showPage(lastDashboardPage);
+$("previewCustomize").onclick = () => showChartChooser(false);
+$("previewAiSettings").onclick = () => $("aiSettings").showModal();
+$("sidebarToggle").onclick = () => { sidebarCollapsed = !sidebarCollapsed; syncSidebar(); };
+$("previewFilterButton").onclick = () => {
+  if (document.body.classList.contains("previewFiltersOpen")) { closePreviewFilters(); return; }
+  const filters = $("dashboardFilters");
+  document.body.classList.add("previewFiltersOpen");
+  $("previewFilterButton").setAttribute("aria-expanded", "true");
+  if (typeof filters.showPopover === "function") {
+    filters.setAttribute("popover", "auto");
+    filters.showPopover();
+  }
+};
+$("dashboardFilters").addEventListener("toggle", event => {
+  if (event.target !== $("dashboardFilters")) return;
+  if (event.newState === "closed" && document.body.classList.contains("previewMode") && !$("dashboardFilters").matches(":popover-open")) {
+    document.body.classList.remove("previewFiltersOpen");
+    $("previewFilterButton").setAttribute("aria-expanded", "false");
+  }
+});
+Object.entries(previewViews).forEach(([view, [tabId]]) => {
+  $(tabId).onclick = () => { previewView = view; syncPreviewView(); };
+  $(tabId).onkeydown = event => {
+    if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+    event.preventDefault();
+    const tabs = Object.values(previewViews).map(([id]) => id), index = tabs.indexOf(tabId);
+    const next = event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1
+      : (index + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length;
+    $(tabs[next]).click(); $(tabs[next]).focus();
+  };
+});
+const changePreviewChart = index => {
+  previewChartIndex = index;
+  renderOverviewLayout(filtered());
+};
+$("previewChartSelect").onchange = () => changePreviewChart(Number($("previewChartSelect").value));
+$("previewPreviousChart").onclick = () => changePreviewChart(previewChartIndex - 1);
+$("previewNextChart").onclick = () => changePreviewChart(previewChartIndex + 1);
+const followPageHash = () => {
+  // Native menu links and browser Back/Forward enter here; a reload still needs a fresh dataset upload.
+  const page = pageFromHash();
+  if (page) showPage(page, false);
+  else if (window.location.hash === "#change-dataset") showSetup(false);
+  else if (window.location.hash === "#account") showAccount(false);
+  else if (window.location.hash === "#datasetTablePanel") {
+    showPage("detail", false);
+    $("datasetTablePanel").scrollIntoView({block: "start"});
+    return;
+  }
+  window.scrollTo(0, 0);
+  const heading = window.location.hash === "#account" ? $("accountTitle")
+    : document.body.classList.contains("previewMode") ? $("businessOverviewTitle") : $("dashboardTitle");
+  heading.tabIndex = -1;
+  heading.focus({preventScroll: true});
+};
+window.addEventListener("hashchange", followPageHash);
 ["from", "to", "category", "product", "weekday", "period"].forEach((id) =>
   $(id).addEventListener("change", render),
 );
 $("reset").onclick = resetFilters;
 $("previousDataPage").onclick = () => { datasetTablePage--; renderDatasetTable(); };
 $("nextDataPage").onclick = () => { datasetTablePage++; renderDatasetTable(); };
-$("chooseCharts").onclick = () => showChartChooser(false);
-document.addEventListener("change", event => {
-  if (!event.target.matches(".chartTypeSelect")) return;
-  chartTypeById[event.target.dataset.chartType] = event.target.value;
-  render();
+$("detailChartSelect").onchange = () => {
+  // All detailed charts are already present; jump to the chosen card instead of hiding other charts.
+  const panel = [...$("detailCharts").children].find(panel => panel.dataset.chartPanel === $("detailChartSelect").value);
+  if (panel) { panel.tabIndex = -1; panel.focus({preventScroll: true}); panel.scrollIntoView({block: "start"}); }
+};
+$("dashboardFilters").addEventListener("keydown", event => {
+  if (event.key === "Escape" && document.body.classList.contains("previewFiltersOpen")) {
+    closePreviewFilters(); $("previewFilterButton").focus();
+  }
 });
+$("chooseCharts").onclick = () => showChartChooser(false);
 $("closeChartChooser").onclick = () => $("chartChooser").close();
-$("chartChooser").addEventListener("close", () => $("chooseCharts").focus());
+$("chartChooser").addEventListener("close", () => chooserTrigger?.focus());
 $("selectRecommendedCharts").onclick = selectRecommendedCharts;
 $("loadSelectedCharts").onclick = loadSelectedCharts;
 $("openAiSettings").onclick = () => $("aiSettings").showModal();
 $("closeAiSettings").onclick = () => $("aiSettings").close();
 $("refreshModels").onclick = refreshModels;
 // Starting over or switching model invalidates outstanding answers and clears local chat context.
-$("newConversation").onclick = () => { revision++; resetConversation(); };
+$("newConversation").onclick = startNewConversation;
 $("localModel").onchange = () => { updateAnswerModeNotice(); syncAnalysisSelection(); };
-$("retryOverview").onclick = () => overview.retry();
 $("insightForm").onsubmit = (e) => {
   // Keep the form on the same page and answer the typed question.
   e.preventDefault();
   ask($("insightQuestion").value);
 };
-showSetup();
+showSetup(false);
+syncSidebar();
+mobileSidebar.addEventListener("change", syncSidebar);
+// Account settings can be opened directly before any temporary dataset has been loaded.
+if (window.location.hash === "#account") showAccount(false);
 applyBusinessTheme($("business").value);
 refreshModels().catch(() => {});
+const resizePreview = () => { if (document.body.classList.contains("previewMode")) renderOverviewLayout(filtered()); };
+compactPreview.addEventListener("change", resizePreview);
+const changeChartType = event => {
+  const control = event.target.closest(".chartTypeSelect");
+  if (!control || !CHART_TYPES.includes(control.value) || !chartOptions().some(option => option.id === control.dataset.chartType)) return;
+  chartTypeById[control.dataset.chartType] = control.value;
+  const rows = filtered(), products = group(rows, "Product_Name").sort((a, b) => sum(b[1], "Net_Sales") - sum(a[1], "Net_Sales"));
+  // Only redraw charts: filters, table pagination, pending AI answers, and conversation stay intact.
+  renderOverviewCharts(rows, products, meta.capabilities);
+  renderDetailedCharts(rows, products, meta.capabilities);
+  $(control.id)?.focus({preventScroll: true});
+};
+$("dashboardMain").addEventListener("change", changeChartType);
+// React can unmount this controller: detach observers/listeners to avoid duplicate work after remounting.
+return () => { disposed = true; revision++; overview.dispose(); discoveryController.abort(); localAnalysisController?.abort(); localAnalysisController = null; browserOllama.disconnect(); window.removeEventListener("hashchange", followPageHash); previewChartObserver.disconnect(); compactPreview.removeEventListener("change", resizePreview); mobileSidebar.removeEventListener("change", syncSidebar); $("dashboardMain").removeEventListener("change", changeChartType); document.body.classList.remove("workspaceMode", "sidebarCollapsed"); };
 }

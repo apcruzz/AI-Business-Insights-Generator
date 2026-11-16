@@ -141,3 +141,49 @@ test('cache bounds and expiry prevent indefinite session memory growth', async (
   value.select(scope); await value.start();
   assert.equal(calls, 4);
 });
+
+test('unmount cancels a scheduled overview without starting a provider request', async () => {
+  let calls = 0;
+  const {value, states} = controller(async () => { calls++; return answer; }, {delay: 5});
+  value.select(scope);
+  value.dispose();
+  const count = states.length;
+  await new Promise(resolve => setTimeout(resolve, 25));
+  value.select(scope);
+  await value.retry();
+  await value.start();
+  assert.equal(calls, 0);
+  assert.equal(states.length, count);
+  assert.equal(value.state.status, 'idle');
+});
+
+test('unmount aborts an in-flight overview and suppresses late account data', async () => {
+  const pending = deferred(); let signal;
+  const {value, states} = controller((_payload, requestSignal) => { signal = requestSignal; return pending.promise; });
+  value.select(scope);
+  const running = value.start();
+  value.dispose();
+  const count = states.length;
+  pending.resolve(answer);
+  await running;
+  assert.equal(signal.aborted, true);
+  assert.equal(value.scope, null);
+  assert.equal(value.cache.size, 0);
+  assert.equal(states.length, count);
+  assert.equal(value.state.status, 'idle');
+});
+
+test('unmount clears cached overviews and ignores late failures', async () => {
+  const pending = deferred();
+  const {value, states} = controller(async payload => payload.datasetId === scope.datasetId ? answer : pending.promise);
+  value.select(scope); await value.start();
+  assert.equal(value.cache.size, 1);
+  value.select({...scope, datasetId: 'other'});
+  const running = value.start();
+  value.dispose();
+  const count = states.length;
+  pending.reject(Error('late failure'));
+  await running;
+  assert.equal(value.cache.size, 0);
+  assert.equal(states.length, count);
+});

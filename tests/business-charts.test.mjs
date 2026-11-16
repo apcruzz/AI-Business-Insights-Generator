@@ -50,3 +50,17 @@ test('SVGs use actual line/heatmap/histogram renderers and escape uploaded label
   assert.ok(!html.includes('<img'));
   assert.match(renderBusinessChart('service',[],meta,'#78513a',String),/No matching records/);
 });
+test('Responsive plots fill a tall pane without stretching labels or clipping negative values',()=>{
+  const meta={business:'Bakery',currency:'USD',capabilities:all};
+  const rows=[{Date:'2026-01-01',Net_Sales:-1000000},{Date:'2026-01-02',Net_Sales:2000000}];
+  for(const [width,height] of [[280,180],[410,320]]){
+    const html=renderBusinessChart('trend',rows,meta,'#5489ff',String,{width,height,fontSize:12});
+    assert.ok(!/NaN|Infinity/.test(html));
+    const circles=[...html.matchAll(/<circle cx="([\d.]+)" cy="([\d.]+)"/g)].map(m=>[+m[1],+m[2]]);
+    assert.equal(circles.length,2);
+    for(const [x,y] of circles) assert.ok(x>0 && x<width && y>0 && y<height);
+    assert.ok(Math.abs(circles[0][1]-circles[1][1])>height*.65, 'Use the available plot height');
+    assert.match(html,/-1000000<\/title>/, 'Hover retains the exact negative amount');
+    assert.match(html,/font-size="12"/, 'Label size does not depend on SVG scaling');
+  }
+});
