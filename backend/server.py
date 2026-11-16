@@ -12,6 +12,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from backend.config import DIST, ROOT, UPLOAD_LIMIT_BYTES
 from backend.ai_providers import available_models
 from backend.groq_client import GroqError
+from backend.gemini_client import GeminiError
 
 # One process-wide request token is fetched by dashboard.js before it posts data.
 TOKEN = secrets.token_urlsafe(32)
@@ -86,7 +87,7 @@ class Handler(BaseHTTPRequestHandler):
             else:
                 self.send_json(result)
         # Provider failures are explicit: never silently switch a cloud question to local AI.
-        except GroqError as error:
+        except (GroqError, GeminiError) as error:
             self.send_json({"error": str(error)}, error.status)
         # Return expected validation details, but hide unexpected internal exceptions from the browser.
         except Exception as error:
@@ -116,7 +117,7 @@ def main():
     server = ThreadingHTTPServer(("127.0.0.1", args.port), Handler)
     print(
         f"Free Business Dashboard: http://127.0.0.1:{args.port}\n"
-        "Uploads are processed in memory. Optional Groq chat sends data context to Groq. Press Ctrl+C to stop.",
+        "Uploads are processed in memory. Optional cloud AI sends data context to the provider you select. Press Ctrl+C to stop.",
         flush=True,
     )
     if not args.no_browser:

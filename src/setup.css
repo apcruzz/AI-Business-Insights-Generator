@@ -1317,3 +1317,25 @@ body.overviewMode .overviewBottom .highlightsPanel .insightCards article {
   .datasetTablePanel { padding: 16px; }
   .datasetPagination { flex-wrap: wrap; }
 }
+/* Initial AI review grows independently of the compact conversation card. */
+.aiOverviewPanel { margin-top: 12px; min-width: 0; flex: 0 0 auto; background: #f6fffd; border-color: #addfd6; }
+.aiOverviewPanel .insightHeader { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.aiOverviewPanel h2 { font-size: 18px; margin: 0 0 6px; color: #087968; }
+.aiOverviewPanel .modelRow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 14px 0 10px; }
+.aiOverviewPanel .modelRow label { font-size: 12px; font-weight: 600; }
+.aiOverviewPanel .modelRow select { max-width: 100%; min-width: 0; font-size: 13px; }
+.aiOverviewPanel .aiDataNotice { line-height: 1.6; font-size: 12px; max-width: 110ch; }
+.aiOverviewPanel .overviewAnswer { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; line-height: 1.7; margin: 16px 0; }
+.aiOverviewPanel #overviewEvidence { max-height: 360px; overflow: auto; font-size: 12px; }
+.aiOverviewPanel #overviewEvidence pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+.aiOverviewPanel .quietButton { flex-shrink: 0; }
+@media (min-width: 1000px) and (min-height: 650px) {
+  body.overviewMode main { height: auto; min-height: calc(100dvh - 64px); overflow: visible; }
+  body.overviewMode #overview { height: auto; }
+  body.overviewMode .overviewGrid { flex: 0 0 300px; }
+}
+@media (max-width: 550px) {
+  .aiOverviewPanel .insightHeader { flex-wrap: wrap; }
+  .aiOverviewPanel .modelRow { align-items: stretch; flex-direction: column; }
+  .aiOverviewPanel .modelRow select { width: 100%; }
+}

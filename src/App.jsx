@@ -275,21 +275,36 @@ export default function App() {
             </section>
           </div>
 
-          {/* Insights combine computed cards with calculated answers, Ollama, or Groq chat. */}
+          <section className="panel aiOverviewPanel" aria-labelledby="aiOverviewTitle">
+            <div className="insightHeader">
+              <div>
+                <h2 id="aiOverviewTitle">AI overview and recommendations</h2>
+                <p className="sub">An initial review of the current dataset and filters. Ask follow-up questions below.</p>
+              </div>
+              <button id="openAiSettings" className="quietButton" type="button" aria-haspopup="dialog">AI settings</button>
+            </div>
+            <div className="modelRow">
+              <label htmlFor="localModel">AI provider / answer mode</label>
+              <select id="localModel" defaultValue="" aria-describedby="aiModeSummary overviewDataNotice">
+                <option value="">Calculated answers</option>
+              </select>
+              <span id="aiModeSummary" className="modeSummary" aria-live="polite">Uses dashboard data</span>
+            </div>
+            <p id="overviewDataNotice" className="sub aiDataNotice"></p>
+            <p id="overviewStatus" className="sub" role="status">Choose an AI provider to generate an overview.</p>
+            <p id="overviewAnswer" className="overviewAnswer" aria-live="polite"></p>
+            <div id="overviewEvidence" hidden></div>
+            <button id="retryOverview" className="quietButton" type="button" hidden>Retry overview</button>
+          </section>
+
+          {/* Computed cards remain separate from AI overview and chat. */}
           <div className="overviewBottom">
             <section className="panel insightsPanel compactAssistant" aria-labelledby="assistantTitle">
               <div className="insightHeader">
                 <div>
                   <h2 id="assistantTitle">Business assistant</h2>
                 </div>
-                <button id="openAiSettings" className="quietButton" type="button" aria-haspopup="dialog">AI settings</button>
-              </div>
-              <div className="modelRow">
-                <label htmlFor="localModel" className="srOnly">Answer mode</label>
-                <select id="localModel" defaultValue="" aria-describedby="aiModeSummary">
-                  <option value="">Calculated answers</option>
-                </select>
-                <span id="aiModeSummary" className="modeSummary" aria-live="polite">Uses dashboard data</span>
+
               </div>
               <div className="conversationViewport" tabIndex="0" aria-label="Conversation and supporting calculations">
                 <p id="insightAnswer" aria-live="polite"></p>

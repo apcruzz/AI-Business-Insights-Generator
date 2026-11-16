@@ -15,6 +15,7 @@ from backend.api import dispatch
 from backend.ai_providers import available_models
 from backend.config import DIST, UPLOAD_LIMIT_BYTES
 from backend.groq_client import GroqError
+from backend.gemini_client import GeminiError
 from backend.request_scope import OWNER
 
 
@@ -126,7 +127,7 @@ def create_app():
             browser_step = request.path in ('/api/ollama-step', '/api/ollama-cancel')
             if not limits.allow(('browser-step' if browser_step else 'post', name), 60 if browser_step else 20):
                 return error('Upload/question limit reached. Try again shortly.', 429)
-            if request.path in ('/api/analyst', '/api/ollama-start') and not limits.allow(('ai', name), 6):
+            if request.path in ('/api/analyst', '/api/overview', '/api/ollama-start') and not limits.allow(('ai', name), 6):
                 return error('AI question limit reached. Try again shortly.', 429)
 
     @app.after_request
@@ -169,7 +170,7 @@ def create_app():
 
     @app.post('/api/<action>')
     def api(action):
-        if action not in ('profile', 'analyze', 'analyst', 'explain', 'ollama-start', 'ollama-step', 'ollama-cancel'):
+        if action not in ('profile', 'analyze', 'analyst', 'overview', 'explain', 'ollama-start', 'ollama-step', 'ollama-cancel'):
             return error('Not found.', 404)
         if action == 'explain':
             return error('Local Ollama is available only in local development.', 400)
@@ -180,7 +181,7 @@ def create_app():
             if not isinstance(payload, dict):
                 raise ValueError('Submit a JSON object.')
             return jsonify(dispatch('/api/' + action, payload))
-        except GroqError as exc:
+        except (GroqError, GeminiError) as exc:
             return error(str(exc), exc.status)
         except ValueError as exc:
             return error(str(exc), 400)

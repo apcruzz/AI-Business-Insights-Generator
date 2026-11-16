@@ -1,8 +1,12 @@
 # Free Business Dashboard
 
-A local two-page dashboard with business setup, CSV/Excel uploads, column suggestions, automatic charts, calculated insights, and optional AI data analysts through Ollama or GroqCloud GPT-OSS 120B.
+A local two-page dashboard with business setup, CSV/Excel uploads, column suggestions, automatic charts, calculated insights, and optional AI data analysts through Ollama, Google Gemini, or GroqCloud GPT-OSS 120B.
 
-The dashboard and Ollama run on your computer without API keys or subscriptions. Uploaded files are processed in memory and are not saved by the server. Groq is a separate, optional cloud choice requiring a Groq API key and internet access. Selecting it sends questions, recent conversation, dataset metadata, column samples, and query results to Groq. Groq's free plan has usage limits; your account's plan determines any charges.
+The dashboard and Ollama run on your computer without API keys or subscriptions. Uploaded files are processed in memory and are not saved by the server. Gemini and Groq are optional cloud choices requiring their own backend API keys and internet access. Selecting a cloud provider generates the initial overview and sends questions, recent conversation, dataset metadata, column samples and query results to that provider. API project access, usage limits and any charges depend on your account. Existing local and calculated modes remain available.
+
+## Gemini overview and chat
+
+See [Gemini setup](docs/gemini-setup.md) for Windows startup commands, provider selection, data sharing and verification. Select Gemini explicitly to generate an initial overview; ask follow-up questions in Business assistant. The backend API key stays on the server.
 
 ## Project structure
 
@@ -16,6 +20,8 @@ free_business_dashboard/
 │   ├── business_data.py # Validate optional delivery, booking, waste and job fields
 │   ├── normalizer.py     # Mapping validation and sales-data normalization
 │   ├── ollama_client.py  # Local AI prompt and Ollama API calls
+│   ├── gemini_client.py  # Server-only Gemini structured-action transport
+│   ├── analyst_overview.py # Fixed initial-review prompt and aggregate calculations
 │   ├── groq_client.py    # Server-only Groq API transport and error handling
 │   ├── ai_providers.py   # Model discovery and explicit provider selection
 │   ├── analyst_agent.py  # Shared question/query/evidence/conversation loop
@@ -66,7 +72,7 @@ python app.py
 Install Python 3.10 or newer if needed. In PowerShell, change to the extracted `free_business_dashboard` folder:
 
 ```powershell
-py -m venv .venv
+python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 npm install
 npm run build
