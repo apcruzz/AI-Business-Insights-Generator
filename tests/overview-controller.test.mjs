@@ -47,6 +47,25 @@ test('calculated mode and a missing dataset do not request AI', async () => {
   assert.equal(value.state.status, 'idle');
 });
 
+test('local Ollama overviews share scoped deduplication and explicit local privacy notices', async () => {
+  for (const provider of ['ollama', 'browser_ollama']) {
+    let calls = 0;
+    const local = {...scope, provider, model: 'llama3.2:3b'};
+    const {value} = controller(async payload => {
+      calls++;
+      assert.equal(payload.provider, provider);
+      assert.equal(payload.task, 'overview');
+      return answer;
+    });
+    value.select(local); await value.start();
+    value.select({...local});
+    assert.equal(calls, 1);
+    assert.equal(value.state.status, 'ready');
+    assert.match(answerModeNotice(local, false, true), /automatic overview/);
+    value.dispose();
+  }
+});
+
 test('repeated renders, model refresh and navigation deduplicate one pending request', async () => {
   const pending = deferred(); let calls = 0;
   const {value} = controller((payload, signal) => {

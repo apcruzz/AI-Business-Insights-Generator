@@ -81,6 +81,11 @@ def main():
                 page.locator('#buildButton').click()
                 page.locator('#loadSelectedCharts').click()
                 expect(page.locator('#dashboardMain')).to_be_visible()
+                expect(page.locator('#overviewAssistant')).to_be_visible()
+                # The included fictional sample also resumes in a cookie-authenticated account after refresh.
+                page.reload()
+                expect(page.locator('#overviewAssistant')).to_be_visible()
+                expect(page.locator('#previewSidebarDataset')).to_have_text('Cafe_Demo.csv')
                 page.locator('#insightQuestion').fill('What are total sales?')
                 page.locator('#askButton').click()
                 expect(page.locator('#insightAnswer')).to_contain_text('Calculated answer')

@@ -23,7 +23,7 @@ export default function App() {
 }
 
 function ConversationWindowButton({id, action, label}) {
-  // Keep the same labeled, keyboard-accessible controls in the panel and its minimized bar.
+  // Icon controls retain labels and keyboard access even at their compact size.
   return <button id={id} className={`conversationWindowButton conversationWindowButton--${action}`} type="button"
     aria-label={label} title={label} aria-controls="overviewAssistant"
     aria-pressed={action === "maximize" ? false : undefined}>
@@ -378,13 +378,10 @@ function Dashboard({accountPage, user}) {
                 <div>
                   <h2 id="assistantTitle">Business assistant</h2>
                 </div>
-                <div className="conversationToolbar">
-                  <button id="openAiSettings" className="quietButton" type="button" aria-haspopup="dialog">AI settings</button>
-                  <div className="conversationWindowControls" role="group" aria-label="AI conversation controls">
-                    <ConversationWindowButton id="minimizeConversation" action="minimize" label="Minimize conversation" />
-                    <ConversationWindowButton id="maximizeConversation" action="maximize" label="Maximize conversation" />
-                    <ConversationWindowButton id="closeConversation" action="close" label="Close conversation" />
-                  </div>
+                <div className="conversationWindowControls" role="group" aria-label="AI conversation controls">
+                  <ConversationWindowButton id="minimizeConversation" action="minimize" label="Minimize conversation" />
+                  <ConversationWindowButton id="maximizeConversation" action="maximize" label="Maximize conversation" />
+                  <ConversationWindowButton id="closeConversation" action="close" label="Close conversation" />
                 </div>
               </div>
               <div className="modelRow">
@@ -393,6 +390,7 @@ function Dashboard({accountPage, user}) {
                   <option value="">Calculated answers</option>
                 </select>
                 <span id="aiModeSummary" className="modeSummary" aria-live="polite">Uses dashboard data</span>
+                <button id="openAiSettings" className="quietButton" type="button" aria-haspopup="dialog">AI settings</button>
               </div>
               <div className="conversationViewport" tabIndex="0" aria-label="Conversation and supporting calculations">
                 {/* Replies and evidence scroll here so long answers cannot expand the surrounding card. */}
@@ -469,12 +467,13 @@ function Dashboard({accountPage, user}) {
       </main>
       {/* Hiding the panel preserves its DOM, draft, and pending replies. This launcher reopens it. */}
       <div id="conversationDock" className="conversationDock" role="group" aria-label="AI conversation" hidden>
-        <button id="restoreConversation" type="button" aria-controls="overviewAssistant" aria-expanded="false">
-          <span className="conversationDockIcon" aria-hidden="true">✦</span>
-          <span id="conversationDockLabel">Open AI conversation</span>
+        <button id="restoreConversation" type="button" aria-controls="overviewAssistant" aria-expanded="false" title="Open business assistant">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M18 10v7a2 2 0 0 1-2 2H9l-5 3V7a2 2 0 0 1 2-2h7M8 10h4M8 14h6" />
+            <path d="m18 2 1.1 3.9L23 7l-3.9 1.1L18 12l-1.1-3.9L13 7l3.9-1.1L18 2Z" />
+          </svg>
+          <span id="conversationDockLabel" className="srOnly">Open business assistant</span>
         </button>
-        <ConversationWindowButton id="maximizeMinimizedConversation" action="maximize" label="Maximize conversation" />
-        <ConversationWindowButton id="closeMinimizedConversation" action="close" label="Close conversation" />
       </div>
     </>
   );

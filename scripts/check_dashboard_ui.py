@@ -61,8 +61,13 @@ def main():
 
                 def fake_local(route):
                     local_requests.append(route.request.url)
-                    assert route.request.url.endswith('/api/tags'), 'No real model inference in this UI check'
-                    route.fulfill(json={'models': [{'name': 'ui-test:local'}]},
+                    if route.request.url.endswith('/api/tags'):
+                        result = {'models': [{'name': 'ui-test:local'}]}
+                    else:
+                        assert route.request.url.endswith('/api/chat')
+                        result = {'message': {'content': json.dumps({'action': 'answer', 'sql': '',
+                            'answer': 'Review recorded sales and costs before making changes.'})}}
+                    route.fulfill(json=result,
                                   headers={'Access-Control-Allow-Origin': origin})
 
                 page.route('http://127.0.0.1:11434/**', fake_local)
@@ -114,6 +119,8 @@ def main():
                 assert abs(final_metric['x'] + final_metric['width'] - metric_row['x'] - metric_row['width']) < 1
                 page.evaluate('window.scrollTo(0, 0)')
                 page.screenshot(path='/tmp/dashboard-ui-unified-overview.png', full_page=True)
+                expect(page.locator('#overviewAssistant')).to_be_visible()
+                expect(page.locator('#restoreConversation')).to_be_hidden()
                 assert 'Units sold' in page.locator('#overviewCards').inner_text()
                 assert page.locator('[data-question]').count() == 0
                 assert not local_requests, 'Page load/upload must not contact Ollama'
@@ -368,7 +375,8 @@ def check_conversation_messages(page, expect):
         page.locator('#maximizeConversation').click()
         page.locator('#minimizeConversation').click()
         expect(page.locator('#restoreConversation')).to_be_focused()
-        page.locator('#closeMinimizedConversation').click()
+        page.locator('#restoreConversation').click()
+        page.locator('#closeConversation').click()
         expect(page.locator('#overviewAssistant')).to_be_hidden()
         assert len(pending) == 1, 'Window actions must not duplicate the pending request'
         pending.pop().fulfill(json={'conversationId': 'mock-message-ui', 'mode': 'Groq',
@@ -684,6 +692,8 @@ def check_sidebar_collapse(page, expect, origin):
 
 def check_preview_fit(page, expect, width):
     """Verify bounded layout and reachable content, rather than just hiding overflow."""
+    if page.locator('#restoreConversation').is_visible():
+        page.locator('#restoreConversation').click()
     def fits():
         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'), f'Preview horizontal overflow at {width}'
         assert page.evaluate('document.documentElement.scrollHeight <= innerHeight + 1'), f'Preview page scrolls at {width}'
@@ -737,7 +747,7 @@ def check_preview_fit(page, expect, width):
 
 def check_control_sizes(page):
     """Comparable actions have the same text size and control height."""
-    controls = page.locator('button:visible:not(.mappingTool)')
+    controls = page.locator('button:visible:not(.mappingTool):not(.conversationWindowButton):not(#openAiSettings):not(#restoreConversation)')
     sizes = controls.evaluate_all('els => els.map(el => ({font: getComputedStyle(el).fontSize, height: el.getBoundingClientRect().height}))')
     assert len({item['font'] for item in sizes}) <= 1, sizes
     assert all(abs(item['height'] - (32 if page.viewport_size['width'] <= 760 else 36)) < 1 for item in sizes), sizes

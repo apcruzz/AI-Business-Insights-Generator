@@ -118,7 +118,8 @@ def create_account_app():
                 return error('Your request limit reached. Try again shortly.', 429)
             if request.method in UNSAFE:
                 browser_step = request.path in ('/api/ollama-step', '/api/ollama-cancel')
-                if not limits.allow(('browser-step' if browser_step else 'post', name), 60 if browser_step else 20):
+                workspace = request.path in ('/api/workspace-save', '/api/workspace-restore')
+                if not limits.allow(('workspace' if workspace else 'browser-step' if browser_step else 'post', name), 60 if browser_step or workspace else 20):
                     return error('Upload/question limit reached. Try again shortly.', 429)
                 if request.path in ('/api/analyst', '/api/overview', '/api/ollama-start') and not limits.allow(('ai', name), 6):
                     return error('AI question limit reached. Try again shortly.', 429)
@@ -265,7 +266,7 @@ def create_account_app():
     @app.post('/api/<action>')
     def api(action):
         # Share the same parsers and calculations as local development, behind the hosted access checks.
-        if action not in ('profile', 'analyze', 'analyst', 'overview', 'explain', 'ollama-start', 'ollama-step', 'ollama-cancel'):
+        if action not in ('profile', 'analyze', 'analyst', 'overview', 'explain', 'ollama-start', 'ollama-step', 'ollama-cancel', 'workspace-save', 'workspace-restore'):
             return error('Not found.', 404)
         if action == 'explain':
             return error('Local Ollama is available only in local development.', 400)

@@ -16,6 +16,57 @@ from playwright.sync_api import sync_playwright, expect
 from backend.normalizer import normalize
 
 
+def check_conversation_header(page):
+    """Small window actions sit beside the complete title without overlap or clipping."""
+    title = page.locator('#assistantTitle').bounding_box()
+    controls = page.locator('.conversationWindowControls').bounding_box()
+    assert controls['x'] >= title['x'] + title['width'], (title, controls)
+    assert abs(title['y'] + title['height'] / 2 - controls['y'] - controls['height'] / 2) < 1
+    for button in page.locator('.conversationWindowButton').all():
+        box = button.bounding_box()
+        assert box['width'] == box['height'] == 24, box
+        expect(button).to_be_in_viewport(ratio=1)
+
+
+def check_initial_assistant_and_launcher(page):
+    """The assistant starts open; minimizing overlays one round launcher without shortening the dashboard."""
+    expect(page.locator('body')).to_have_attribute('data-conversation-state', 'open')
+    expect(page.locator('#overviewAssistant')).to_be_visible()
+    expect(page.locator('#conversationDock')).to_be_hidden()
+    overview = page.locator('#overview').bounding_box()
+    original_bottom = overview['y'] + overview['height']
+    page.locator('#minimizeConversation').click()
+    expect(page.locator('body')).to_have_attribute('data-conversation-state', 'minimized')
+    overview = page.locator('#overview').bounding_box()
+    assert abs(overview['y'] + overview['height'] - original_bottom) < 1, 'Floating launcher must not reserve its own row'
+    for width, height in [(1440, 1000), (1024, 600), (390, 568), (320, 640)]:
+        page.set_viewport_size({'width': width, 'height': height})
+        expect(page.locator('#overviewAssistant')).to_be_hidden()
+        launcher = page.get_by_role('button', name='Open business assistant', exact=True)
+        expect(launcher).to_be_in_viewport(ratio=1)
+        box = launcher.bounding_box()
+        assert box['width'] == box['height'] == (48 if width <= 760 else 52), box
+        assert 0 < width - box['x'] - box['width'] <= 24
+        assert page.locator('#conversationDock button').count() == 1
+        expect(page.locator('.overviewChartSlot:visible').first).to_be_visible()
+        assert page.evaluate('''() => {
+            const button = document.getElementById('restoreConversation').getBoundingClientRect();
+            return [...document.querySelectorAll('.overviewChartSlot, #overviewHighlights')].some(panel => {
+                const box = panel.getBoundingClientRect();
+                return box.width > 0 && box.height > 0 && button.left < box.right && button.right > box.left
+                    && button.top < box.bottom && button.bottom > box.top;
+            });
+        }'''), 'Minimized assistant should overlap the dashboard content'
+        assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
+        assert page.evaluate('document.documentElement.scrollHeight <= innerHeight + 1')
+        page.screenshot(path=f'/tmp/dashboard-ui-assistant-launcher-{width}.png')
+    page.set_viewport_size({'width': 1440, 'height': 1000})
+    page.locator('#restoreConversation').focus()
+    page.keyboard.press('Enter')
+    expect(page.locator('#insightQuestion')).to_be_focused()
+    check_conversation_header(page)
+
+
 def check_conversation_window(page):
     """Sizing and visibility preserve the same chat DOM, draft, evidence, filters, and model."""
     panel, log = page.locator('#overviewAssistant'), page.locator('#insightAnswer')
@@ -24,6 +75,7 @@ def check_conversation_window(page):
     draft = 'Keep this unsent question'
     page.locator('#insightQuestion').fill(draft)
     page.evaluate('window.originalChatLog = document.getElementById("insightAnswer")')
+    check_conversation_header(page)
 
     def preserved():
         expect(log).to_have_text(transcript)
@@ -70,22 +122,28 @@ def check_conversation_window(page):
     page.evaluate("location.hash = '#business-overview'")
     expect(page.locator('#conversationDock')).to_be_visible()
     expect(panel).to_be_hidden()
-    page.locator('#maximizeMinimizedConversation').click()
+    page.locator('#restoreConversation').click()
+    page.locator('#maximizeConversation').click()
     expect(panel).to_be_visible()
     expect(page.locator('#maximizeConversation')).to_be_focused()
     preserved()
     page.locator('#closeConversation').click()
-    expect(page.locator('#conversationDockLabel')).to_have_text('Open AI conversation')
-    expect(page.locator('#maximizeMinimizedConversation')).to_be_hidden()
-    expect(page.locator('#closeMinimizedConversation')).to_be_hidden()
+    expect(page.locator('#conversationDockLabel')).to_have_text('Reopen business assistant')
+    assert page.locator('#conversationDock button').count() == 1
     page.locator('#restoreConversation').click()
     expect(page.locator('#insightQuestion')).to_be_focused()
     preserved()
     page.screenshot(path='/tmp/dashboard-ui-conversation-restored.png')
 
+    for width in [1280, 1201]:
+        page.set_viewport_size({'width': width, 'height': 800})
+        check_conversation_header(page)
+        preserved()
+
     for width, height in [(1024, 600), (390, 568), (320, 640)]:
         page.set_viewport_size({'width': width, 'height': height})
         page.locator('#previewAssistantTab').click()
+        check_conversation_header(page)
         page.locator('#maximizeConversation').click()
         expect(page.locator('#previewWorkspaceTabs')).to_be_hidden()
         expect(panel).to_be_in_viewport(ratio=1)
@@ -98,7 +156,8 @@ def check_conversation_window(page):
         expect(page.locator('#previewNextChart')).to_be_in_viewport(ratio=1)
         preserved()
         page.screenshot(path=f'/tmp/dashboard-ui-conversation-minimized-{width}.png')
-        page.locator('#closeMinimizedConversation').click()
+        page.locator('#restoreConversation').click()
+        page.locator('#closeConversation').click()
         expect(panel).to_be_hidden()
         page.locator('#previewAssistantTab').click()
         expect(panel).to_be_visible()
@@ -190,12 +249,17 @@ def main():
 
             page.route('**/api/**', api)
             page.goto(origin)
+            for width, height in [(1440, 1000), (390, 844)]:
+                page.set_viewport_size({'width': width, 'height': height})
+                page.screenshot(path=f'/tmp/dashboard-ui-file-picker-{width}.png', full_page=True)
+            page.set_viewport_size({'width': 1440, 'height': 1000})
             page.locator('#upload').set_input_files(str(csv))
             page.locator('#inspectButton').click()
             expect(page.locator('#mappingPanel')).to_be_visible()
             page.locator('#buildButton').click()
             expect(page.locator('#chartChooser')).to_be_visible()
             page.locator('#loadSelectedCharts').click()
+            check_initial_assistant_and_launcher(page)
             expect(page.locator('#overviewAssistant')).to_be_visible()
             expect(page.locator('#aiOverviewPanel')).to_have_count(0)
             assert overview_count() == 0 and inference_count() == 0

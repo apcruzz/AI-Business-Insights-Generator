@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import {clearWorkspaceReference} from "./workspace-session.js";
 import "./accounts.css";
 
 async function accountRequest(path, {method = "GET", body, token} = {}) {
@@ -36,6 +37,7 @@ export function AccountAccess({children}) {
     window.addEventListener("pageshow", refreshRestoredPage);
     return () => window.removeEventListener("pageshow", refreshRestoredPage);
   }, []);
+  useEffect(() => { if (session && !session.authenticated) clearWorkspaceReference(); }, [session]);
   if (!session) return <main className="authPage"><section className="authCard"><p className="authEyebrow">BUSINESS INSIGHTS</p><h1>{error ? "Connection interrupted" : "Opening your workspace…"}</h1>{error && <><p className="authError" role="alert">{error}</p><button className="authPrimary" onClick={load}>Try again</button></>}</section></main>;
   // Mount the dashboard only after authentication; a fresh page also replaces pre-login client state.
   if (!session.authenticated) return <SignIn session={session} onSignedIn={() => window.location.reload()} />;
@@ -61,6 +63,7 @@ function SignIn({session, onSignedIn}) {
     setBusy(true);
     try {
       await accountRequest(registering ? "/api/auth/register" : "/api/auth/login", {method: "POST", body: values, token: session.token});
+      clearWorkspaceReference();
       await onSignedIn();
     } catch (error) { setError(error.message); }
     finally { setBusy(false); }
@@ -103,6 +106,7 @@ function AccountPage({session}) {
     setError("");
     try {
       await accountRequest(path, {method, body, token: session.token});
+      clearWorkspaceReference();
       // Remove every previous dataset, transcript, model connection and CSRF token from this page.
       window.location.reload();
     } catch (error) {
