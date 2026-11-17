@@ -73,8 +73,9 @@ body.workspaceMode #mappingPanel > .setupGrid { grid-template-columns: repeat(4,
 body.workspaceMode .mappingGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; align-items: end; }
 body.workspaceMode :is(.setupGrid, .mappingGrid) > label { display: grid; min-width: 0; align-content: end; gap: 7px; color: #657188; font-size: var(--font-caption); font-weight: 550; }
 body.workspaceMode :is(.setupGrid, .mappingGrid) :is(input, select) { width: 100%; min-width: 0; background-color: #fcfcfe; }
-body.workspaceMode input[type="file"] { line-height: calc(var(--control-height) - 2px) !important; padding: 0 6px !important; color: var(--muted); overflow: hidden; }
-body.workspaceMode input[type="file"]::file-selector-button { height: calc(var(--control-height) - 10px); border: 0; border-radius: 5px; padding: 0 9px; margin-right: 8px; background: #edf0ff; color: #5361bc; font: inherit; cursor: pointer; }
+/* Equal vertical padding centers the native picker button and filename inside the shared control height. */
+body.workspaceMode input[type="file"] { box-sizing: border-box; line-height: calc(var(--control-height) - 10px) !important; padding: 4px 6px !important; color: var(--muted); overflow: hidden; }
+body.workspaceMode input[type="file"]::file-selector-button { height: calc(var(--control-height) - 10px); border: 0; border-radius: 5px; padding: 0 9px; margin: 0 8px 0 0; vertical-align: top; background: #edf0ff; color: #5361bc; font: inherit; line-height: inherit; cursor: pointer; }
 body.workspaceMode .setupActions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
 body.workspaceMode #setupStatus { color: #5966b2; font-size: var(--font-caption); }
 body.workspaceMode .mappingTools { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; gap: 12px; }

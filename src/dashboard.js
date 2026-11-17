@@ -1137,9 +1137,9 @@ function syncPreviewView() {
   $("maximizeConversation").setAttribute("aria-pressed", String(maximized));
   $("maximizeConversation").title = label;
   $("conversationDock").hidden = !dismissed;
-  $("conversationDockLabel").textContent = conversationState === "minimized" ? "Resume AI conversation" : "Open AI conversation";
-  $("maximizeMinimizedConversation").hidden = conversationState !== "minimized";
-  $("closeMinimizedConversation").hidden = conversationState !== "minimized";
+  const launcherLabel = conversationState === "minimized" ? "Open business assistant" : "Reopen business assistant";
+  $("conversationDockLabel").textContent = launcherLabel;
+  $("restoreConversation").title = launcherLabel;
 }
 function setConversationState(state, focusId) {
   // Reuse the mounted conversation so drafts, evidence, and in-flight replies survive all window actions.
@@ -2845,10 +2845,9 @@ $("selectRecommendedCharts").onclick = selectRecommendedCharts;
 $("loadSelectedCharts").onclick = loadSelectedCharts;
 $("openAiSettings").onclick = () => $("aiSettings").showModal();
 $("minimizeConversation").onclick = () => setConversationState("minimized", "restoreConversation");
-$("closeConversation").onclick = $("closeMinimizedConversation").onclick = () => setConversationState("closed", "restoreConversation");
+$("closeConversation").onclick = () => setConversationState("closed", "restoreConversation");
 $("maximizeConversation").onclick = () => setConversationState(conversationState === "maximized" ? "open" : "maximized", "maximizeConversation");
 $("restoreConversation").onclick = () => setConversationState("open", "insightQuestion");
-$("maximizeMinimizedConversation").onclick = () => setConversationState("maximized", "maximizeConversation");
 const restoreConversationOnEscape = event => {
   // Let dialogs, menus, and filter popovers handle their own Escape key first.
   if (event.key !== "Escape" || event.defaultPrevented || conversationState !== "maximized"

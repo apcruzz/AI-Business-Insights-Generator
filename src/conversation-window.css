@@ -1,29 +1,42 @@
 /* Conversation window actions only change layout; the same chat stays mounted in every state. */
 body.previewMode .compactAssistant .insightHeader {
-  flex-direction: column;
-  align-items: stretch;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
   gap: 6px;
 }
-.conversationToolbar, .conversationWindowControls {
+/* Give the title its full text width; the floating launcher carries the assistant icon. */
+body.previewMode .compactAssistant .insightHeader h2::before { display: none; }
+.conversationWindowControls {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   flex-shrink: 0;
 }
-.conversationToolbar { justify-content: space-between; }
-body.previewMode .conversationToolbar #openAiSettings { color: #657188; }
+body.previewMode .compactAssistant .modelRow { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; }
+body.previewMode .compactAssistant .modelRow select { grid-column: 1 / -1; max-width: none; }
+body.previewMode #openAiSettings {
+  height: 24px !important;
+  min-height: 24px !important;
+  padding: 0 4px !important;
+  font-size: var(--font-caption) !important;
+  color: #657188;
+}
 body .conversationWindowButton {
   display: inline-grid;
   place-items: center;
-  width: var(--control-height);
-  flex: 0 0 var(--control-height);
+  width: 24px;
+  min-width: 24px;
+  height: 24px !important;
+  min-height: 24px !important;
+  flex: 0 0 24px;
   padding: 0 !important;
   color: #6b7395;
   background: #f7f7fd;
   border: 1px solid #e7e9f4;
   box-shadow: none;
 }
-.conversationWindowButton svg { width: 18px; height: 18px; }
+.conversationWindowButton svg { width: 14px; height: 14px; }
 body .conversationWindowButton:hover { color: #5c57bf; background: #eeecff; border-color: #d8d3fb; }
 body .conversationWindowButton--close:hover { color: #a23e60; background: #fff0f4; border-color: #f0d4df; }
 .conversationWindowButton .conversationRestoreIcon { display: none; }
@@ -39,13 +52,6 @@ body.previewMode[data-conversation-state="maximized"] .overviewBottom #overviewA
   grid-column: 1;
   grid-row: 1;
 }
-body.previewMode[data-conversation-state="maximized"] .compactAssistant .insightHeader {
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-}
-body.previewMode[data-conversation-state="maximized"] .conversationToolbar { flex: 1; justify-content: flex-end; gap: 12px; }
 body.previewMode[data-conversation-state="maximized"] .compactAssistant .conversationViewport,
 body.previewMode[data-conversation-state="maximized"] #insightForm,
 body.previewMode[data-conversation-state="maximized"] .conversationFooter {
@@ -54,8 +60,7 @@ body.previewMode[data-conversation-state="maximized"] .conversationFooter {
   align-self: center;
 }
 
-/* Dismissed chat gives its desktop column back to the charts; reserve room for the reopen bar. */
-body.previewMode:is([data-conversation-state="minimized"], [data-conversation-state="closed"]) #dashboardMain { padding-bottom: 70px; }
+/* Dismissed chat gives its desktop column back to the charts. The fixed launcher overlays the content. */
 @media (min-width: 1201px) {
   body.previewMode:is([data-conversation-state="minimized"], [data-conversation-state="closed"]) #overview {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -64,33 +69,26 @@ body.previewMode:is([data-conversation-state="minimized"], [data-conversation-st
 .conversationDock {
   position: fixed;
   right: 24px;
-  bottom: 14px;
+  bottom: 18px;
   z-index: 15;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  max-width: calc(100vw - 24px);
-  padding: 5px;
-  border: 1px solid #dfdef2;
-  border-radius: 13px;
-  background: #fff;
-  box-shadow: 0 4px 18px rgb(46 48 94 / 10%);
 }
 body:not(.previewMode) .conversationDock { display: none; }
 body #restoreConversation {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-  color: #5d58b4;
-  background: #f1efff;
-  border-color: transparent;
-  font-weight: 600;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px !important;
+  min-height: 52px !important;
+  padding: 0 !important;
+  border: 1px solid #6962db;
+  border-radius: 50%;
+  color: white;
+  background: #736beb;
+  box-shadow: 0 5px 18px rgb(83 74 184 / 25%);
 }
-.conversationDockIcon { font-size: 20px; line-height: 1; }
-#conversationDockLabel { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body #restoreConversation:hover { background: #6159d4; border-color: #5951c9; }
+#restoreConversation svg { width: 25px; height: 25px; }
 @media (max-width: 760px) {
-  .conversationDock { right: 12px; bottom: 10px; }
-  body.previewMode[data-conversation-state="maximized"] .compactAssistant .insightHeader { flex-direction: column; align-items: stretch; }
-  body.previewMode[data-conversation-state="maximized"] .conversationToolbar { justify-content: space-between; gap: 4px; }
+  .conversationDock { right: 12px; bottom: 12px; }
+  body #restoreConversation { width: 48px; height: 48px !important; min-height: 48px !important; }
 }
