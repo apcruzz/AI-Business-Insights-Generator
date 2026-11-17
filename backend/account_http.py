@@ -17,6 +17,7 @@ from backend.analyst_conversations import CONVERSATIONS
 from backend.browser_analyst import BROWSER_RUNS
 from backend.config import DIST
 from backend.groq_client import GroqError
+from backend.gemini_client import GeminiError
 from backend.production import WindowLimits
 from backend.request_scope import OWNER
 
@@ -119,7 +120,7 @@ def create_account_app():
                 browser_step = request.path in ('/api/ollama-step', '/api/ollama-cancel')
                 if not limits.allow(('browser-step' if browser_step else 'post', name), 60 if browser_step else 20):
                     return error('Upload/question limit reached. Try again shortly.', 429)
-                if request.path in ('/api/analyst', '/api/ollama-start') and not limits.allow(('ai', name), 6):
+                if request.path in ('/api/analyst', '/api/overview', '/api/ollama-start') and not limits.allow(('ai', name), 6):
                     return error('AI question limit reached. Try again shortly.', 429)
 
     @app.after_request
@@ -264,7 +265,7 @@ def create_account_app():
     @app.post('/api/<action>')
     def api(action):
         # Share the same parsers and calculations as local development, behind the hosted access checks.
-        if action not in ('profile', 'analyze', 'analyst', 'explain', 'ollama-start', 'ollama-step', 'ollama-cancel'):
+        if action not in ('profile', 'analyze', 'analyst', 'overview', 'explain', 'ollama-start', 'ollama-step', 'ollama-cancel'):
             return error('Not found.', 404)
         if action == 'explain':
             return error('Local Ollama is available only in local development.', 400)
@@ -286,7 +287,7 @@ def create_account_app():
             return error(str(exc), 503)
         if isinstance(exc, AccountConflict):
             return error(str(exc), 409)
-        if isinstance(exc, GroqError):
+        if isinstance(exc, (GroqError, GeminiError)):
             return error(str(exc), exc.status)
         if isinstance(exc, ValueError):
             return error(str(exc), 400)

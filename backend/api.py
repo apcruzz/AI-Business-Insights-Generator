@@ -1,16 +1,17 @@
 """Shared dashboard API dispatch for local and production servers."""
 import json
-from backend.data_loader import frame_from_payload
 from backend.normalizer import normalize, suggest_mapping
 from backend.ollama_client import explain
 from backend.ai_providers import available_models
 from backend.groq_client import GroqError
 from backend.analyst_datasets import DATASETS
-from backend.analyst_agent import analyze_question
+from backend.analyst_agent import analyze_question, analyze_overview
 from backend.browser_analyst import BROWSER_RUNS
 
 
 def dispatch(path, payload):
+    if path in ("/api/profile", "/api/analyze"):
+        from backend.data_loader import frame_from_payload
     if path == "/api/ollama-start":
         return BROWSER_RUNS.start(payload)
     elif path == "/api/ollama-step":
@@ -51,6 +52,8 @@ def dispatch(path, payload):
             result["analystNote"] = str(error)
         return (result)
     # Pass the question, dataset ID, filters, and conversation ID to the SQL analyst.
+    elif path == "/api/overview":
+        return analyze_overview(payload)
     elif path == "/api/analyst":
         return (analyze_question(payload))
     elif path == "/api/explain":

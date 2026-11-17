@@ -17,7 +17,7 @@ class ConversationCache:
         self.lock = threading.Lock()
 
     # Resume only when dataset, filters, and model match; otherwise create an empty conversation.
-    def open(self, token, dataset_id, filters, model):
+    def open(self, token, dataset_id, filters, model, seed_token=None):
         scope = (OWNER.get(), dataset_id, json.dumps(filters, sort_keys=True), model)
         with self.lock:
             now = time.monotonic()
@@ -32,10 +32,14 @@ class ConversationCache:
                 # Give this request a snapshot so later cache changes do not modify its history.
                 return token, copy.deepcopy(entry['turns'])
             token = secrets.token_urlsafe(24)
-            self.items[token] = {'scope': scope, 'updated': now, 'turns': []}
+            seed = self.items.get(seed_token) if isinstance(seed_token, str) else None
+            # Copy the initial overview into a NEW chat; never append follow-ups to
+            # the cached overview's conversation or expose another scope's history.
+            turns = copy.deepcopy(seed['turns'][:1]) if seed and seed['scope'] == scope else []
+            self.items[token] = {'scope': scope, 'updated': now, 'turns': turns}
             while len(self.items) > self.max_items:
                 self.items.popitem(last=False)
-            return token, []
+            return token, copy.deepcopy(turns)
 
     # Save a completed exchange with its evidence, keeping at most four recent turns.
     def append(self, token, question, answer, evidence):
