@@ -33,6 +33,18 @@ class AnalystTests(unittest.TestCase):
         finally:
             tool.close()
 
+    def test_local_server_ollama_automatic_overview_uses_verified_evidence(self):
+        from backend.analyst_agent import analyze_overview
+        reply = json.dumps({'action': 'answer', 'sql': '', 'answer': 'Selected net sales are USD 130. Review costs and coverage.'})
+        with patch('backend.analyst_agent.DATASETS', self.cache), \
+             patch('backend.ollama_client.local_models', return_value=['llama3.2:3b']), \
+             patch('backend.ollama_client.chat', return_value=reply) as model:
+            result = analyze_overview({'provider': 'ollama', 'model': 'llama3.2:3b', 'datasetId': self.key})
+        self.assertEqual(result['status'], 'answered')
+        self.assertEqual(result['provider'], 'ollama')
+        self.assertTrue(result['evidence'])
+        self.assertIn('Verified initial overview calculations', json.dumps(model.call_args.args))
+
     def test_filters_match_dashboard_and_do_not_mutate_cache(self):
         selected = select_rows(self.dataset, {'from':'2025-02-01','to':'2025-02-28','product':'Tea','weekday':'1','period':'evening'})
         self.assertEqual(selected['Net_Sales'].sum(), 20)

@@ -1,12 +1,14 @@
 # Keeps normalized rows and extra uploaded columns available to future questions by dataset ID.
 """Bounded process-local datasets for the analyst; no uploads are written to disk."""
 import os
+import json
+import copy
 import secrets
 from backend.request_scope import OWNER
 import threading
 import time
 from collections import OrderedDict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import pandas as pd
 
@@ -20,6 +22,8 @@ class Dataset:
     size: int
     created: float
     owner: str
+    dashboard_columns: tuple = ()
+    workspace: dict = field(default_factory=dict)
 
 
 class DatasetCache:
@@ -28,11 +32,12 @@ class DatasetCache:
         self.max_bytes = max_bytes or (32 if os.getenv("APP_ENV") == "production" else 128) * 1024 * 1024
         self.max_items, self.ttl = max_items, ttl
         self._items = OrderedDict()
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()
 
     # Combine validated canonical fields with unmapped source fields, then issue an opaque dataset ID.
     def put(self, source, result, mapping):
         frame = pd.DataFrame(result['rows'])
+        dashboard_columns = tuple(frame.columns)
         # Extra uploaded fields remain queryable without changing dashboard records.
         extras = {}
         for i, column in enumerate(source.columns):
@@ -46,8 +51,8 @@ class DatasetCache:
         size = int(frame.memory_usage(index=True, deep=True).sum())
         if size > self.max_bytes:
             raise ValueError('This dataset is too large for AI analysis memory. Calculated answers still work.')
-        metadata = {key: result[key] for key in ('filename', 'business', 'currency', 'capabilities', 'warnings')}
-        entry = Dataset(frame, metadata, extras, size, time.monotonic(), OWNER.get())
+        metadata = {key: value for key, value in result.items() if key not in ('rows', 'datasetId')}
+        entry = Dataset(frame, metadata, extras, size, time.monotonic(), OWNER.get(), dashboard_columns)
         key = secrets.token_urlsafe(24)
         # Expire old datasets and evict least-recently-used entries before storing this upload.
         with self._lock:
@@ -73,6 +78,27 @@ class DatasetCache:
                 raise ValueError('The AI dataset expired or the server restarted. Build the dashboard again to reload it.')
             self._items.move_to_end(key)
             return entry
+
+    def restore_workspace(self, key):
+        # Reconstruct only normalized dashboard fields, never unmapped/private source columns.
+        with self._lock:
+            entry = self.get(key)
+            dashboard = {**copy.deepcopy(entry.metadata), 'datasetId': key,
+                         'rows': json.loads(entry.frame[list(entry.dashboard_columns)].to_json(orient='records'))}
+            return {'dashboard': dashboard, 'state': copy.deepcopy(entry.workspace.get('state', {})),
+                    'revision': entry.workspace.get('revision', 0)}
+
+    def save_workspace(self, key, state, revision):
+        # UI preferences remain in the same bounded, expiring, request-owned entry as the data.
+        from backend.workspace import validate_state
+        state = validate_state(state)
+        if type(revision) is not int or not 0 <= revision <= 9007199254740991:
+            raise ValueError('Invalid workspace revision.')
+        with self._lock:
+            entry = self.get(key)
+            if revision >= entry.workspace.get('revision', 0):
+                entry.workspace.update(state=copy.deepcopy(state), revision=revision)
+            return {'saved': True}
 
     def discard_owner(self, prefix):
         # Prefixes let logout clear one browser, while account deletion clears every session for that user.

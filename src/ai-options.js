@@ -24,7 +24,7 @@ export function chooseAnswerMode(options, current, initial = false) {
 // Explain where data goes at the point where the user chooses the model.
 export function answerModeNotice(option, groqConfigured, hosted = false, geminiConfigured = false) {
   if (option?.provider === "browser_ollama") {
-    return "Local Ollama via this browser: AI inference runs on your computer. Uploads, authorized SQL calculations and conversation state still use the dashboard server" + (hosted ? " on Render" : "") + ". Questions, column samples and verified results are sent to your local model. No AI inference requests go to cloud providers in this mode.";
+    return "Local Ollama via this browser: AI inference runs on your computer. Uploads, authorized SQL calculations and conversation state still use the dashboard server" + (hosted ? " on Render" : "") + ". Selecting a connected local model generates an automatic overview. Questions, column samples and verified results are sent to your local model. New data, filters or models use a separate overview; completed overviews are reused in this session. Reconnect explicitly after a page refresh. No AI inference requests go to cloud providers in this mode.";
   }
   if (option?.provider === "gemini") {
     return "Google Gemini cloud: selecting this mode generates an initial overview in Business assistant. New data, filters or a different Gemini model use a separate overview; completed overviews are reused in this session. The overview request, questions, recent conversation, column names, sample values, and calculation results are sent to Google. Calculations use the current filters. Google API project quotas and terms apply; a Gemini app subscription does not configure API access.";
@@ -33,7 +33,7 @@ export function answerModeNotice(option, groqConfigured, hosted = false, geminiC
     return "Groq cloud: your question, recent conversation, column names, sample values, and calculation results are sent to Groq. Calculations can use all rows matching your filters. Internet is required; Groq account limits apply.";
   }
   const local = option?.provider === "ollama"
-    ? "Ollama analyzes your uploaded data on this computer."
+    ? "Ollama analyzes your uploaded data on this computer. Selecting a local model generates an automatic overview; new data, filters or models use a separate overview. Completed overviews are reused in this session."
     : (hosted ? "Calculated answers run in your browser using dashboard data processed on Render." : "Calculated answers use your mapped dashboard data on this computer.");
   return local + (geminiConfigured ? " Gemini is available when you select it." : " To enable Gemini, set GEMINI_API_KEY on the Python backend and restart it.") + (groqConfigured
     ? " GPT-OSS 120B is also available through Groq cloud when you select it."

@@ -7,6 +7,7 @@ import {answerOptions, chooseAnswerMode, answerModeNotice} from "./ai-options.js
 import {overviewIcon} from "./overview-icons.js";
 import {OverviewController} from "./overview-controller.js";
 import {assistantMessages, formatAIAnswer} from "./assistant-messages.js";
+import {readWorkspaceReference, writeWorkspaceReference, clearWorkspaceReference} from "./workspace-session.js";
 // Frontend controller: upload -> map columns -> normalize via API -> filter/render -> ask questions.
 import {
   $,
@@ -61,7 +62,9 @@ let localAnalysisController = null;
 let disposed = false;
 const discoveryController = new AbortController();
 const overview = new OverviewController({
-  request: (payload, signal) => api("/api/overview", payload, {signal}),
+  request: (payload, signal) => payload.provider === "browser_ollama"
+    ? runBrowserAnalyst(api, browserOllama, payload, {signal})
+    : api("/api/overview", payload, {signal}),
   onChange: renderAutomaticOverview,
 });
 const pageHashes = {overview: "#business-overview", detail: "#detailed-dashboard"};
@@ -75,6 +78,9 @@ let chooserTrigger = null;
 let previewView = "charts", previewChartIndex = 0;
 // Window state affects presentation only; never reset analysis or send another AI request here.
 let conversationState = "open";
+// Capture once: slow model discovery must not mistake a newly uploaded file for a previous workspace.
+const workspaceReference = readWorkspaceReference();
+let workspaceRestoring = Boolean(workspaceReference), workspaceTimer = null, workspaceRevision = Date.now(), savedWorkspaceKey = "", pendingBrowserMode = "";
 const compactPreview = window.matchMedia("(max-width: 1200px)");
 const mobileSidebar = window.matchMedia("(max-width: 760px)");
 let sidebarCollapsed = false;
@@ -89,6 +95,7 @@ function syncSidebar() {
   const label = collapsed ? "Expand sidebar" : "Collapse sidebar";
   $("sidebarToggle").setAttribute("aria-label", label);
   $("sidebarToggle").title = label;
+  scheduleWorkspaceSave();
 }
 const previewViews = {charts: ["previewChartsTab", "overviewCharts"], highlights: ["previewHighlightsTab", "overviewHighlights"], assistant: ["previewAssistantTab", "overviewAssistant"]};
 // Resize only the plot markup, leaving card dimensions, selected models, and conversations intact.
@@ -185,7 +192,7 @@ function note(text) {
 }
 
 // POST helper for the local Python API. The token ties requests to this page load.
-async function api(path, payload, {signal} = {}) {
+async function api(path, payload, {signal, keepalive = false} = {}) {
   if (!token) {
     const session = await fetch("/api/session", {signal});
     if (session.status === 401) { window.location.reload(); throw Error("Sign in again to continue."); }
@@ -196,14 +203,15 @@ async function api(path, payload, {signal} = {}) {
   const response = await fetch(path, {
     method: "POST",
     signal,
+    keepalive,
     headers: { "Content-Type": "application/json", "X-Dashboard-Token": token },
     body: JSON.stringify(payload),
   });
   const result = await response.json();
   if (!response.ok) {
-    if (response.status === 401) window.location.reload();
+    if (response.status === 401 && path !== "/api/workspace-save") window.location.reload();
     if (response.status === 403) token = "";
-    throw Error(result.error || "Unable to complete this action.");
+    throw Object.assign(Error(result.error || "Unable to complete this action."), {status: response.status});
   }
   return result;
 }
@@ -274,6 +282,7 @@ function showPage(page, updateRoute = true) {
   if (overview) renderOverviewLayout(filtered());
   syncPreviewView();
   window.scrollTo(0, 0);
+  scheduleWorkspaceSave();
 }
 // Rank business preferences first, then choose distinct, supported fallback metrics.
 function chartOptions() {
@@ -552,10 +561,12 @@ function renderKpiOptions(result) {
   $("kpiHelp").textContent =
     "Choose the measures that matter most, or leave all unchecked to use the defaults. Only measures supported by your columns are shown.";
 }
-function buildDashboard() {
+function buildDashboard({restored = false} = {}) {
   if (!analyzedData) return;
   meta = analyzedData;
   data = meta.rows;
+  if (meta.datasetId) writeWorkspaceReference(meta.datasetId);
+  else clearWorkspaceReference();
   previewView = "charts";
   previewChartIndex = 0;
   overviewKpiIds = [];
@@ -591,10 +602,86 @@ function buildDashboard() {
     .join("");
   $("dataNotes").textContent = meta.warnings.join(" ");
   setDefaultFilterValues();
-  showPage("overview");
-  render();
-  showChartChooser(true);
-  $("setupStatus").textContent = "Choose KPI cards and charts for your overview.";
+  showPage("overview", !restored);
+  if (!restored) {
+    render();
+    showChartChooser(true);
+    $("setupStatus").textContent = "Choose KPI cards and charts for your overview.";
+  }
+}
+
+function workspaceState() {
+  return {filters: Object.fromEntries(["from", "to", "category", "product", "weekday", "period"].map(id => [id, $(id).value])),
+    chartIds: overviewChartIds, kpiIds: overviewKpiIds, chartTypes: chartTypeById, page: lastDashboardPage,
+    previewView, previewChartIndex, sidebarCollapsed, conversationState, answerMode: pendingBrowserMode || $("localModel").value};
+}
+function scheduleWorkspaceSave() {
+  if (disposed || workspaceRestoring || !/^[A-Za-z0-9_-]{32}$/.test(meta.datasetId || "")) return;
+  clearTimeout(workspaceTimer);
+  workspaceTimer = setTimeout(saveWorkspace, 800);
+}
+function saveWorkspace() {
+  clearTimeout(workspaceTimer);
+  if (disposed || workspaceRestoring || !/^[A-Za-z0-9_-]{32}$/.test(meta.datasetId || "")) return;
+  const state = workspaceState(), key = JSON.stringify([meta.datasetId, state]);
+  if (key === savedWorkspaceKey) return;
+  savedWorkspaceKey = key;
+  workspaceRevision = Math.max(Date.now(), workspaceRevision + 1);
+  // A small keepalive request also finishes when a refresh interrupts the page. It never contains rows or AI text.
+  api("/api/workspace-save", {datasetId: meta.datasetId, state, revision: workspaceRevision}, {keepalive: true})
+    .catch(() => { if (savedWorkspaceKey === key) savedWorkspaceKey = ""; });
+}
+async function restoreWorkspace() {
+  const id = workspaceReference;
+  if (!id) { workspaceRestoring = false; return; }
+  $("setupStatus").textContent = "Restoring your dashboard…";
+  $("inspectButton").disabled = $("buildButton").disabled = true;
+  try {
+    const restored = await api("/api/workspace-restore", {datasetId: id}, {signal: discoveryController.signal});
+    if (disposed) return;
+    // Navigation stays available during recovery; honor the latest page chosen while the request was pending.
+    const requestedHash = window.location.hash;
+    analyzedData = restored.dashboard;
+    const state = restored.state || {};
+    workspaceRevision = Math.max(workspaceRevision, restored.revision || 0);
+    renderKpiOptions(analyzedData);
+    buildDashboard({restored: true});
+    const allowedCharts = new Set(chartOptions().map(option => option.id));
+    if (state.chartIds?.length) overviewChartIds = state.chartIds.filter(id => allowedCharts.has(id)).slice(0, 3);
+    const allowedKpis = new Set([...document.querySelectorAll('input[name="kpi"]')].map(input => input.value));
+    overviewKpiIds = (state.kpiIds || []).filter(id => allowedKpis.has(id));
+    chartTypeById = Object.fromEntries(Object.entries(state.chartTypes || {}).filter(([id, type]) => allowedCharts.has(id) && CHART_TYPES.includes(type)));
+    for (const [id, value] of Object.entries(state.filters || {})) $(id).value = value;
+    previewView = state.previewView || "charts";
+    previewChartIndex = state.previewChartIndex || 0;
+    sidebarCollapsed = Boolean(state.sidebarCollapsed);
+    conversationState = state.conversationState || "open";
+    if (state.answerMode?.startsWith("browser_ollama:")) {
+      pendingBrowserMode = state.answerMode;
+      $("localModel").value = "";
+      $("browserOllamaStatus").textContent = "Dashboard restored. Reconnect Local Ollama explicitly to resume your selected local model.";
+    } else $("localModel").value = aiOptions.find(option => option.available && option.value === state.answerMode)?.value || "";
+    updateAnswerModeNotice();
+    render();
+    syncSidebar();
+    const page = Object.keys(pageHashes).find(page => pageHashes[page] === requestedHash) || state.page || "overview";
+    showPage(page, !["#account", "#change-dataset"].includes(requestedHash));
+    if (requestedHash === "#account") showAccount(false);
+    else if (requestedHash === "#change-dataset") showSetup(false);
+    $("setupStatus").textContent = "Dashboard restored.";
+  } catch (error) {
+    if (disposed) return;
+    if (error.status === 400 || error.status === 401 || error.status === 403) clearWorkspaceReference();
+    $("setupStatus").textContent = error.status === 400
+      ? "Your previous dataset expired or the server restarted. Select a sample or upload your original file to rebuild it."
+      : "Could not restore your dashboard. Refresh to retry, or choose a dataset.";
+  } finally {
+    if (!disposed) {
+      workspaceRestoring = false;
+      $("inspectButton").disabled = $("buildButton").disabled = false;
+      scheduleWorkspaceSave();
+    }
+  }
 }
 function setDefaultFilterValues() {
   // Return all filters to the full dataset range.
@@ -1140,6 +1227,7 @@ function syncPreviewView() {
   const launcherLabel = conversationState === "minimized" ? "Open business assistant" : "Reopen business assistant";
   $("conversationDockLabel").textContent = launcherLabel;
   $("restoreConversation").title = launcherLabel;
+  scheduleWorkspaceSave();
 }
 function setConversationState(state, focusId) {
   // Reuse the mounted conversation so drafts, evidence, and in-flight replies survive all window actions.
@@ -1221,6 +1309,7 @@ function render() {
   renderDatasetTable();
   renderInsights(rows);
   syncAnalysisSelection();
+  scheduleWorkspaceSave();
 }
 function uniqueOrders(rows) {
   // Returns null when order IDs are missing or failed validation.
@@ -2610,8 +2699,9 @@ function syncAnalysisSelection() {
   analysisDataset = meta;
   revision++;
   resetConversation();
-  overview.select(meta.datasetId && option?.available && option.provider === "gemini" && selected.length ? scope : null);
+  overview.select(meta.datasetId && option?.available && ["gemini", "ollama", "browser_ollama"].includes(option.provider) && selected.length ? scope : null);
   renderAutomaticOverview(overview.state);
+  scheduleWorkspaceSave();
 }
 function renderAutomaticOverview(state) {
   if (disposed) return;
@@ -2664,7 +2754,8 @@ async function connectBrowserOllama() {
   try {
     const models = await browserOllama.connect();
     if (disposed) return;
-    applyAIOptions();
+    applyAIOptions(pendingBrowserMode || $("localModel").value);
+    pendingBrowserMode = "";
     $("browserOllamaStatus").textContent = models.length
       ? `Connected · ${models.length} local model(s). Select Local Ollama under Answer mode to use one.`
       : "Connected, but no downloaded local models were found. Run ollama pull llama3.2:3b, then Reconnect.";
@@ -2804,7 +2895,7 @@ $("previewChartSelect").onchange = () => changePreviewChart(Number($("previewCha
 $("previewPreviousChart").onclick = () => changePreviewChart(previewChartIndex - 1);
 $("previewNextChart").onclick = () => changePreviewChart(previewChartIndex + 1);
 const followPageHash = () => {
-  // Native menu links and browser Back/Forward enter here; a reload still needs a fresh dataset upload.
+  // Navigation reuses mounted data; refresh recovery restores the authenticated server-side dataset separately.
   const page = pageFromHash();
   if (page) showPage(page, false);
   else if (window.location.hash === "#change-dataset") showSetup(false);
@@ -2861,19 +2952,24 @@ $("closeAiSettings").onclick = () => $("aiSettings").close();
 $("refreshModels").onclick = refreshModels;
 // Starting over or switching model invalidates outstanding answers and clears local chat context.
 $("newConversation").onclick = startNewConversation;
-$("localModel").onchange = () => { updateAnswerModeNotice(); syncAnalysisSelection(); };
+$("localModel").onchange = () => { pendingBrowserMode = ""; updateAnswerModeNotice(); syncAnalysisSelection(); };
 $("insightForm").onsubmit = (e) => {
   // Keep the form on the same page and answer the typed question.
   e.preventDefault();
   ask($("insightQuestion").value);
 };
 showSetup(false);
+if (workspaceReference) {
+  $("setupStatus").textContent = "Restoring your dashboard…";
+  $("inspectButton").disabled = $("buildButton").disabled = true;
+}
 syncSidebar();
 mobileSidebar.addEventListener("change", syncSidebar);
 // Account settings can be opened directly before any temporary dataset has been loaded.
 if (window.location.hash === "#account") showAccount(false);
 applyBusinessTheme($("business").value);
-refreshModels().catch(() => {});
+refreshModels().then(() => { if (!disposed) return restoreWorkspace(); }).catch(() => { workspaceRestoring = false; });
+window.addEventListener("pagehide", saveWorkspace);
 const resizePreview = () => { if (document.body.classList.contains("previewMode")) renderOverviewLayout(filtered()); };
 compactPreview.addEventListener("change", resizePreview);
 const changeChartType = event => {
@@ -2888,5 +2984,5 @@ const changeChartType = event => {
 };
 $("dashboardMain").addEventListener("change", changeChartType);
 // React can unmount this controller: detach observers/listeners to avoid duplicate work after remounting.
-return () => { disposed = true; revision++; overview.dispose(); discoveryController.abort(); localAnalysisController?.abort(); localAnalysisController = null; browserOllama.disconnect(); window.removeEventListener("hashchange", followPageHash); window.removeEventListener("keydown", restoreConversationOnEscape); previewChartObserver.disconnect(); compactPreview.removeEventListener("change", resizePreview); mobileSidebar.removeEventListener("change", syncSidebar); $("dashboardMain").removeEventListener("change", changeChartType); document.body.classList.remove("workspaceMode", "sidebarCollapsed"); delete document.body.dataset.conversationState; };
+return () => { disposed = true; clearTimeout(workspaceTimer); window.removeEventListener("pagehide", saveWorkspace); revision++; overview.dispose(); discoveryController.abort(); localAnalysisController?.abort(); localAnalysisController = null; browserOllama.disconnect(); window.removeEventListener("hashchange", followPageHash); window.removeEventListener("keydown", restoreConversationOnEscape); previewChartObserver.disconnect(); compactPreview.removeEventListener("change", resizePreview); mobileSidebar.removeEventListener("change", syncSidebar); $("dashboardMain").removeEventListener("change", changeChartType); document.body.classList.remove("workspaceMode", "sidebarCollapsed"); delete document.body.dataset.conversationState; };
 }
