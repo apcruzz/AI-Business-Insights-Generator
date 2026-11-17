@@ -14,6 +14,10 @@ def dispatch(path, payload):
         from backend.data_loader import frame_from_payload
     if path == "/api/ollama-start":
         return BROWSER_RUNS.start(payload)
+    elif path == "/api/workspace-restore":
+        return DATASETS.restore_workspace(payload.get('datasetId'))
+    elif path == "/api/workspace-save":
+        return DATASETS.save_workspace(payload.get('datasetId'), payload.get('state'), payload.get('revision'))
     elif path == "/api/ollama-step":
         return BROWSER_RUNS.advance(payload)
     elif path == "/api/ollama-cancel":

@@ -61,8 +61,13 @@ def main():
 
                 def fake_local(route):
                     local_requests.append(route.request.url)
-                    assert route.request.url.endswith('/api/tags'), 'No real model inference in this UI check'
-                    route.fulfill(json={'models': [{'name': 'ui-test:local'}]},
+                    if route.request.url.endswith('/api/tags'):
+                        result = {'models': [{'name': 'ui-test:local'}]}
+                    else:
+                        assert route.request.url.endswith('/api/chat')
+                        result = {'message': {'content': json.dumps({'action': 'answer', 'sql': '',
+                            'answer': 'Review recorded sales and costs before making changes.'})}}
+                    route.fulfill(json=result,
                                   headers={'Access-Control-Allow-Origin': origin})
 
                 page.route('http://127.0.0.1:11434/**', fake_local)
