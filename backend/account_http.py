@@ -17,6 +17,7 @@ from backend.analyst_conversations import CONVERSATIONS
 from backend.browser_analyst import BROWSER_RUNS
 from backend.config import DIST
 from backend.groq_client import GroqError
+from backend.gemini_client import GeminiError
 from backend.production import WindowLimits
 from backend.request_scope import OWNER
 
@@ -38,6 +39,7 @@ def create_account_app():
     app = Flask(__name__, static_folder=None)
     app.config['MAX_CONTENT_LENGTH'] = 3 * 1024 * 1024
     limits, work, auth_work = WindowLimits(), threading.BoundedSemaphore(1), threading.BoundedSemaphore(1)
+    # Bound unauthenticated CSRF handshakes in memory; real user sessions live in the database.
     anonymous, anonymous_lock = OrderedDict(), threading.Lock()
     app.extensions.update(account_store=store, account_limits=limits, account_work=work)
 
@@ -49,6 +51,7 @@ def create_account_app():
         return response
 
     def owner(user, sid):
+        # Scope temporary data to both an immutable account ID and a particular browser session.
         return f"account:{user['id']}:{sid}"
 
     def purge(prefix):
@@ -58,6 +61,7 @@ def create_account_app():
         DATASETS.discard_owner(prefix)
 
     def payload(allowed):
+        # Accept only each form's fields, so callers cannot submit their own user IDs or privileges.
         value = request.get_json()
         if not isinstance(value, dict) or set(value) - allowed:
             raise ValueError('Submit only the fields shown in this form.')
@@ -73,6 +77,7 @@ def create_account_app():
             return error('Request limit reached. Try again shortly.', 429)
         g.user, g.csrf, g.cookie = None, None, None
         public_shell = request.method in ('GET', 'HEAD') and (request.path in ('/', '/index.html') or request.path.startswith('/assets/'))
+        # Serve the sign-in UI without a database lookup; business APIs are still authenticated below.
         if public_shell:
             return None
         raw = request.cookies.get(COOKIE, '')
@@ -83,6 +88,7 @@ def create_account_app():
                     del anonymous[key]
             anonymous_entry = anonymous.get(raw)
         entry = None if anonymous_entry else store.session(raw)
+        # Resolve ownership from the server-side session rather than trusting request-body identifiers.
         if entry:
             g.user, g.csrf, g.session_id, g.raw_session = entry, entry['csrf'], entry['token_hash'], raw
             g.owner_token = OWNER.set(owner(entry, entry['token_hash']))
@@ -93,6 +99,7 @@ def create_account_app():
         if not g.user and not public_get and not auth_post:
             return error('Sign in to continue.', 401)
         if request.method in UNSAFE:
+            # Check the exact website origin and a session-bound token before any state-changing action.
             if request.headers.get('Origin') != origin:
                 return error('Use this website to submit requests.', 403)
             if not g.csrf or not secrets.compare_digest(request.headers.get('X-Dashboard-Token', ''), g.csrf):
@@ -113,11 +120,12 @@ def create_account_app():
                 browser_step = request.path in ('/api/ollama-step', '/api/ollama-cancel')
                 if not limits.allow(('browser-step' if browser_step else 'post', name), 60 if browser_step else 20):
                     return error('Upload/question limit reached. Try again shortly.', 429)
-                if request.path in ('/api/analyst', '/api/ollama-start') and not limits.allow(('ai', name), 6):
+                if request.path in ('/api/analyst', '/api/overview', '/api/ollama-start') and not limits.allow(('ai', name), 6):
                     return error('AI question limit reached. Try again shortly.', 429)
 
     @app.after_request
     def headers(response):
+        # Loopback access in this policy is for browser Ollama; it grants no server-side localhost access.
         response.headers.update({
             'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff',
             'X-Frame-Options': 'DENY', 'Referrer-Policy': 'no-referrer',
@@ -132,6 +140,7 @@ def create_account_app():
 
     @app.teardown_request
     def clear_scope(exception):
+        # Restore the ContextVar even after errors so a reused worker thread cannot retain this owner.
         if hasattr(g, 'owner_token'):
             OWNER.reset(g.owner_token)
 
@@ -151,6 +160,7 @@ def create_account_app():
 
     @app.get('/api/auth/session')
     def auth_session():
+        # New visitors need a CSRF-protected anonymous cookie before they can register or sign in.
         if not g.csrf:
             raw, csrf = secrets.token_urlsafe(32), secrets.token_urlsafe(32)
             with anonymous_lock:
@@ -162,6 +172,7 @@ def create_account_app():
                        token=g.csrf, registrationOpen=registration_open)
 
     def signed_in(user):
+        # Replace the pre-login cookie with a fresh persistent session and discard the anonymous entry.
         raw, csrf = store.create_session(user, request.cookies.get(COOKIE))
         with anonymous_lock:
             anonymous.pop(request.cookies.get(COOKIE), None)
@@ -204,6 +215,7 @@ def create_account_app():
     @app.post('/api/auth/logout')
     def logout():
         payload(set())
+        # Serialize revocation with analysis so an in-flight job cannot repopulate cleared session data.
         if not work.acquire(blocking=False):
             return error('An upload or analysis is running. Wait for it to finish, then sign out.', 429)
         try:
@@ -230,6 +242,7 @@ def create_account_app():
             if request.method == 'DELETE':
                 value = payload({'currentPassword'})
                 store.delete(g.user, value.get('currentPassword'))
+                # Account deletion clears temporary data for every browser session owned by this account.
                 purge(f"account:{g.user['id']}:")
                 g.clear_cookie = True
                 return jsonify(deleted=True)
@@ -251,7 +264,8 @@ def create_account_app():
 
     @app.post('/api/<action>')
     def api(action):
-        if action not in ('profile', 'analyze', 'analyst', 'explain', 'ollama-start', 'ollama-step', 'ollama-cancel'):
+        # Share the same parsers and calculations as local development, behind the hosted access checks.
+        if action not in ('profile', 'analyze', 'analyst', 'overview', 'explain', 'ollama-start', 'ollama-step', 'ollama-cancel'):
             return error('Not found.', 404)
         if action == 'explain':
             return error('Local Ollama is available only in local development.', 400)
@@ -273,7 +287,7 @@ def create_account_app():
             return error(str(exc), 503)
         if isinstance(exc, AccountConflict):
             return error(str(exc), 409)
-        if isinstance(exc, GroqError):
+        if isinstance(exc, (GroqError, GeminiError)):
             return error(str(exc), exc.status)
         if isinstance(exc, ValueError):
             return error(str(exc), 400)

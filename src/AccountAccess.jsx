@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import "./accounts.css";
 
 async function accountRequest(path, {method = "GET", body, token} = {}) {
+  // Authentication travels in the HttpOnly cookie; mutations also require the server-issued CSRF token.
   let response;
   try {
     response = await fetch(path, {method, credentials: "same-origin", cache: "no-store",
@@ -11,6 +12,7 @@ async function accountRequest(path, {method = "GET", body, token} = {}) {
     throw Error("Could not reach the account service. Check your connection and try again.");
   }
   const value = await response.json().catch(() => ({}));
+  // Preserve HTTP status so callers can distinguish an expired login from a correctable form error.
   if (!response.ok) {
     const error = Error(value.error || "The account service is unavailable. Try again shortly.");
     error.status = response.status;
@@ -29,13 +31,16 @@ export function AccountAccess({children}) {
   };
   useEffect(() => {
     load();
+    // A restored browser-history snapshot must revalidate its session instead of showing stale private data.
     const refreshRestoredPage = event => { if (event.persisted) window.location.reload(); };
     window.addEventListener("pageshow", refreshRestoredPage);
     return () => window.removeEventListener("pageshow", refreshRestoredPage);
   }, []);
   if (!session) return <main className="authPage"><section className="authCard"><p className="authEyebrow">BUSINESS INSIGHTS</p><h1>{error ? "Connection interrupted" : "Opening your workspace…"}</h1>{error && <><p className="authError" role="alert">{error}</p><button className="authPrimary" onClick={load}>Try again</button></>}</section></main>;
+  // Mount the dashboard only after authentication; a fresh page also replaces pre-login client state.
   if (!session.authenticated) return <SignIn session={session} onSignedIn={() => window.location.reload()} />;
   const accounts = session.authMode === "accounts";
+  // Keep the account page mounted while routes change, just like the dataset and conversation panels.
   return children({user: session.user, accountPage: accounts ? <AccountPage session={session} /> : <>
     <div className="accountPageHeading"><h1 id="accountTitle" tabIndex={-1}>Your account</h1><p className="sub">Your current workspace</p></div>
     <section className="panel accountInfo"><h2>{session.authMode === "demo" ? "Team demo access" : "Local workspace"}</h2><p>{session.authMode === "demo" ? "This demonstration uses team credentials managed by the service owner." : "You are running locally. Account registration is available on a hosted service configured for user accounts."}</p><p>Your uploaded dataset and conversations remain temporary. Keep your original file.</p><a href="#change-dataset">Choose a dataset →</a></section>
@@ -50,6 +55,7 @@ function SignIn({session, onSignedIn}) {
     event.preventDefault();
     setError("");
     const values = Object.fromEntries(new FormData(event.currentTarget));
+    // Confirmation is a browser convenience; the backend still validates every submitted credential.
     if (registering && values.password !== values.confirmPassword) { setError("Passwords do not match."); return; }
     delete values.confirmPassword;
     setBusy(true);
@@ -100,6 +106,7 @@ function AccountPage({session}) {
       // Remove every previous dataset, transcript, model connection and CSRF token from this page.
       window.location.reload();
     } catch (error) {
+      // Expired sessions need a fresh sign-in; ordinary validation failures should keep the form open.
       if (error.status === 401) window.location.reload();
       else { setError(error.message); setBusy(false); }
     }
@@ -108,6 +115,7 @@ function AccountPage({session}) {
     event.preventDefault();
     const values = Object.fromEntries(new FormData(event.currentTarget));
     if (passwordChange && values.newPassword !== values.confirmPassword) { setError("New passwords do not match."); return; }
+    // Only the actual password fields belong in the API payload; confirmation stays in the UI.
     delete values.confirmPassword;
     perform("/api/account", "PATCH", values);
   };
@@ -116,6 +124,7 @@ function AccountPage({session}) {
         <p className="accountChangeNotice">Saving changes signs out other devices and clears your temporary dashboard. Your account will stay registered.</p>
         {error && <p className="authError" role="alert">{error}</p>}
       <div className="accountPageGrid">
+        {/* Profile and password forms share the same protected update endpoint but send different fields. */}
         <section className="panel accountSection"><h2>Profile</h2>
           <form className="accountForm" id="profileForm" method="post" onSubmit={update}>
             <label htmlFor="profileDisplayName">Display name<input id="profileDisplayName" name="displayName" defaultValue={session.user.displayName} required maxLength={80} autoComplete="nickname" /></label>
@@ -132,6 +141,7 @@ function AccountPage({session}) {
             <button className="authPrimary" disabled={busy}>Update password</button>
           </form>
         </section>
+        {/* Deletion requires both the current password and an explicit confirmation, not just a session. */}
         <section className="panel accountSection accountDanger"><h2>Delete account</h2><p>This permanently removes your account, signs out every device, and clears your temporary datasets and conversations. Creating the same username later will create a new account.</p>
           <form className="accountForm" id="deleteAccountForm" method="post" onSubmit={event => {event.preventDefault(); if (deleteConfirmed) perform("/api/account", "DELETE", Object.fromEntries(new FormData(event.currentTarget)));}}>
             <label htmlFor="deleteCurrentPassword">Current password<input id="deleteCurrentPassword" name="currentPassword" type="password" required maxLength={256} autoComplete="current-password" /></label>

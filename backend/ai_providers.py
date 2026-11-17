@@ -3,7 +3,7 @@ import os
 import re
 from dataclasses import dataclass
 
-from backend import groq_client, ollama_client
+from backend import gemini_client, groq_client, ollama_client
 from backend.config import GROQ_MODEL
 
 
@@ -16,6 +16,8 @@ class AnalystModel:
     def mode(self):
         if self.provider == 'browser_ollama':
             return 'Local Ollama via browser'
+        if self.provider == 'gemini':
+            return 'Gemini cloud data analyst'
         return 'Groq cloud data analyst' if self.provider == 'groq' else 'Local data analyst'
 
     @property
@@ -26,7 +28,7 @@ class AnalystModel:
     def chat(self, messages, **options):
         if self.provider == 'browser_ollama':
             raise ValueError('Browser Ollama inference must run in the browser.')
-        transport = groq_client if self.provider == 'groq' else ollama_client
+        transport = {'groq': groq_client, 'gemini': gemini_client, 'ollama': ollama_client}[self.provider]
         return transport.chat(self.model, messages, **options)
 
 
@@ -39,6 +41,11 @@ def resolve_model(provider, model):
             raise ValueError('Choose GPT-OSS 120B for the Groq provider.')
         if not groq_client.configured():
             raise ValueError('Set GROQ_API_KEY on the backend and restart it to enable Groq.')
+    elif provider == 'gemini':
+        if model not in gemini_client.GEMINI_MODELS:
+            raise ValueError('Choose one of the Gemini models listed in AI provider / answer mode.')
+        if not gemini_client.configured():
+            raise ValueError('Set GEMINI_API_KEY in the terminal that starts the Python backend, then restart that backend.')
     elif provider == 'ollama':
         try:
             models = ollama_client.local_models()
@@ -50,12 +57,12 @@ def resolve_model(provider, model):
         if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._/:+-]{0,199}', model) or ':cloud' in model.lower():
             raise ValueError('Choose a downloaded local Ollama model.')
     else:
-        raise ValueError('Choose Ollama or Groq as the AI provider.')
+        raise ValueError('Choose Ollama, Gemini or Groq as the AI provider.')
     return AnalystModel(provider, model)
 
 
 def available_models():
-    """Expose local models and Groq configuration even when Ollama is offline."""
+    """Expose local models and cloud configuration even when Ollama is offline."""
     try:
         models = ollama_client.local_models()
     except (OSError, ValueError, KeyError, TypeError):
@@ -65,5 +72,8 @@ def available_models():
     groq_ready = groq_client.configured()
     options.append({'provider': 'groq', 'model': GROQ_MODEL,
                     'label': 'GPT-OSS 120B · Groq (cloud)', 'available': groq_ready})
+    gemini_ready = gemini_client.configured()
+    options.extend({'provider': 'gemini', 'model': model, 'label': label, 'available': gemini_ready}
+                   for model, label in gemini_client.GEMINI_MODELS.items())
     # Keep the original local-only list for older API clients.
-    return {'models': models, 'options': options, 'groqConfigured': groq_ready, 'hosted': os.getenv('APP_ENV') == 'production'}
+    return {'models': models, 'options': options, 'groqConfigured': groq_ready, 'geminiConfigured': gemini_ready, 'hosted': os.getenv('APP_ENV') == 'production'}

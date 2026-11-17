@@ -15,6 +15,7 @@ from backend.api import dispatch
 from backend.ai_providers import available_models
 from backend.config import DIST, UPLOAD_LIMIT_BYTES
 from backend.groq_client import GroqError
+from backend.gemini_client import GeminiError
 from backend.request_scope import OWNER
 
 
@@ -25,6 +26,7 @@ class WindowLimits:
         self.lock = threading.Lock()
 
     def allow(self, key, limit, seconds=60):
+        # Update each bucket atomically; eviction also bounds memory when many distinct keys arrive.
         with self.lock:
             now = time.monotonic()
             start, count = self.items.get(key, (now, 0))
@@ -38,6 +40,7 @@ class WindowLimits:
 
 
 def create_app():
+    # Select the explicit hosted authentication mode; never silently start an unauthenticated service.
     if os.getenv('APP_ENV') != 'production':
         raise RuntimeError('Production entry point requires APP_ENV=production.')
     mode = os.getenv('AUTH_MODE', 'demo')
@@ -48,6 +51,7 @@ def create_app():
         raise RuntimeError('AUTH_MODE must be accounts or demo.')
     try:
         users = json.loads(os.environ['DEMO_USERS_JSON'])
+        # Invited-demo credentials are per-person password hashes, not the local process-wide API token.
         if not isinstance(users, dict) or not 1 <= len(users) <= 20:
             raise ValueError()
         for name, value in users.items():
@@ -69,6 +73,7 @@ def create_app():
     app.config['MAX_CONTENT_LENGTH'] = int(min(UPLOAD_LIMIT_BYTES, 2 * 1024 * 1024) * 1.5)
     sessions, session_lock = OrderedDict(), threading.Lock()
     limits = WindowLimits()
+    # Limit expensive upload/analysis work to one request while other threads can answer health checks.
     work = threading.BoundedSemaphore(1)
     # Exposed only for deterministic isolation/rate-limit tests, never as HTTP routes.
     app.extensions['demo_limits'] = limits
@@ -108,6 +113,7 @@ def create_app():
             return error('Your demo request limit reached.', 429)
         now = time.monotonic()
         sid = request.cookies.get('__Host-demo')
+        # Separate browser sessions even when two visitors use the same invited username.
         with session_lock:
             for key in list(sessions):
                 if now - sessions[key]['created'] > 3600:
@@ -122,6 +128,7 @@ def create_app():
             g.sid = sid
             g.csrf = entry['csrf']
         g.owner_token = OWNER.set(name + ':' + sid)
+        # This token protects POST requests against CSRF; Basic credentials remain the authentication.
         if request.method == 'POST':
             if request.headers.get('Origin') != origin:
                 return error('Use this demo website to submit requests.', 403)
@@ -132,7 +139,7 @@ def create_app():
             browser_step = request.path in ('/api/ollama-step', '/api/ollama-cancel')
             if not limits.allow(('browser-step' if browser_step else 'post', name), 60 if browser_step else 20):
                 return error('Upload/question limit reached. Try again shortly.', 429)
-            if request.path in ('/api/analyst', '/api/ollama-start') and not limits.allow(('ai', name), 6):
+            if request.path in ('/api/analyst', '/api/overview', '/api/ollama-start') and not limits.allow(('ai', name), 6):
                 return error('AI question limit reached. Try again shortly.', 429)
 
     @app.after_request
@@ -149,6 +156,7 @@ def create_app():
 
     @app.teardown_request
     def clear_scope(exception):
+        # Undo request ownership on both successful and failed requests before the worker is reused.
         if hasattr(g, 'owner_token'):
             OWNER.reset(g.owner_token)
 
@@ -179,7 +187,7 @@ def create_app():
 
     @app.post('/api/<action>')
     def api(action):
-        if action not in ('profile', 'analyze', 'analyst', 'explain', 'ollama-start', 'ollama-step', 'ollama-cancel'):
+        if action not in ('profile', 'analyze', 'analyst', 'overview', 'explain', 'ollama-start', 'ollama-step', 'ollama-cancel'):
             return error('Not found.', 404)
         if action == 'explain':
             return error('Local Ollama is available only in local development.', 400)
@@ -190,7 +198,7 @@ def create_app():
             if not isinstance(payload, dict):
                 raise ValueError('Submit a JSON object.')
             return jsonify(dispatch('/api/' + action, payload))
-        except GroqError as exc:
+        except (GroqError, GeminiError) as exc:
             return error(str(exc), exc.status)
         except ValueError as exc:
             return error(str(exc), 400)

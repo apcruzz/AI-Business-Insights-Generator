@@ -49,6 +49,7 @@ export const BUSINESS_FIELDS = {
   Job_ID:'Job / repair ID', Job_Status:'Job status', Job_Opened:'Job opened (date and time)', Job_Completed:'Job completed (date and time)',
 };
 export function chartTitle(id, business) {
+  // Change business-facing wording without creating a separate chart implementation or calculation.
   const p = businessProfile(business);
   if (id === 'products' && business === 'Grocery store') return 'Best-selling groceries';
   if (id === 'products' && business === 'Ice cream shop') return 'Best-selling flavors and treats';
@@ -64,9 +65,11 @@ export function chartTitle(id, business) {
 export function chartPlan(business, capabilities = {}) {
   const p = businessProfile(business);
   const order = [...new Set([...p.recommended, ...p.fallback, 'trend','category','products','profitability','weekday','hour','staff','orderValue'])];
+  // Availability comes from validated data, not from the business label alone.
   const available = order.filter(id => CHARTS[id].needs.every(key => capabilities[key]));
   const families = new Set();
   const recommended = available.filter(id => {
+    // For example, a pie and a bar of category revenue should not consume two recommendation slots.
     if (families.has(CHARTS[id].family)) return false;
     families.add(CHARTS[id].family); return true;
   }).slice(0,3);

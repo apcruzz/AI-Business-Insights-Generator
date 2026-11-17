@@ -5,6 +5,8 @@ import {renderBusinessChart} from "./business-charts.js";
 import {CHART_TYPES, chartTypeLabel, renderChartVariant} from "./chart-variants.js";
 import {answerOptions, chooseAnswerMode, answerModeNotice} from "./ai-options.js";
 import {overviewIcon} from "./overview-icons.js";
+import {OverviewController} from "./overview-controller.js";
+import {assistantMessages, formatAIAnswer} from "./assistant-messages.js";
 // Frontend controller: upload -> map columns -> normalize via API -> filter/render -> ask questions.
 import {
   $,
@@ -49,10 +51,19 @@ let data = [],
   aiOptions = answerOptions({}),
   modelsLoaded = false,
   groqConfigured = false,
+  geminiConfigured = false,
+  analysisScopeKey = "",
+  analysisDataset = null,
   hosted = false,
   backendModels = {};
 const browserOllama = new BrowserOllama();
 let localAnalysisController = null;
+let disposed = false;
+const discoveryController = new AbortController();
+const overview = new OverviewController({
+  request: (payload, signal) => api("/api/overview", payload, {signal}),
+  onChange: renderAutomaticOverview,
+});
 const pageHashes = {overview: "#business-overview", detail: "#detailed-dashboard"};
 const pageFromHash = () => {
   // Keep bookmarks to the former preview working, with one canonical overview URL.
@@ -78,6 +89,7 @@ function syncSidebar() {
   $("sidebarToggle").title = label;
 }
 const previewViews = {charts: ["previewChartsTab", "overviewCharts"], highlights: ["previewHighlightsTab", "overviewHighlights"], assistant: ["previewAssistantTab", "overviewAssistant"]};
+// Resize only the plot markup, leaving card dimensions, selected models, and conversations intact.
 const previewChartObserver = new ResizeObserver(entries => {
   if (!document.body.classList.contains("previewMode")) return;
   const rows = filtered(), products = group(rows, "Product_Name").sort((a, b) => sum(b[1], "Net_Sales") - sum(a[1], "Net_Sales"));
@@ -100,6 +112,7 @@ const previewChartObserver = new ResizeObserver(entries => {
   }
 });
 function updatePageHash(hash) {
+  // Programmatic navigation already renders its page; pushState avoids a second hashchange render.
   if (window.location.hash !== hash) window.history.pushState(null, "", hash);
 }
 
@@ -172,7 +185,7 @@ function note(text) {
 // POST helper for the local Python API. The token ties requests to this page load.
 async function api(path, payload, {signal} = {}) {
   if (!token) {
-    const session = await fetch("/api/session");
+    const session = await fetch("/api/session", {signal});
     if (session.status === 401) { window.location.reload(); throw Error("Sign in again to continue."); }
     const result = await session.json();
     if (!session.ok) throw Error(result.error || "Unable to load your session.");
@@ -211,6 +224,7 @@ function showSetup(updateRoute = true) {
   window.scrollTo(0, 0);
 }
 function markNavigation(hash) {
+  // Mark both header menus and sidebar links together so their current-page state stays consistent.
   document.querySelectorAll(".pageMenu a, .previewNavigation a, [data-workspace-page]").forEach(link => {
     if ((link.getAttribute("href") || link.dataset.workspacePage) === hash) link.setAttribute("aria-current", "page");
     else link.removeAttribute("aria-current");
@@ -219,6 +233,7 @@ function markNavigation(hash) {
   $("dashboardTitle").textContent = titles[hash] || "AI Business Insights";
 }
 function showAccount(updateRoute = true) {
+  // Hide other views without clearing their state; only saving account changes triggers a full reload.
   closePreviewFilters();
   if (updateRoute) updatePageHash("#account");
   $("setupPage").hidden = true;
@@ -267,6 +282,7 @@ function chartOptions() {
     recommended:plan.recommended.includes(id)}));
 }
 function applyBusinessTheme(name) {
+  // A profile changes presentation and terminology, while every business keeps the same data pipeline.
   const p = businessProfile(name);
   // Profile wording and chart recommendations adapt; UI accents remain consistent.
   const theme = getComputedStyle(document.documentElement);
@@ -357,6 +373,7 @@ function loadSelectedCharts() {
   $("setupStatus").textContent = "Dashboard ready.";
 }
 function selectRecommendedCharts() {
+  // Reset the dialog's draft checkboxes to supported defaults without committing them immediately.
   const recommended = new Set(chartOptions().slice(0, 3).map((option) => option.id));
   document.querySelectorAll('input[name="chartChoice"]').forEach((input) => {
     input.checked = recommended.has(input.value);
@@ -1091,6 +1108,7 @@ function renderOverviewCharts(rows, products, c) {
   syncPreviewView();
 }
 function syncPreviewView() {
+  // Compact tabs and desktop columns share the same DOM panels; update roles as well as visibility.
   const preview = document.body.classList.contains("previewMode"), compact = preview && compactPreview.matches;
   document.body.dataset.previewView = previewView;
   $("previewWorkspaceTabs").hidden = !compact;
@@ -1111,6 +1129,7 @@ function syncPreviewView() {
   }
 }
 function closePreviewFilters() {
+  // Remove popover behavior before another page uses these same filters in its normal layout.
   const filters = $("dashboardFilters");
   if (typeof filters.hidePopover === "function" && filters.matches(":popover-open")) filters.hidePopover();
   filters.removeAttribute("popover");
@@ -1118,6 +1137,7 @@ function closePreviewFilters() {
   $("previewFilterButton").setAttribute("aria-expanded", "false");
 }
 function renderOverviewLayout(rows) {
+  // A layout switch redraws presentation only; render() handles actual filter/data changes and chat reset.
   $("overviewCards").innerHTML = metrics(rows, true);
   const products = group(rows, "Product_Name").sort((a, b) => sum(b[1], "Net_Sales") - sum(a[1], "Net_Sales"));
   renderOverviewCharts(rows, products, meta.capabilities);
@@ -1146,7 +1166,6 @@ function renderDetailedCharts(rows, products, c) {
 function render() {
   // Recalculate every chart/table whenever filters or data change.
   if (!data.length) return;
-  revision++;
   selected = filtered();
   datasetTablePage = 0;
   const rows = selected,
@@ -1181,9 +1200,7 @@ function render() {
   if (!$("detailTables").childElementCount) $("detailTables").innerHTML = note("Map a product or employee column to show sales summaries.");
   renderDatasetTable();
   renderInsights(rows);
-  resetConversation();
-  $("analystEvidence").hidden = true;
-  $("analystEvidence").replaceChildren();
+  syncAnalysisSelection();
 }
 function uniqueOrders(rows) {
   // Returns null when order IDs are missing or failed validation.
@@ -2469,45 +2486,49 @@ function renderAnalystEvidence(response) {
 // Forget the browser conversation token/transcript and clear evidence for the old selection.
 function resetConversation() {
   localAnalysisController?.abort();
+  localAnalysisController = null;
+  busy = false;
   conversationId = null;
   conversationTurns = [];
   $("insightAnswer").textContent = "";
   $("insightAnswer").setAttribute("aria-busy", "false");
   $("analystEvidence").hidden = true;
   $("analystEvidence").replaceChildren();
+  updateAskAvailability();
 }
 // Give each speaker a separate bubble. All questions and model output remain
 // plain text so uploaded labels and AI answers cannot inject HTML into the UI.
 function showConversation(pending = null) {
   const panel = $("insightAnswer");
   const messages = document.createDocumentFragment();
-  for (const turn of [...conversationTurns, pending].filter(Boolean)) {
-    for (const role of ["user", "assistant"]) {
+  for (const item of assistantMessages(overview.state, conversationTurns, pending)) {
+      const role = item.role;
       const message = document.createElement("article");
       message.className = `chatMessage chatMessage--${role}`;
       message.setAttribute("aria-label", role === "user" ? "Your message" : "Assistant reply");
-      if (role === "assistant" && turn.status) message.dataset.status = turn.status;
+      if (role === "assistant" && item.status) message.dataset.status = item.status;
       const speaker = document.createElement("strong"), body = document.createElement("p");
       speaker.className = "chatMessageSpeaker";
       speaker.textContent = role === "user" ? "You" : "Assistant";
       body.className = "chatMessageBody";
-      body.textContent = role === "user" ? turn.question : turn.answer;
+      body.textContent = item.content;
       // Text separators also keep copied/read transcripts from joining speakers.
       message.append(speaker, "\n", body);
       messages.append(message, "\n");
-    }
   }
   panel.replaceChildren(messages);
-  panel.setAttribute("aria-busy", String(pending?.status === "pending"));
+  panel.setAttribute("aria-busy", String(pending?.status === "pending" || ["scheduled", "loading"].includes(overview.state.status)));
   const viewport = panel.closest(".conversationViewport");
   // Keep the latest answer visible while leaving its evidence just below it.
   viewport.scrollTop = Math.max(0, panel.offsetHeight - viewport.clientHeight);
 }
 async function ask(question) {
   // Ask the deterministic engine or the explicitly selected AI provider.
-  if (busy) return;
+  if (disposed || busy || ["scheduled", "loading"].includes(overview.state.status)) return;
   busy = true;
-  $("askButton").disabled = true;
+  const requestController = new AbortController();
+  localAnalysisController = requestController;
+  updateAskAvailability();
   // Remember the selection revision so a slow response cannot overwrite a newer dashboard.
   const current = revision,
     option = aiOptions.find(item => item.value === $("localModel").value),
@@ -2515,7 +2536,7 @@ async function ask(question) {
   $("analystEvidence").hidden = true;
   $("analystEvidence").replaceChildren();
   showConversation({question, status: "pending", answer: model
-    ? `${option.provider === "groq" ? "Groq" : "Your local model"} is inspecting the data and running calculations…`
+    ? `${option.provider === "groq" ? "Groq" : option.provider === "gemini" ? "Gemini" : "Your local model"} is inspecting the data and running calculations…`
     : "Calculating…"});
   try {
     let answer;
@@ -2524,24 +2545,19 @@ async function ask(question) {
       // Send only the dataset reference, conversation token, question, and current filters; rows are cached on the server.
       const payload = {
         provider: option.provider, model, question, datasetId: meta.datasetId, conversationId,
+        overviewId: overview.state.status === "ready" ? overview.state.response.conversationId : null,
         filters: Object.fromEntries(["from", "to", "category", "product", "weekday", "period"].map(id => [id, $(id).value])),
       };
-      localAnalysisController = new AbortController();
       const response = option.provider === "browser_ollama"
-        ? await runBrowserAnalyst(api, browserOllama, payload, {signal: localAnalysisController.signal})
-        : await api("/api/analyst", payload);
+        ? await runBrowserAnalyst(api, browserOllama, payload, {signal: requestController.signal})
+        : await api("/api/analyst", payload, {signal: requestController.signal});
       if (revision === current) {
         // If backend memory expired or scope changed, discard the old visible transcript too.
         if (conversationId && conversationId !== response.conversationId) conversationTurns = [];
         conversationId = response.conversationId;
         renderAnalystEvidence(response);
       }
-      answer =
-        response.mode + " · " +
-        response.model +
-        "\n" +
-        response.answer +
-        (response.evidence?.length ? "\nCheck the supporting calculations below: AI interpretation can still make mistakes." : "");
+      answer = formatAIAnswer(response);
     } else answer = "Calculated answer\n" + calculatedAnswer(question);
     if (revision === current) {
       // Keep the visible transcript aligned with the backend limit of four recent exchanges.
@@ -2553,22 +2569,59 @@ async function ask(question) {
     if (revision === current)
       showConversation({question, status: "error", answer: e.message + " Choose Calculated answers to continue without a model."});
   } finally {
-    busy = false;
-    $("askButton").disabled = false;
+    if (localAnalysisController === requestController) {
+      busy = false;
+      localAnalysisController = null;
+      if (!disposed) updateAskAvailability();
+    }
   }
 }
-function updateAnswerModeNotice() {
+function updateAskAvailability() {
+  $("askButton").disabled = busy || ["scheduled", "loading"].includes(overview.state.status);
+}
+function syncAnalysisSelection() {
+  if (disposed) return;
   const option = aiOptions.find(item => item.value === $("localModel").value);
-  $("aiDataNotice").textContent = answerModeNotice(option, groqConfigured, hosted);
+  const filters = Object.fromEntries(["from", "to", "category", "product", "weekday", "period"].map(id => [id, $(id).value]));
+  const scope = {datasetId: meta.datasetId, provider: option?.provider, model: option?.model, filters};
+  const key = JSON.stringify(scope);
+  if (key === analysisScopeKey && analysisDataset === meta) return;
+  analysisScopeKey = key;
+  analysisDataset = meta;
+  revision++;
+  resetConversation();
+  overview.select(meta.datasetId && option?.available && option.provider === "gemini" && selected.length ? scope : null);
+  renderAutomaticOverview(overview.state);
+}
+function renderAutomaticOverview(state) {
+  if (disposed) return;
+  $("analystEvidence").hidden = true;
+  $("analystEvidence").replaceChildren();
+  if (state.response) renderAnalystEvidence(state.response);
+  showConversation();
+  updateAskAvailability();
+}
+function startNewConversation() {
+  revision++;
+  resetConversation();
+  if (overview.state.status === "error") overview.retry();
+  else renderAutomaticOverview(overview.state);
+}
+function updateAnswerModeNotice() {
+  // Explain where inference runs before a question is sent; changing this text makes no provider call.
+  const option = aiOptions.find(item => item.value === $("localModel").value);
+  $("aiDataNotice").textContent = answerModeNotice(option, groqConfigured, hosted, geminiConfigured);
   $("localModel").title = $("aiDataNotice").textContent;
   $("aiModeSummary").textContent = option?.provider === "groq"
     ? "Shares question & data context with Groq cloud"
+    : option?.provider === "gemini" ? "Shares question & data context with Google Gemini"
     : ["ollama", "browser_ollama"].includes(option?.provider)
       ? "AI inference on your computer"
       : "Uses dashboard data · No AI inference";
   $("insightMode").textContent = "Calculated insights · " + (option?.model ? option.label : "AI optional");
 }
 function applyAIOptions(current = $("localModel").value, initial = false) {
+  // Merge server discovery with explicitly connected browser models, keeping provider-qualified IDs.
   const options = [...(backendModels.options || []), ...browserOllama.models.map(model => ({
     provider: "browser_ollama", model, label: `${model} · Local Ollama (this browser)`, available: true,
   }))];
@@ -2580,25 +2633,28 @@ function applyAIOptions(current = $("localModel").value, initial = false) {
     return element;
   }));
   $("localModel").value = value;
-  if (current !== value) { revision++; resetConversation(); }
   updateAnswerModeNotice();
+  syncAnalysisSelection();
 }
 async function connectBrowserOllama() {
+  // This explicit action is the point where the page may first ask to access the visitor's loopback service.
   $("connectBrowserOllama").disabled = true;
   $("disconnectBrowserOllama").disabled = false;
   $("browserOllamaStatus").textContent = "Connecting to Ollama on this computer. Allow Chrome’s Local Network Access prompt if shown…";
   try {
     const models = await browserOllama.connect();
+    if (disposed) return;
     applyAIOptions();
     $("browserOllamaStatus").textContent = models.length
       ? `Connected · ${models.length} local model(s). Select Local Ollama under Answer mode to use one.`
       : "Connected, but no downloaded local models were found. Run ollama pull llama3.2:3b, then Reconnect.";
     $("connectBrowserOllama").textContent = "Reconnect Local Ollama";
   } catch (error) {
+    if (disposed) return;
     applyAIOptions();
     $("browserOllamaStatus").textContent = error.message;
   } finally {
-    $("connectBrowserOllama").disabled = false;
+    if (!disposed) $("connectBrowserOllama").disabled = false;
   }
 }
 $("connectBrowserOllama").onclick = connectBrowserOllama;
@@ -2616,9 +2672,12 @@ async function refreshModels() {
   // Discover local models and backend Groq configuration without sending data to cloud AI.
   $("refreshModels").disabled = true;
   try {
-    const response = await fetch("/api/models");
+    const response = await fetch("/api/models", {signal: discoveryController.signal});
+    if (response.status === 401) { window.location.reload(); return; }
     if (!response.ok) throw Error("AI discovery failed");
-    const result = await response.json(), current = $("localModel").value;
+    const result = await response.json();
+    if (disposed) return;
+    const current = $("localModel").value;
     if (result.hosted) {
       uploadLimitMb = 2;
       $("uploadLimitNote").hidden = false;
@@ -2630,12 +2689,14 @@ async function refreshModels() {
     backendModels = result;
     applyAIOptions(current, !modelsLoaded);
     groqConfigured = Boolean(result.groqConfigured);
+    geminiConfigured = Boolean(result.geminiConfigured);
     modelsLoaded = true;
     updateAnswerModeNotice();
   } catch {
+    if (disposed) return;
     $("insightMode").textContent = "Could not refresh AI options. Check that the backend is running.";
   } finally {
-    $("refreshModels").disabled = false;
+    if (!disposed) $("refreshModels").disabled = false;
   }
 }
 // Connect page buttons and dropdowns to the functions above.
@@ -2646,6 +2707,7 @@ $("sheet").onchange = () => {
   inspect();
 };
 function setMappingTool(buttonId, panelId, expanded) {
+  // Keep the disclosure's visual state and screen-reader state synchronized with the same boolean.
   $(buttonId).setAttribute("aria-expanded", String(expanded));
   $(panelId).hidden = !expanded;
 }
@@ -2719,6 +2781,7 @@ $("previewChartSelect").onchange = () => changePreviewChart(Number($("previewCha
 $("previewPreviousChart").onclick = () => changePreviewChart(previewChartIndex - 1);
 $("previewNextChart").onclick = () => changePreviewChart(previewChartIndex + 1);
 const followPageHash = () => {
+  // Native menu links and browser Back/Forward enter here; a reload still needs a fresh dataset upload.
   const page = pageFromHash();
   if (page) showPage(page, false);
   else if (window.location.hash === "#change-dataset") showSetup(false);
@@ -2742,6 +2805,7 @@ $("reset").onclick = resetFilters;
 $("previousDataPage").onclick = () => { datasetTablePage--; renderDatasetTable(); };
 $("nextDataPage").onclick = () => { datasetTablePage++; renderDatasetTable(); };
 $("detailChartSelect").onchange = () => {
+  // All detailed charts are already present; jump to the chosen card instead of hiding other charts.
   const panel = [...$("detailCharts").children].find(panel => panel.dataset.chartPanel === $("detailChartSelect").value);
   if (panel) { panel.tabIndex = -1; panel.focus({preventScroll: true}); panel.scrollIntoView({block: "start"}); }
 };
@@ -2759,8 +2823,8 @@ $("openAiSettings").onclick = () => $("aiSettings").showModal();
 $("closeAiSettings").onclick = () => $("aiSettings").close();
 $("refreshModels").onclick = refreshModels;
 // Starting over or switching model invalidates outstanding answers and clears local chat context.
-$("newConversation").onclick = () => { revision++; resetConversation(); };
-$("localModel").onchange = () => { revision++; resetConversation(); updateAnswerModeNotice(); };
+$("newConversation").onclick = startNewConversation;
+$("localModel").onchange = () => { updateAnswerModeNotice(); syncAnalysisSelection(); };
 $("insightForm").onsubmit = (e) => {
   // Keep the form on the same page and answer the typed question.
   e.preventDefault();
@@ -2769,6 +2833,7 @@ $("insightForm").onsubmit = (e) => {
 showSetup(false);
 syncSidebar();
 mobileSidebar.addEventListener("change", syncSidebar);
+// Account settings can be opened directly before any temporary dataset has been loaded.
 if (window.location.hash === "#account") showAccount(false);
 applyBusinessTheme($("business").value);
 refreshModels().catch(() => {});
@@ -2785,5 +2850,6 @@ const changeChartType = event => {
   $(control.id)?.focus({preventScroll: true});
 };
 $("dashboardMain").addEventListener("change", changeChartType);
-return () => { window.removeEventListener("hashchange", followPageHash); previewChartObserver.disconnect(); compactPreview.removeEventListener("change", resizePreview); mobileSidebar.removeEventListener("change", syncSidebar); $("dashboardMain").removeEventListener("change", changeChartType); document.body.classList.remove("workspaceMode", "sidebarCollapsed"); };
+// React can unmount this controller: detach observers/listeners to avoid duplicate work after remounting.
+return () => { disposed = true; revision++; overview.dispose(); discoveryController.abort(); localAnalysisController?.abort(); localAnalysisController = null; browserOllama.disconnect(); window.removeEventListener("hashchange", followPageHash); previewChartObserver.disconnect(); compactPreview.removeEventListener("change", resizePreview); mobileSidebar.removeEventListener("change", syncSidebar); $("dashboardMain").removeEventListener("change", changeChartType); document.body.classList.remove("workspaceMode", "sidebarCollapsed"); };
 }

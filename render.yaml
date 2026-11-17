@@ -6,11 +6,13 @@ services:
     dockerfilePath: ./Dockerfile
     dockerContext: .
     healthCheckPath: /health
+    # Releases are deliberate: committing or pushing a branch must not deploy automatically.
     autoDeployTrigger: "off"
     envVars:
       - key: APP_ENV
         value: production
       - key: PUBLIC_ORIGIN
+        # Supply deployment-specific values in Render rather than storing credentials in this file.
         sync: false
       - key: AUTH_MODE
         value: accounts

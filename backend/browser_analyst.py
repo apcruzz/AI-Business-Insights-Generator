@@ -23,6 +23,7 @@ class BrowserRuns:
                 del self.items[key]
 
     def _packet(self, key, entry):
+        # Send the browser a model prompt or a finished result; the analysis state stays in this cache.
         request = entry['run'].inference()
         if request is None:
             self.items.pop(key, None)
@@ -31,6 +32,7 @@ class BrowserRuns:
             self.items.pop(key, None)
             raise ValueError('This local analysis context is too large. Use fewer columns or a new conversation.')
         entry['step'] = secrets.token_urlsafe(24)
+        # A new one-use token is issued for every step, so stale browser replies cannot advance a run twice.
         return {'status': 'model_required', 'runId': key, 'step': entry['step'], 'inference': request}
 
     def start(self, payload):
@@ -61,6 +63,7 @@ class BrowserRuns:
             if entry is None or entry['owner'] != OWNER.get():
                 raise ValueError('This local analysis expired or is unavailable. Ask the question again.')
             DATASETS.get(entry['run'].dataset_id)
+            # Ownership/expiry is checked again between model turns, not just when the question begins.
             step = payload.get('step')
             if not isinstance(step, str) or not secrets.compare_digest(step, entry['step']):
                 raise ValueError('This analysis step was already used or is out of order.')
@@ -70,6 +73,7 @@ class BrowserRuns:
             return self._packet(key, entry)
 
     def cancel(self, payload):
+        # Treat cancellation as idempotent, while refusing to delete another session's pending run.
         with self.lock:
             key = payload.get('runId')
             if isinstance(key, str) and key in self.items and self.items[key]['owner'] == OWNER.get():
