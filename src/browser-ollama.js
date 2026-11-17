@@ -96,14 +96,17 @@ export class BrowserOllama {
     return this.models;
   }
 
-  async chat(inference, {signal} = {}) {
+  async chat(inference, {signal, overview = false} = {}) {
     if (!this.connected || !this.models.includes(inference?.model)) throw Error('Connect Local Ollama and choose an installed local model first.');
     if (!Array.isArray(inference.messages) || !inference.format) throw Error('Invalid analysis request.');
     // Rebuild the body: server-supplied URL/auth/tools/options cannot alter the transport.
     const body = {model: inference.model, messages: inference.messages, format: inference.format,
-      stream: false, options: {temperature: 0, num_predict: 1200, num_ctx: 8192}};
+      stream: false, options: {temperature: 0, num_predict: overview ? 450 : 1200, num_ctx: overview ? 4096 : 8192}};
+    // Fixed local limits, not arbitrary options received in a model packet.
+    // Never warm a model until the visitor explicitly connects and selects it.
+    if (overview) body.keep_alive = '5m';
     if (inference.model.toLowerCase().startsWith('qwen3')) body.think = false;
-    const result = await this.request('/api/chat', body, {signal});
+    const result = await this.request('/api/chat', body, {signal, timeout: overview ? 90000 : 120000});
     if (result.done_reason === 'length') throw Error('Ollama reached its output limit. Try a simpler question.');
     if (typeof result.message?.content !== 'string' || !result.message.content.trim() || result.message.content.length > 16000) {
       throw Error('Ollama returned an empty or oversized analysis action. Try another local model.');
@@ -123,7 +126,7 @@ export async function runBrowserAnalyst(api, ollama, payload, {signal} = {}) {
       if (packet.status !== 'model_required' || !packet.runId || !packet.step) throw Error('Invalid local analysis step.');
       runId = packet.runId;
       // The opaque step token binds this model reply to the server's next expected action.
-      const output = await ollama.chat(packet.inference, {signal});
+      const output = await ollama.chat(packet.inference, {signal, overview: payload.task === 'overview'});
       packet = await api('/api/ollama-step', {runId, step: packet.step, output}, {signal});
     }
     throw Error('Local analysis reached its step limit. Ask a more specific question.');

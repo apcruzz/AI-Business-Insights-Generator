@@ -232,13 +232,16 @@ def explain(payload):
     return {"answer": answer, "mode": "Local AI", "model": model}
 
 
-def chat(model, messages, *, format=None, timeout=60, num_predict=650):
+def chat(model, messages, *, format=None, timeout=60, num_predict=650, overview=False):
     """Shared local chat transport; callers validate the downloaded model first."""
     if os.getenv("APP_ENV") == "production":
         raise ValueError("Local Ollama is unavailable on the hosted demo.")
     # Build a non-streaming request so callers receive one complete model action.
     body = {'model': model, 'messages': messages, 'stream': False,
-            'options': {'temperature': 0, 'num_predict': num_predict, 'num_ctx': 8192}}
+            'options': {'temperature': 0, 'num_predict': num_predict, 'num_ctx': 4096 if overview else 8192}}
+    if overview:
+        # Retain the already explicitly selected model briefly for follow-ups.
+        body['keep_alive'] = '5m'
     # The analyst supplies a JSON schema here so model actions can be parsed and dispatched.
     if format is not None:
         body['format'] = format

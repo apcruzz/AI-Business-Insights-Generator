@@ -57,6 +57,33 @@ test('CORS, origin rejection, malformed JSON, and missing models have actionable
   await assert.rejects(empty.chat(inference), /installed/);
 });
 
+test('overview uses bounded local settings while manual questions retain their capacity', async () => {
+  const bodies = [];
+  const client = new BrowserOllama(async (url, options) => {
+    if (url.endsWith('/api/tags')) return response({models:[{name: inference.model}]});
+    bodies.push(JSON.parse(options.body));
+    return response({message:{content:'{"action":"answer"}'}});
+  });
+  await client.connect();
+  const packet = {...inference, options:{num_predict:100000, num_ctx:100000}, keep_alive:'24h', task:'overview'};
+  await client.chat(packet, {overview:true});
+  await client.chat(packet);
+  assert.deepEqual(bodies[0].options, {temperature:0, num_predict:450, num_ctx:4096});
+  assert.equal(bodies[0].keep_alive, '5m');
+  assert.deepEqual(bodies[1].options, {temperature:0, num_predict:1200, num_ctx:8192});
+  assert.equal(bodies[1].keep_alive, undefined);
+});
+
+test('the original overview task selects the fast profile, not arbitrary inference options', async () => {
+  const profiles = [];
+  const api = async path => path.endsWith('start') ? {status:'model_required', runId:'run', step:'nonce', inference}
+    : path.endsWith('step') ? {status:'complete', result:{status:'answered'}} : {};
+  const ollama = {chat: async (packet, options) => { profiles.push(options.overview); return 'text'; }};
+  await runBrowserAnalyst(api, ollama, {task:'overview'});
+  await runBrowserAnalyst(api, ollama, {question:'Net sales?'});
+  assert.deepEqual(profiles, [true, false]);
+});
+
 test('model timeout and disconnect abort fetches without any cloud fallback', async () => {
   const fetcher = async (url, {signal}) => new Promise((resolve, reject) => signal.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError'))));
   const client = new BrowserOllama(fetcher);

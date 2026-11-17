@@ -127,7 +127,9 @@ class GeminiModelOptionTests(unittest.TestCase):
         with patch.object(gemini_client.GEMINI_HTTP, 'open', side_effect=error) as send, patch('backend.groq_client.chat') as groq, patch('backend.ollama_client.chat') as local:
             with self.assertRaisesRegex(gemini_client.GeminiError, 'HTTP 503'):
                 analyze_overview({**self.payload, 'model': LITE})
-        self.assertEqual(send.call_count, 1)
+        # One transient retry is allowed; it must keep the selected model/provider.
+        self.assertEqual(send.call_count, 2)
+        self.assertTrue(all(LITE in call.args[0].full_url for call in send.call_args_list))
         groq.assert_not_called()
         local.assert_not_called()
 
