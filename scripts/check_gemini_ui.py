@@ -16,6 +16,103 @@ from playwright.sync_api import sync_playwright, expect
 from backend.normalizer import normalize
 
 
+def check_conversation_window(page):
+    """Sizing and visibility preserve the same chat DOM, draft, evidence, filters, and model."""
+    panel, log = page.locator('#overviewAssistant'), page.locator('#insightAnswer')
+    transcript = log.inner_text()
+    model = page.locator('#localModel').input_value()
+    draft = 'Keep this unsent question'
+    page.locator('#insightQuestion').fill(draft)
+    page.evaluate('window.originalChatLog = document.getElementById("insightAnswer")')
+
+    def preserved():
+        expect(log).to_have_text(transcript)
+        expect(page.locator('#insightQuestion')).to_have_value(draft)
+        expect(page.locator('#localModel')).to_have_value(model)
+        expect(page.locator('#product')).to_have_value('')
+        assert page.evaluate('document.getElementById("insightAnswer") === window.originalChatLog')
+        assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
+        assert page.evaluate('document.documentElement.scrollHeight <= innerHeight + 1')
+
+    normal_width = panel.bounding_box()['width']
+    chart_width = page.locator('#overviewSlot0').bounding_box()['width']
+    page.locator('#maximizeConversation').click()
+    expect(page.locator('#maximizeConversation')).to_have_attribute('aria-label', 'Restore conversation')
+    expect(page.locator('#maximizeConversation')).to_have_attribute('aria-pressed', 'true')
+    expect(page.locator('#overviewCards')).to_be_hidden()
+    expect(page.locator('#overviewCharts')).to_be_hidden()
+    expect(panel).to_be_in_viewport(ratio=1)
+    assert panel.bounding_box()['width'] > normal_width * 2
+    expect(page.locator('#previewHeader')).to_be_visible()
+    page.locator('#previewFilterButton').click()
+    page.locator('#from').focus()
+    page.keyboard.press('Escape')
+    expect(page.locator('#dashboardFilters')).to_be_hidden()
+    expect(page.locator('body')).to_have_attribute('data-conversation-state', 'maximized')
+    page.locator('#openAiSettings').click()
+    page.keyboard.press('Escape')
+    expect(page.locator('#aiSettings')).to_be_hidden()
+    expect(page.locator('body')).to_have_attribute('data-conversation-state', 'maximized')
+    page.locator('#maximizeConversation').focus()
+    page.keyboard.press('Escape')
+    expect(page.locator('#maximizeConversation')).to_have_attribute('aria-pressed', 'false')
+    expect(page.locator('#overviewCards')).to_be_visible()
+    preserved()
+
+    page.locator('#minimizeConversation').click()
+    expect(panel).to_be_hidden()
+    expect(page.locator('#restoreConversation')).to_be_focused()
+    expect(page.locator('#conversationDock')).to_be_in_viewport(ratio=1)
+    assert page.locator('#overviewSlot0').bounding_box()['width'] > chart_width + 50
+    page.evaluate("location.hash = '#detailed-dashboard'")
+    expect(page.locator('#detailPage')).to_be_visible()
+    expect(page.locator('#conversationDock')).to_be_hidden()
+    page.evaluate("location.hash = '#business-overview'")
+    expect(page.locator('#conversationDock')).to_be_visible()
+    expect(panel).to_be_hidden()
+    page.locator('#maximizeMinimizedConversation').click()
+    expect(panel).to_be_visible()
+    expect(page.locator('#maximizeConversation')).to_be_focused()
+    preserved()
+    page.locator('#closeConversation').click()
+    expect(page.locator('#conversationDockLabel')).to_have_text('Open AI conversation')
+    expect(page.locator('#maximizeMinimizedConversation')).to_be_hidden()
+    expect(page.locator('#closeMinimizedConversation')).to_be_hidden()
+    page.locator('#restoreConversation').click()
+    expect(page.locator('#insightQuestion')).to_be_focused()
+    preserved()
+    page.screenshot(path='/tmp/dashboard-ui-conversation-restored.png')
+
+    for width, height in [(1024, 600), (390, 568), (320, 640)]:
+        page.set_viewport_size({'width': width, 'height': height})
+        page.locator('#previewAssistantTab').click()
+        page.locator('#maximizeConversation').click()
+        expect(page.locator('#previewWorkspaceTabs')).to_be_hidden()
+        expect(panel).to_be_in_viewport(ratio=1)
+        expect(page.locator('#askButton')).to_be_in_viewport(ratio=1)
+        preserved()
+        page.screenshot(path=f'/tmp/dashboard-ui-conversation-maximized-{width}.png')
+        page.locator('#minimizeConversation').click()
+        expect(page.locator('#overviewCharts')).to_be_visible()
+        expect(page.locator('#conversationDock')).to_be_in_viewport(ratio=1)
+        expect(page.locator('#previewNextChart')).to_be_in_viewport(ratio=1)
+        preserved()
+        page.screenshot(path=f'/tmp/dashboard-ui-conversation-minimized-{width}.png')
+        page.locator('#closeMinimizedConversation').click()
+        expect(panel).to_be_hidden()
+        page.locator('#previewAssistantTab').click()
+        expect(panel).to_be_visible()
+        expect(page.locator('#conversationDock')).to_be_hidden()
+        preserved()
+        page.locator('#closeConversation').click()
+        page.locator('#restoreConversation').click()
+        expect(panel).to_be_visible()
+        expect(page.locator('#insightQuestion')).to_be_focused()
+        preserved()
+    page.set_viewport_size({'width': 1440, 'height': 1000})
+    page.locator('#insightQuestion').fill('')
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--browser', default=shutil.which('chromium') or shutil.which('google-chrome'))
@@ -116,6 +213,8 @@ def main():
             expect(page.locator('#insightAnswer .chatMessage--assistant').last).to_contain_text('Net sales are 70.')
             expect(page.locator('#insightAnswer script')).to_have_count(0)
             assert calls[-1][1]['model'] == 'gemini-3.5-flash-lite'
+            check_conversation_window(page)
+            assert overview_count() == 1 and inference_count() == 1, 'Window actions must not start AI requests'
             page.evaluate("location.hash = '#detailed-dashboard'")
             expect(page.locator('#detailPage')).to_be_visible()
             page.evaluate("location.hash = '#business-overview'")
@@ -149,7 +248,7 @@ def main():
             assert overview_count() == 3 and inference_count() == 2
             assert not errors, errors
             browser.close()
-            print('PASS: automatic Gemini overview is an assistant-only message in the existing chat; follow-up scope, filters, explicit retry, errors, escaping, navigation, mobile and calculated answers checked. APIs were mocked.')
+            print('PASS: conversation maximize/restore/minimize/close, preserved draft/history/model, responsive layout, focus and Escape; no extra inference; automatic Gemini overview, follow-up scope, filters, retry, errors, escaping, navigation, mobile and calculated answers. APIs were mocked.')
     finally:
         server.shutdown()
         server.server_close()

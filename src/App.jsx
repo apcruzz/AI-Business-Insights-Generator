@@ -15,10 +15,27 @@ import "./ui.css";
 import "./workspace-header.css";
 import "./chart-options.css";
 import "./workspace-theme.css";
+import "./conversation-window.css";
 
 export default function App() {
   // Authentication wraps the whole workspace so protected UI never mounts for signed-out visitors.
   return <AccountAccess>{({accountPage, user}) => <Dashboard accountPage={accountPage} user={user} />}</AccountAccess>;
+}
+
+function ConversationWindowButton({id, action, label}) {
+  // Keep the same labeled, keyboard-accessible controls in the panel and its minimized bar.
+  return <button id={id} className={`conversationWindowButton conversationWindowButton--${action}`} type="button"
+    aria-label={label} title={label} aria-controls="overviewAssistant"
+    aria-pressed={action === "maximize" ? false : undefined}>
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {action === "minimize" && <path d="M4 14h12" />}
+      {action === "close" && <path d="m5 5 10 10M15 5 5 15" />}
+      {action === "maximize" && <>
+        <rect className="conversationMaximizeIcon" x="4" y="4" width="12" height="12" rx="2" />
+        <g className="conversationRestoreIcon"><path d="M7 5V4a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1h-1" /><rect x="3" y="7" width="10" height="10" rx="1" /></g>
+      </>}
+    </svg>
+  </button>;
 }
 
 function Dashboard({accountPage, user}) {
@@ -361,7 +378,14 @@ function Dashboard({accountPage, user}) {
                 <div>
                   <h2 id="assistantTitle">Business assistant</h2>
                 </div>
-                <button id="openAiSettings" className="quietButton" type="button" aria-haspopup="dialog">AI settings</button>
+                <div className="conversationToolbar">
+                  <button id="openAiSettings" className="quietButton" type="button" aria-haspopup="dialog">AI settings</button>
+                  <div className="conversationWindowControls" role="group" aria-label="AI conversation controls">
+                    <ConversationWindowButton id="minimizeConversation" action="minimize" label="Minimize conversation" />
+                    <ConversationWindowButton id="maximizeConversation" action="maximize" label="Maximize conversation" />
+                    <ConversationWindowButton id="closeConversation" action="close" label="Close conversation" />
+                  </div>
+                </div>
               </div>
               <div className="modelRow">
                 <label htmlFor="localModel" className="srOnly">Answer mode</label>
@@ -443,6 +467,15 @@ function Dashboard({accountPage, user}) {
           Local data processing. Gross profit excludes operating expenses.
         </footer>
       </main>
+      {/* Hiding the panel preserves its DOM, draft, and pending replies. This launcher reopens it. */}
+      <div id="conversationDock" className="conversationDock" role="group" aria-label="AI conversation" hidden>
+        <button id="restoreConversation" type="button" aria-controls="overviewAssistant" aria-expanded="false">
+          <span className="conversationDockIcon" aria-hidden="true">✦</span>
+          <span id="conversationDockLabel">Open AI conversation</span>
+        </button>
+        <ConversationWindowButton id="maximizeMinimizedConversation" action="maximize" label="Maximize conversation" />
+        <ConversationWindowButton id="closeMinimizedConversation" action="close" label="Close conversation" />
+      </div>
     </>
   );
 }
