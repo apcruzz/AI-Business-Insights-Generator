@@ -42,7 +42,7 @@ class OverviewSourceColumnTests(unittest.TestCase):
         payload = self.dataset()
         dataset = self.cache.get(payload['datasetId'])
         self.assertFalse(dataset.metadata['capabilities']['Date'])
-        self.assertEqual(required_source_columns(dataset, OVERVIEW_QUESTION), ['Date'])
+        self.assertNotIn('Date', self.run_overview(payload).required_columns)
         reply = json.dumps({'action': 'answer', 'sql': '', 'answer': 'Net sales are 70. Recommend reviewing Coffee and measuring sales. Date coverage is unavailable.'})
         with patch.dict(os.environ, {'GEMINI_API_KEY': 'synthetic-key'}), patch('backend.gemini_client.chat', return_value=reply) as send:
             result = analyze_overview({**payload, 'provider': 'gemini', 'model': GEMINI_MODEL})
