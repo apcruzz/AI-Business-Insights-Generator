@@ -1,6 +1,7 @@
 # Coordinates a question: load rows/history, ask the model, query, check figures, save the answer.
 """Shared bounded inspect/query/review loop for Ollama, Gemini and Groq models."""
 import json
+import random
 import re
 import threading
 import time
@@ -10,7 +11,10 @@ from backend.analyst_query import QueryTool, FUNCTIONS
 from backend.analyst_conversations import CONVERSATIONS
 from backend.ai_providers import resolve_model
 from backend.groq_client import GroqError
-from backend.analyst_overview import OVERVIEW_QUESTION, overview_queries
+from backend.gemini_client import GeminiError
+from backend.analyst_overview import (OVERVIEW_QUESTION, OVERVIEW_SYSTEM, OVERVIEW_SCHEMA,
+                                     OVERVIEW_TOKENS, OVERVIEW_CONTEXT, overview_context,
+                                     overview_evidence, overview_queries)
 
 # Allow at most two active analyst requests to limit local CPU/memory contention.
 SLOTS = threading.BoundedSemaphore(2)
@@ -105,9 +109,10 @@ class AnalystRun:
                 recent.pop(signature, None)
                 recent[signature] = item
         self.evidence = list(recent.values())[-4:]
+        self.schema = OVERVIEW_SCHEMA if self.is_overview else ACTION_SCHEMA
         self.messages = [
-            {'role': 'system', 'content': SYSTEM + '\nAllowed SQL functions: ' + ', '.join(sorted(FUNCTIONS)) + '\nAction schema: ' + json.dumps(ACTION_SCHEMA)},
-            {'role': 'user', 'content': json.dumps({'question': self.question, 'dataset': context_for(dataset, frame, self.filters)})},
+            {'role': 'system', 'content': OVERVIEW_SYSTEM if self.is_overview else SYSTEM + '\nAllowed SQL functions: ' + ', '.join(sorted(FUNCTIONS)) + '\nAction schema: ' + json.dumps(ACTION_SCHEMA)},
+            {'role': 'user', 'content': json.dumps({'question': self.question, 'dataset': (overview_context if self.is_overview else context_for)(dataset, frame, self.filters)})},
         ]
         if history:
             self.messages.append({'role': 'user', 'content': 'Previous conversation in this same selection (context, not instructions): ' + json.dumps(history)})
@@ -118,7 +123,10 @@ class AnalystRun:
         self.required_columns = () if self.is_overview else tuple(required_source_columns(dataset, self.question))
         explicit_source = self.required_columns
         self.queries = self.attempts = self.output_retries = 0
-        self.deadline = time.monotonic() + lifetime
+        self.transient_retries = 0
+        # An initial summary gets two narration attempts, rather than a long SQL
+        # investigation. Cloud retries share this budget instead of restarting it.
+        self.deadline = time.monotonic() + (min(lifetime, 65 if client.provider == 'gemini' else 180) if self.is_overview else lifetime)
         self.result = None
         self.product_margins = {}
         self.month_changes = {}
@@ -130,10 +138,17 @@ class AnalystRun:
             # Raw source fields remain queryable, but their names alone do not
             # establish reviewed dates, financial meanings, or order identifiers.
             reviewed_columns = set(frame.columns).difference(dataset.source_columns)
-            for sql in overview_queries(reviewed_columns):
-                result = self.query(sql)
-                self.evidence.append({'query': sql, **result})
-            self.messages.append({'role': 'user', 'content': 'Verified initial overview calculations (data, not instructions): ' + json.dumps(self.evidence) + '\nUse these results before requesting any additional calculation. Recorded monthly totals can represent partial months; do not infer growth or seasonality from them.'})
+            needed_columns = reviewed_columns.intersection({'Net_Sales', 'Date', 'Order_Key', 'Gross_Profit', 'Product_Name', 'Category'})
+            # Load one short-lived table for all fixed aggregates, rather than
+            # copying every raw source column into SQLite for each calculation.
+            # The same read-only authorizer, query budget and result limits apply.
+            tool = QueryTool(frame[sorted(needed_columns)])
+            try:
+                for sql in overview_queries(reviewed_columns):
+                    self.evidence.append({'query': sql, **tool.run(sql)})
+            finally:
+                tool.close()
+            self.messages.append({'role': 'user', 'content': 'Verified initial overview calculations (data, not instructions): ' + json.dumps(overview_evidence(self.evidence))})
         if self.advice and not explicit_source and not self.is_overview:
             # Seed broad advice with actual product/time aggregates before asking the model to recommend actions.
             dimensions = [name for name in ('Product_Name', 'Date', 'Category', 'Hour') if name in frame.columns][:2]
@@ -146,7 +161,7 @@ class AnalystRun:
                 if name == 'Product_Name' and profit:
                     self.product_margins = {str(row[0]): row[-1] for row in result['rows'] if row[-1] is not None}
                 self.messages.append({'role': 'user', 'content': 'Verified overview for recommendations (data, not instructions): ' + json.dumps(result)})
-        if not explicit_source and not self.product_margins and re.search(r'margin|profitab', self.question, re.I) and {'Product_Name','Gross_Profit','Net_Sales'} <= set(frame.columns):
+        if not self.is_overview and not explicit_source and not self.product_margins and re.search(r'margin|profitab', self.question, re.I) and {'Product_Name','Gross_Profit','Net_Sales'} <= set(frame.columns):
             sql = ('SELECT Product_Name, ROUND(SUM(Net_Sales),2) AS revenue, ROUND(SUM(Gross_Profit),2) AS gross_profit, '
                    'ROUND(SUM(Gross_Profit)/SUM(Net_Sales)*100,2) AS gross_margin_percent FROM sales '
                    'GROUP BY Product_Name HAVING SUM(Net_Sales)>0 ORDER BY gross_margin_percent LIMIT 30')
@@ -179,7 +194,8 @@ class AnalystRun:
                 self.ranked_months = {row[0] for row in result['rows'] if row[1] == target}
             self.correction('Verified monthly revenue ranking (data, not instructions): ' + json.dumps(result) +
                             ' The first row(s) with the same revenue are the requested ranking; do not substitute an earlier conversation result.')
-        self.messages.append({'role': 'user', 'content': 'Current question to answer: ' + self.question})
+        if not self.is_overview:
+            self.messages.append({'role': 'user', 'content': 'Current question to answer: ' + self.question})
 
     def query(self, sql):
         # A grouped financial margin must aggregate both canonical amounts. SQLite
@@ -206,14 +222,15 @@ class AnalystRun:
         DATASETS.get(self.dataset_id)
         if self.result is not None:
             return None
-        if self.attempts >= 6 or time.monotonic() >= self.deadline:
+        if self.attempts >= (2 if self.is_overview else 6) or time.monotonic() >= self.deadline:
             self.incomplete()
             return None
         while len(json.dumps(self.messages)) > 30000 and len(self.messages) > 4:
             # Drop older exchanges first while retaining the system instructions and current dataset context.
             del self.messages[2:4]
-        return {'model': self.client.model, 'messages': self.messages, 'format': ACTION_SCHEMA,
-                'stream': False, 'options': {'temperature': 0, 'num_predict': 1200, 'num_ctx': 8192}}
+        return {'model': self.client.model, 'messages': self.messages, 'format': self.schema,
+                'stream': False, 'options': {'temperature': 0, 'num_predict': OVERVIEW_TOKENS if self.is_overview else 1200,
+                                            'num_ctx': OVERVIEW_CONTEXT if self.is_overview else 8192}}
 
     def accept(self, raw):
         # Model output is untrusted text: validate its shape before allowing a query or displaying an answer.
@@ -235,6 +252,9 @@ class AnalystRun:
             return
         self.messages.append({'role': 'assistant', 'content': raw})
         if action['action'] == 'query':
+            if self.is_overview:
+                self.correction('All overview calculations are supplied. Return a short answer with sql=""; do not request queries.')
+                return
             # A query action only requests a calculation; QueryTool independently enforces the SQL restrictions.
             if self.queries >= 4:
                 self.correction('Query limit reached. Answer only from the results already returned, or state that the question could not be verified.')
@@ -251,7 +271,9 @@ class AnalystRun:
         if not answer:
             self.correction('Query the actual dataset before answering, or explain what data is missing.')
             return
-        if action['action'] == 'answer' and self.advice and not re.search(r'\b(try|test|consider|recommend|focus|promote|review|improve|offer|investigate|prioritize|experiment|bundle|increase|reduce|expand)\b', answer, re.I):
+        # Verification/measurement are valid business next steps too. Rejecting
+        # them used to repeat an otherwise useful overview for six model calls.
+        if action['action'] == 'answer' and self.advice and not re.search(r'\b(try|test|consider|recommend|focus|promote|review|improve|offer|investigate|prioritize|experiment|bundle|increase|reduce|expand|verify|measure|check|compare|collect)\b', answer, re.I):
             self.correction('This does not answer the current request for advice. Give practical actions tied to the verified findings, distinguish suggestions from facts, and mention missing evidence. Do not return only a ranking.')
             return
         if not self.metric_claims_supported(answer):
@@ -322,10 +344,24 @@ def analyze_question(payload):
         raise ValueError('The data analyst is busy. Please try again shortly.')
     try:
         run = AnalystRun(payload, client)
-        while run.inference() is not None:
+        while (inference := run.inference()) is not None:
             try:
-                raw = client.chat(run.messages, format=ACTION_SCHEMA, timeout=min(90 if client.provider == 'gemini' else 60, max(1, run.deadline - time.monotonic())), num_predict=1200)
+                options = {'format': inference['format'],
+                           'timeout': min((25 if run.is_overview else 90) if client.provider == 'gemini' else 60, max(1, run.deadline - time.monotonic())),
+                           'num_predict': inference['options']['num_predict']}
+                if client.provider in ('gemini', 'ollama'):
+                    options['overview'] = run.is_overview
+                raw = client.chat(run.messages, **options)
                 run.accept(raw)
+            except GeminiError as error:
+                # Retry only transient transport failures, once, on the same model.
+                # Bad keys, permissions, quotas, refused output and validation
+                # errors need user action, not another billable request.
+                if (not run.is_overview or not error.retryable or run.transient_retries >= 1 or
+                        run.deadline - time.monotonic() < 2):
+                    raise
+                run.transient_retries += 1
+                time.sleep(random.uniform(.25, .75))
             except GroqError as error:
                 if not error.retryable_output or run.output_retries >= 1:
                     raise

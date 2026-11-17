@@ -20,9 +20,10 @@ MAX_RESPONSE_BYTES = 256 * 1024
 
 class GeminiError(RuntimeError):
     """Only fixed, browser-safe messages cross the HTTP boundary."""
-    def __init__(self, message, status=502):
+    def __init__(self, message, status=502, *, retryable=False):
         super().__init__(message)
         self.status = status
+        self.retryable = retryable
 
 
 def configured():
@@ -45,15 +46,15 @@ def connection_error(error):
     if isinstance(reason, ssl.SSLError):
         return GeminiError('The Python HTTPS connection to Gemini failed during TLS negotiation. Check the managed network or proxy configuration.')
     if isinstance(reason, (TimeoutError, socket.timeout)):
-        return GeminiError('The Gemini request timed out. Try again later or select another Gemini model in AI provider / answer mode.', 504)
+        return GeminiError('The Gemini request timed out. Try again later or select another Gemini model in AI provider / answer mode.', 504, retryable=True)
     if isinstance(reason, socket.gaierror):
         return GeminiError('Python could not resolve the Gemini API address. Check DNS or the network connection.')
     if isinstance(reason, (ConnectionResetError, ConnectionRefusedError)):
-        return GeminiError('The network connection to Gemini was interrupted or refused. Check the connection and try again later.')
+        return GeminiError('The network connection to Gemini was interrupted or refused. Check the connection and try again later.', retryable=True)
     return GeminiError('Python could not complete the network connection to Gemini. Check the connection, proxy or VPN settings.')
 
 
-def chat(model, messages, *, format, timeout=90, num_predict=1200):
+def chat(model, messages, *, format, timeout=90, num_predict=1200, overview=False):
     if not isinstance(model, str) or model not in GEMINI_MODELS:
         raise ValueError('Choose one of the Gemini models listed in AI provider / answer mode.')
     key = os.environ.get('GEMINI_API_KEY', '').strip()
@@ -76,9 +77,11 @@ def chat(model, messages, *, format, timeout=90, num_predict=1200):
         'systemInstruction': {'parts': instructions}, 'contents': contents,
         'generationConfig': {
             # Use supported defaults for Gemini 3 sampling/candidate settings.
-            # Leave room for reasoning as well as the bounded analyst action.
-            'maxOutputTokens': max(8192, min(num_predict, 16000)),
-            'thinkingConfig': {'thinkingLevel': 'low', 'includeThoughts': False},
+            # A short, precomputed overview needs less output/reasoning. Leave
+            # headroom for reasoning tokens; num_predict alone can truncate JSON.
+            'maxOutputTokens': 2048 if overview else max(8192, min(num_predict, 16000)),
+            # Flash supports low; only Flash-Lite supports minimal thinking.
+            'thinkingConfig': {'thinkingLevel': 'minimal' if overview and model == 'gemini-3.5-flash-lite' else 'low', 'includeThoughts': False},
             'responseFormat': {'text': {'mimeType': 'APPLICATION_JSON', 'schema': format}},
         },
     }
@@ -109,8 +112,8 @@ def chat(model, messages, *, format, timeout=90, num_predict=1200):
         if status == 404:
             raise GeminiError('The configured Gemini model is unavailable to this API project (HTTP 404). Check model access or choose another answer mode.') from None
         if status == 503:
-            raise GeminiError('Gemini is temporarily unavailable (HTTP 503). Try again later or choose another answer mode.') from None
-        raise GeminiError('Gemini could not complete the request. Try again later or choose another answer mode.') from None
+            raise GeminiError('Gemini is temporarily unavailable (HTTP 503). Try again later or choose another answer mode.', retryable=True) from None
+        raise GeminiError('Gemini could not complete the request. Try again later or choose another answer mode.', retryable=status in (500, 502, 504)) from None
     except OSError as error:
         raise connection_error(error) from None
     except (ValueError, TypeError):

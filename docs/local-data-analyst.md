@@ -4,7 +4,7 @@
 
 The existing upload/mapping/chart workflow remains unchanged. `/api/analyze` now also registers an immutable analysis snapshot and returns an opaque `datasetId`. CSV and the selected Excel worksheet share the same pipeline. Source fields not mapped to dashboard fields are preserved under their original names (or a collision-safe alias).
 
-The snapshot is not sent wholesale to an LLM, and no inference runs automatically at upload time. Once an AI model is selected and the user asks a question:
+The snapshot is not sent wholesale to an LLM, and no inference runs automatically at upload time. Once Gemini or an explicitly connected Ollama model is selected, a compact automatic overview uses server-calculated aggregates (see below). Follow-up questions use the full analyst workflow:
 
 1. The browser sends the explicit provider/model, dataset ID, question, conversation ID and current filters to `/api/analyst`. Requests without a provider retain the original Ollama behavior.
 2. The backend retrieves that dataset and applies the dashboard date/category/product/weekday/time-of-day filters.
@@ -37,7 +37,7 @@ Generated Python, shell commands, `eval` and `exec` are never used. SQLite's aut
 ## Limits and accuracy
 
 - Cache: four datasets, total estimated DataFrame memory at most 128 MiB, one-hour expiry; server restart clears it. Evicted/expired data requires rebuilding the dashboard. Oversized datasets retain calculated-answer functionality.
-- At most two simultaneous analyst requests, six model turns and four queries per request. Overall loop deadline 180 seconds; each model request timeout at most 60 seconds.
+- At most two simultaneous server analyst requests. Manual questions retain six model turns and four queries, with a 180-second loop deadline (60 seconds per local/Groq call; 90 seconds per Gemini call). Browser Ollama runs have their existing session-owned expiry and local transport limits.
 - SQL: one statement, at most 8000 characters, two-second/progress-budget limit, at most 12 output columns and 30 returned rows. Truncation is explicitly shown. Result JSON is limited to 14,000 characters and prompt history is bounded.
 - Canonical financial columns are validated by existing normalization. Extra source fields remain text; monetary/date conversion of these fields requires care and is not automatically trusted.
 - Missing canonical fields and unvalidated order IDs are not exposed as invented data. Row count is not order count. Weather analysis can use uploaded columns only.
@@ -77,3 +77,38 @@ server Ollama, with its existing deadlines and provider behavior.
 
 See the README's browser Ollama section for exact OS setup, privacy boundaries,
 limits, automated checks and the production-origin manual acceptance checklist.
+
+## Short automatic reviews
+
+The overview computes totals and reviewed product/category/month groups against
+all filtered rows in one temporary, read-only SQLite table. Only necessary
+normalized fields enter this table. Full query results remain available for
+verification and follow-ups; the model receives totals and up to three recorded
+groups per dimension, not raw column samples or a SQL-planning prompt. Long
+uploaded labels are omitted from that compact input rather than renamed.
+
+Local overviews request at most 450 output tokens with a 4,096-token context,
+and a short review of at most 130 words. There are at most two narration attempts
+including correction; a model cannot add SQL rounds to this initial review.
+The existing numerical checks still apply, so an unverified response is never
+shown as a completed review. Manual questions retain 1,200 output tokens and an
+8,192-token context. Explicitly used local models stay loaded for five minutes;
+there is no background connection, preload, or cloud fallback. Browser overview
+calls time out after 90 seconds. Cold model loading, available RAM/GPU, and
+other local inference can still affect response time.
+
+Gemini uses its own compact reasoning/output profile and one bounded retry only
+for transient overview transport failures; see [Gemini setup](gemini-setup.md).
+The same dataset/filter/provider/account scopes and explicit local connection
+requirements continue to apply.
+
+The November 16, 2026 fictional three-row check on this Mac reduced a Llama
+3.2:3b review from six calls / 41.5 seconds ending incomplete to one call /
+7.1 seconds ending answered. Llama 3 (8B) finished the compact review in one call /
+11.4 seconds, including 3.5 seconds of model loading. These are individual local
+measurements, not latency guarantees or proof of every natural-language claim.
+The 202 unit tests, Vite build and four Chrome integration checks passed; cloud
+responses in the tests were mocked. No Gemini API key was available for a live
+Gemini latency/availability check. With your backend key set, the existing
+`python -m scripts.check_gemini --model gemini-3.5-flash-lite` performs an optional
+live connection check using fictional data and normal API quota.

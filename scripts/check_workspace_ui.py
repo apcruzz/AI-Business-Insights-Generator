@@ -58,6 +58,11 @@ def main():
                     else:
                         assert route.request.url.endswith('/api/chat')
                         payload = route.request.post_data_json
+                        if 'query' not in payload['format']['properties']['action']['enum']:
+                            assert payload['options'] == {'temperature': 0, 'num_predict': 450, 'num_ctx': 4096}
+                            assert payload['keep_alive'] == '5m'
+                        else:
+                            assert payload['options'] == {'temperature': 0, 'num_predict': 1200, 'num_ctx': 8192}
                         scope = json.loads(payload['messages'][1]['content'])['dataset']['filters']
                         total = 30 if scope.get('product') == 'Tea' else 40 if scope.get('product') == 'Coffee' else 70
                         result = {'message': {'content': json.dumps({'action': 'answer', 'sql': '',

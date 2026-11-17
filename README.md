@@ -2,7 +2,7 @@
 
 A business dashboard with account access, CSV/Excel uploads, column suggestions, automatic charts, calculated insights, and optional AI conversations through Ollama, Google Gemini, or GroqCloud GPT-OSS 120B.
 
-The dashboard and Ollama run on your computer without API keys or subscriptions. Uploaded files are processed in memory and are not saved by the server. Gemini and Groq are optional cloud choices requiring their own backend API keys and internet access. Selecting Gemini or a connected local Ollama model generates an automatic overview in the existing Business assistant conversation. The overview request and follow-up questions send recent conversation, dataset metadata, column samples and query results to the selected provider. API project access, usage limits and any charges depend on your account. Existing local and calculated modes remain available.
+The dashboard and Ollama run on your computer without API keys or subscriptions. Uploaded files are processed in memory and are not saved by the server. Gemini and Groq are optional cloud choices requiring their own backend API keys and internet access. Selecting Gemini or a connected local Ollama model generates an automatic overview in the existing Business assistant conversation. The overview sends compact dataset context and verified aggregate results; follow-up questions also send relevant recent conversation, column metadata and sample values to the selected provider. API project access, usage limits and any charges depend on your account. Existing local and calculated modes remain available.
 
 ## Gemini overview and chat
 
@@ -740,3 +740,15 @@ acceptance check was performed, and no service was deployed or changed.
 
 
 Refresh recovery and local overview checks: run `npm test`, `npm run build`, and `.venv/bin/python -m scripts.check_workspace_ui` (Chrome/Playwright on macOS). The browser check uses fictional CSV/sample data and mocked local model responses. It verifies restored filters/KPIs/chart types/page, cross-session rejection, expiry recovery, local automatic overview/follow-ups, no implicit reconnect after refresh, and no cloud or server-local inference. Live local-model latency and the deployed Render origin remain manual checks.
+
+Automatic reviews now use one temporary SQL table and a compact narration prompt
+over verified aggregates, instead of the full multi-step analyst. Llama reviews
+have a smaller output/context budget and at most one correction; follow-up
+questions keep their existing capacity. Gemini reviews use model-supported low
+or minimal thinking and retry a transient connection/timeout/server failure
+once on the same model. Keys, quotas and permanent errors are not retried, and
+no model or provider changes automatically. A genuine outage can still fail.
+See [review limits](docs/local-data-analyst.md#short-automatic-reviews) and
+[Gemini troubleshooting](docs/gemini-setup.md#data-and-calculations). Restart the
+local Python backend and rebuild the frontend to preview these changes; Render
+needs the changed commit deployed. No new environment variables are required.

@@ -49,8 +49,10 @@ in a second terminal. The built app can be served by Python directly.
 
 ## Data and calculations
 
-Gemini receives the question, relevant recent conversation, column names/sample
-values and calculation results. Calculations operate on all rows matching the
+The initial overview sends compact scope/limitations and server-calculated
+totals plus a few leading groups. It does not send raw column samples or the
+full SQL-planning prompt. Follow-up questions send relevant recent conversation,
+column names/sample values and calculation results. Calculations operate on all rows matching the
 current filters through the existing restricted read-only query engine. Missing
 data, owner/session scopes and provider-specific conversations keep the existing
 rules. Numeric checks reduce unsupported figures but do not prove every answer.
@@ -63,10 +65,21 @@ debounced, and late replies from a previous selection are ignored.
 
 An overview failure is shown in the existing assistant conversation. You can
 still ask a question, or use the existing **New conversation** button to retry
-that failed overview. Errors do not trigger automatic retries or provider
-fallback. Starting a new conversation after a successful overview reuses the
-overview as context for a fresh chat. Other answer providers keep manual Ask
-behavior. Review supporting calculations.
+that failed overview. A short review normally needs one model call; an invalid
+answer gets at most one correction, with the same numerical checks. For an
+overview timeout, interrupted connection or temporary HTTP 500/502/503/504,
+the backend retries once on the same model with a small randomized delay.
+Each attempt has at most a 25-second socket timeout within a shared 65-second
+review budget. Bad keys, permissions, quotas, blocked/malformed output and
+manual chat errors are not automatically retried. A provider outage can still
+prevent a review; no other model or provider is selected silently.
+
+Overview output is limited to a short review, with a 2,048-token Gemini budget
+including reasoning. Flash-Lite uses minimal thinking; Flash uses its supported
+low setting. Longer follow-up questions retain their existing limits. Starting
+a new conversation after a successful overview reuses that overview as context
+for a fresh chat. Connected local Ollama models also generate initial reviews.
+Review supporting calculations: shorter generation is not an accuracy guarantee.
 
 API project quotas, model access and billing apply independently of a Gemini app
 subscription. Keep keys in the Python process or deployment secrets, outside
