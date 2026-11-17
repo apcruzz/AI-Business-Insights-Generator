@@ -81,6 +81,7 @@ def main():
                 page.locator('#buildButton').click()
                 page.locator('#loadSelectedCharts').click()
                 expect(page.locator('#dashboardMain')).to_be_visible()
+                expect(page.locator('#overviewAssistant')).to_be_visible()
                 page.locator('#insightQuestion').fill('What are total sales?')
                 page.locator('#askButton').click()
                 expect(page.locator('#insightAnswer')).to_contain_text('Calculated answer')
