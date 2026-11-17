@@ -1,0 +1,96 @@
+/* Conversation window actions only change layout; the same chat stays mounted in every state. */
+body.previewMode .compactAssistant .insightHeader {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+.conversationToolbar, .conversationWindowControls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.conversationToolbar { justify-content: space-between; }
+body.previewMode .conversationToolbar #openAiSettings { color: #657188; }
+body .conversationWindowButton {
+  display: inline-grid;
+  place-items: center;
+  width: var(--control-height);
+  flex: 0 0 var(--control-height);
+  padding: 0 !important;
+  color: #6b7395;
+  background: #f7f7fd;
+  border: 1px solid #e7e9f4;
+  box-shadow: none;
+}
+.conversationWindowButton svg { width: 18px; height: 18px; }
+body .conversationWindowButton:hover { color: #5c57bf; background: #eeecff; border-color: #d8d3fb; }
+body .conversationWindowButton--close:hover { color: #a23e60; background: #fff0f4; border-color: #f0d4df; }
+.conversationWindowButton .conversationRestoreIcon { display: none; }
+.conversationWindowButton[aria-pressed="true"] .conversationMaximizeIcon { display: none; }
+.conversationWindowButton[aria-pressed="true"] .conversationRestoreIcon { display: inline; }
+
+/* Maximize within the workspace, retaining the page header, navigation, and existing chat scroll area. */
+body.previewMode[data-conversation-state="maximized"] #overview {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+}
+body.previewMode[data-conversation-state="maximized"] .overviewBottom #overviewAssistant {
+  grid-column: 1;
+  grid-row: 1;
+}
+body.previewMode[data-conversation-state="maximized"] .compactAssistant .insightHeader {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+body.previewMode[data-conversation-state="maximized"] .conversationToolbar { flex: 1; justify-content: flex-end; gap: 12px; }
+body.previewMode[data-conversation-state="maximized"] .compactAssistant .conversationViewport,
+body.previewMode[data-conversation-state="maximized"] #insightForm,
+body.previewMode[data-conversation-state="maximized"] .conversationFooter {
+  width: 100%;
+  max-width: 1040px;
+  align-self: center;
+}
+
+/* Dismissed chat gives its desktop column back to the charts; reserve room for the reopen bar. */
+body.previewMode:is([data-conversation-state="minimized"], [data-conversation-state="closed"]) #dashboardMain { padding-bottom: 70px; }
+@media (min-width: 1201px) {
+  body.previewMode:is([data-conversation-state="minimized"], [data-conversation-state="closed"]) #overview {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+.conversationDock {
+  position: fixed;
+  right: 24px;
+  bottom: 14px;
+  z-index: 15;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  max-width: calc(100vw - 24px);
+  padding: 5px;
+  border: 1px solid #dfdef2;
+  border-radius: 13px;
+  background: #fff;
+  box-shadow: 0 4px 18px rgb(46 48 94 / 10%);
+}
+body:not(.previewMode) .conversationDock { display: none; }
+body #restoreConversation {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: #5d58b4;
+  background: #f1efff;
+  border-color: transparent;
+  font-weight: 600;
+}
+.conversationDockIcon { font-size: 20px; line-height: 1; }
+#conversationDockLabel { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 760px) {
+  .conversationDock { right: 12px; bottom: 10px; }
+  body.previewMode[data-conversation-state="maximized"] .compactAssistant .insightHeader { flex-direction: column; align-items: stretch; }
+  body.previewMode[data-conversation-state="maximized"] .conversationToolbar { justify-content: space-between; gap: 4px; }
+}

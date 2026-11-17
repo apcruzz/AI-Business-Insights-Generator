@@ -364,9 +364,19 @@ def check_conversation_messages(page, expect):
         expect(log.locator('.chatMessage--user .chatMessageBody')).to_have_text(question)
         expect(log.locator('[data-status="pending"]')).to_contain_text('running calculations')
         expect(page.locator('#askButton')).to_be_disabled()
+        # Window actions must preserve a pending request, its question, and the reply arriving while hidden.
+        page.locator('#maximizeConversation').click()
+        page.locator('#minimizeConversation').click()
+        expect(page.locator('#restoreConversation')).to_be_focused()
+        page.locator('#closeMinimizedConversation').click()
+        expect(page.locator('#overviewAssistant')).to_be_hidden()
+        assert len(pending) == 1, 'Window actions must not duplicate the pending request'
         pending.pop().fulfill(json={'conversationId': 'mock-message-ui', 'mode': 'Groq',
             'model': 'mock-ui-only', 'answer': answer, 'selectedRows': 4, 'evidence': []})
         expect(log).to_have_attribute('aria-busy', 'false')
+        expect(page.locator('#overviewAssistant')).to_be_hidden()
+        page.locator('#restoreConversation').click()
+        expect(page.locator('#insightQuestion')).to_be_focused()
         expect(log.locator('.chatMessage--assistant .chatMessageBody')).to_contain_text(answer)
         assert log.locator('.chatMessageBody img, .chatMessageBody strong').count() == 0
         assert not page.evaluate('Boolean(window.chatMarkupExecuted)')

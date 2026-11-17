@@ -73,6 +73,8 @@ const pageFromHash = () => {
 let lastDashboardPage = pageFromHash() || "overview";
 let chooserTrigger = null;
 let previewView = "charts", previewChartIndex = 0;
+// Window state affects presentation only; never reset analysis or send another AI request here.
+let conversationState = "open";
 const compactPreview = window.matchMedia("(max-width: 1200px)");
 const mobileSidebar = window.matchMedia("(max-width: 760px)");
 let sidebarCollapsed = false;
@@ -1110,15 +1112,18 @@ function renderOverviewCharts(rows, products, c) {
 function syncPreviewView() {
   // Compact tabs and desktop columns share the same DOM panels; update roles as well as visibility.
   const preview = document.body.classList.contains("previewMode"), compact = preview && compactPreview.matches;
+  const maximized = conversationState === "maximized", dismissed = ["minimized", "closed"].includes(conversationState);
   document.body.dataset.previewView = previewView;
-  $("previewWorkspaceTabs").hidden = !compact;
-  $("previewChartControls").hidden = !compact || previewView !== "charts";
+  document.body.dataset.conversationState = conversationState;
+  $("overviewCards").hidden = maximized;
+  $("previewWorkspaceTabs").hidden = !compact || maximized;
+  $("previewChartControls").hidden = !compact || previewView !== "charts" || maximized;
   for (const [view, [tabId, panelId]] of Object.entries(previewViews)) {
     const active = view === previewView;
     $(tabId).setAttribute("aria-selected", String(active));
     $(tabId).tabIndex = active ? 0 : -1;
-    $(panelId).hidden = compact && !active;
-    if (compact) {
+    $(panelId).hidden = maximized ? view !== "assistant" : (compact && !active) || (view === "assistant" && dismissed);
+    if (compact && !maximized) {
       $(panelId).setAttribute("role", "tabpanel");
       $(panelId).setAttribute("aria-labelledby", tabId);
     } else {
@@ -1127,6 +1132,21 @@ function syncPreviewView() {
       else $(panelId).setAttribute("aria-labelledby", view === "assistant" ? "assistantTitle" : "highlightsTitle");
     }
   }
+  const label = maximized ? "Restore conversation" : "Maximize conversation";
+  $("maximizeConversation").setAttribute("aria-label", label);
+  $("maximizeConversation").setAttribute("aria-pressed", String(maximized));
+  $("maximizeConversation").title = label;
+  $("conversationDock").hidden = !dismissed;
+  $("conversationDockLabel").textContent = conversationState === "minimized" ? "Resume AI conversation" : "Open AI conversation";
+  $("maximizeMinimizedConversation").hidden = conversationState !== "minimized";
+  $("closeMinimizedConversation").hidden = conversationState !== "minimized";
+}
+function setConversationState(state, focusId) {
+  // Reuse the mounted conversation so drafts, evidence, and in-flight replies survive all window actions.
+  conversationState = state;
+  if (compactPreview.matches) previewView = ["open", "maximized"].includes(state) ? "assistant" : "charts";
+  syncPreviewView();
+  $(focusId).focus({preventScroll: true});
 }
 function closePreviewFilters() {
   // Remove popover behavior before another page uses these same filters in its normal layout.
@@ -2763,7 +2783,10 @@ $("dashboardFilters").addEventListener("toggle", event => {
   }
 });
 Object.entries(previewViews).forEach(([view, [tabId]]) => {
-  $(tabId).onclick = () => { previewView = view; syncPreviewView(); };
+  $(tabId).onclick = () => {
+    if (view === "assistant") conversationState = "open";
+    previewView = view; syncPreviewView();
+  };
   $(tabId).onkeydown = event => {
     if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
     event.preventDefault();
@@ -2811,6 +2834,7 @@ $("detailChartSelect").onchange = () => {
 };
 $("dashboardFilters").addEventListener("keydown", event => {
   if (event.key === "Escape" && document.body.classList.contains("previewFiltersOpen")) {
+    event.preventDefault();
     closePreviewFilters(); $("previewFilterButton").focus();
   }
 });
@@ -2820,6 +2844,20 @@ $("chartChooser").addEventListener("close", () => chooserTrigger?.focus());
 $("selectRecommendedCharts").onclick = selectRecommendedCharts;
 $("loadSelectedCharts").onclick = loadSelectedCharts;
 $("openAiSettings").onclick = () => $("aiSettings").showModal();
+$("minimizeConversation").onclick = () => setConversationState("minimized", "restoreConversation");
+$("closeConversation").onclick = $("closeMinimizedConversation").onclick = () => setConversationState("closed", "restoreConversation");
+$("maximizeConversation").onclick = () => setConversationState(conversationState === "maximized" ? "open" : "maximized", "maximizeConversation");
+$("restoreConversation").onclick = () => setConversationState("open", "insightQuestion");
+$("maximizeMinimizedConversation").onclick = () => setConversationState("maximized", "maximizeConversation");
+const restoreConversationOnEscape = event => {
+  // Let dialogs, menus, and filter popovers handle their own Escape key first.
+  if (event.key !== "Escape" || event.defaultPrevented || conversationState !== "maximized"
+    || !document.body.classList.contains("previewMode") || event.target.closest("select")
+    || document.querySelector('dialog[open], [popover]:popover-open, [role="menu"]:not([hidden])')) return;
+  event.preventDefault();
+  setConversationState("open", "maximizeConversation");
+};
+window.addEventListener("keydown", restoreConversationOnEscape);
 $("closeAiSettings").onclick = () => $("aiSettings").close();
 $("refreshModels").onclick = refreshModels;
 // Starting over or switching model invalidates outstanding answers and clears local chat context.
@@ -2851,5 +2889,5 @@ const changeChartType = event => {
 };
 $("dashboardMain").addEventListener("change", changeChartType);
 // React can unmount this controller: detach observers/listeners to avoid duplicate work after remounting.
-return () => { disposed = true; revision++; overview.dispose(); discoveryController.abort(); localAnalysisController?.abort(); localAnalysisController = null; browserOllama.disconnect(); window.removeEventListener("hashchange", followPageHash); previewChartObserver.disconnect(); compactPreview.removeEventListener("change", resizePreview); mobileSidebar.removeEventListener("change", syncSidebar); $("dashboardMain").removeEventListener("change", changeChartType); document.body.classList.remove("workspaceMode", "sidebarCollapsed"); };
+return () => { disposed = true; revision++; overview.dispose(); discoveryController.abort(); localAnalysisController?.abort(); localAnalysisController = null; browserOllama.disconnect(); window.removeEventListener("hashchange", followPageHash); window.removeEventListener("keydown", restoreConversationOnEscape); previewChartObserver.disconnect(); compactPreview.removeEventListener("change", resizePreview); mobileSidebar.removeEventListener("change", syncSidebar); $("dashboardMain").removeEventListener("change", changeChartType); document.body.classList.remove("workspaceMode", "sidebarCollapsed"); delete document.body.dataset.conversationState; };
 }
